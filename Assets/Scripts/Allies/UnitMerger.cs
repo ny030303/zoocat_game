@@ -41,6 +41,5 @@ public class UnitMerger : MonoBehaviour
 
         // 기존 유닛 지우기
         unitSpawner.KillUnit(this.gameObject);
-
     }
 }

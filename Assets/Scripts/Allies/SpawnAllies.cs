@@ -28,52 +28,5 @@ public class SpawnAllies : MonoBehaviour
         {
             spawnButton.onClick.AddListener(() => { unitSpawner.SpawnNextAlly(); });
         }
-        
-
-        //// 가능한 모든 위치를 계산하여 리스트에 저장
-        //availablePositions = new List<Vector2>();
-        //for (int row = 0; row < rows; row++)
-        //{
-        //    for (int col = 0; col < columns; col++)
-        //    {
-        //        Vector2 position = startSpawnPosition + new Vector2(col * spawnOffset.x, -row * spawnOffset.y);
-        //        availablePositions.Add(position);
-        //    }
-        //}
     }
-
-    //void SpawnNextAlly()
-    //{
-    //    if (availablePositions.Count > 0)
-    //    {
-    //        // 가능한 위치들 중 랜덤하게 선택
-    //        int randomPositionIndex = Random.Range(0, availablePositions.Count);
-    //        Vector2 spawnPosition = availablePositions[randomPositionIndex];
-
-    //        // 랜덤하게 아군 프리팹 선택
-    //        UnitData unitData = unitDatabase.GetUnitDataRandom();
-
-    //        // 선택된 아군 프리팹을 해당 위치에 생성
-    //        GameObject newAlly = unitSpawner.SpawnUnit(unitData.unitName, spawnPosition);
-    //        newAlly.transform.SetParent(parentTransform, false);
-
-    //        // 유닛의 속성을 설정합니다.
-    //        Unit unitset = newAlly.GetComponent<Unit>();
-    //        if (unitset != null)
-    //        {
-    //            unitset.Initialize(unitData);
-    //            // 유닛 삭제 시 위치를 다시 추가하도록 이벤트 등록
-    //            unitset.OnUnitDestroyed += () => OnUnitDestroyed(spawnPosition);
-    //        }
-
-    //        // 사용된 위치를 리스트에서 제거
-    //        availablePositions.RemoveAt(randomPositionIndex);
-    //    }
-    //}
-
-    //void OnUnitDestroyed(Vector2 position)
-    //{
-    //    // 삭제된 유닛의 위치를 다시 추가
-    //    availablePositions.Add(position);
-    //}
 }

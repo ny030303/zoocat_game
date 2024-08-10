@@ -133,17 +133,21 @@ public class UnitSpawner : MonoBehaviour
     {
         // 삭제된 유닛의 위치를 다시 추가
         int idx = getAvailablePosition(position);
-        if(mergeIdx != idx) availableState[idx] = 0;
+        //if(mergeIdx != idx) 
+            availableState[idx] = 0;
     }
 
+    // 유닛은 지우되 state는 남기는 Kill
     public void KillUnit(GameObject unit)
     {
-        parentTransform = unit.gameObject.transform.parent;
-        Vector2 unitpos = new Vector2(unit.transform.position.x, unit.transform.position.y);
-        // 월드 좌표계에서의 위치를 로컬 좌표계로 변환
-        Vector2 localPos = parentTransform.InverseTransformPoint(unitpos);
-        
-        OnUnitDestroyed(localPos);
+        //parentTransform = unit.gameObject.transform.parent;
+        //Vector2 unitpos = new Vector2(unit.transform.position.x, unit.transform.position.y);
+        //// 월드 좌표계에서의 위치를 로컬 좌표계로 변환
+        //Vector2 localPos = parentTransform.InverseTransformPoint(unitpos);
+
+        //int idx = getAvailablePosition(localPos);
+        //availableState[idx] = 0;
+        //OnUnitDestroyed(localPos);
         unit.SetActive(false);
         Destroy(unit, 1f);
     }

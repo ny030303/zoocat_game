@@ -70,6 +70,6 @@ public class Monster : MonoBehaviour
         animator.SetBool("IsDead", true);
 
         //FindObjectOfType<GameManager>().AddGold(10); // Reward gold
-        Destroy(gameObject, 3); // Destroy after 1 second to allow death animation to play
+        Destroy(gameObject, 3f); // Destroy after 1 second to allow death animation to play
     }
 }
