@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5737c762d7af02469078d1794312abd, type: 3}
+  m_Name: CHA_1003
+  m_EditorClassIdentifier: 
+  id: CHA_1003
+  unitName: "\uACE0\uC591\uC774C"
+  grade: 1
+  atk: 10
+  hit: 100
+  cri: 10
+  attackSpeed: 1.5
+  attackRange: 9999
+  splashRange: 0
+  hp: 1
+  def: 0
+  moveSpeed: 0
+  skillId: 1003
+  skillValue: 0.2
+  skillDuration: 5
+  target: {fileID: 0}
+  unitSprite: {fileID: 0}
+  unitPrefab: {fileID: 8424795513748287105, guid: f17ab9e244644d845b21c5c13b25b3c4, type: 3}
