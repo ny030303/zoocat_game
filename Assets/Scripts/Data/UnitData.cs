@@ -30,4 +30,37 @@ public class UnitData : ScriptableObject
     public Sprite unitSprite;
     public GameObject unitPrefab; // 프리펩 참조 추가
     internal object transform;
+
+    // Deep Copy Method
+    public UnitData DeepCopy()
+    {
+        // 새로운 인스턴스 생성
+        UnitData clone = ScriptableObject.CreateInstance<UnitData>();
+
+        // 모든 필드를 개별적으로 복사
+        clone.id = this.id;
+        clone.unitName = this.unitName;
+        clone.grade = this.grade;
+
+        clone.atk = this.atk;
+        clone.hit = this.hit;
+        clone.cri = this.cri;
+        clone.attackSpeed = this.attackSpeed;
+        clone.attackRange = this.attackRange;
+        clone.splashRange = this.splashRange;
+        clone.hp = this.hp;
+        clone.def = this.def;
+        clone.moveSpeed = this.moveSpeed;
+        clone.rewardGold = this.rewardGold;
+
+        clone.skillId = this.skillId;
+        clone.skillValue = this.skillValue;
+        clone.skillDuration = this.skillDuration;
+
+        clone.target = this.target;
+        clone.unitSprite = this.unitSprite;
+        clone.unitPrefab = this.unitPrefab;
+
+        return clone;
+    }
 }

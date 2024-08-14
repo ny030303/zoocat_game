@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     private int lifePoints = 3;
     private int currency = 100;
     public TextMeshPro currencyTextObj;
+    private LifeManager lifeManager;
 
     private int summonCost = 10;
     private int maxSummonCost = 50;
@@ -21,11 +22,9 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        lifeManager = FindObjectOfType<LifeManager>();
     }
-    public bool CheckButtonState()
-    {
-      return currency >= summonCost ? true : false;
-    }
+    public bool CheckButtonState()  { return currency >= summonCost ? true : false; }
     public bool SummonUnit()
     {
         if (currency >= summonCost)
@@ -66,14 +65,26 @@ public class GameManager : MonoBehaviour
     private void ChangeCurrency()
     {
         currencyTextObj.text = currency.ToString();
-        if (OnCurrencyChanged != null)
-        {
-            OnCurrencyChanged();
-        }
+        if (OnCurrencyChanged != null) OnCurrencyChanged();
     }
 
-    public void TakeDamage(bool v1, int v2)
+    public void TakeDamage()
     {
-        lifePoints -= v2;
+        if (lifePoints > 0)
+        {
+            lifePoints--;
+            UpdateLifeUI();
+        }
+
+        if (lifePoints <= 0) GameOver();
+    }
+    void UpdateLifeUI()
+    {
+        if (lifeManager != null) lifeManager.UpdateLifeUI(lifePoints);
+    }
+    void GameOver()
+    {
+        if (lifeManager != null) lifeManager.GameOver();
+        // 추가적인 게임 오버 처리 (예: 게임 중지, 점수 저장 등)
     }
 }

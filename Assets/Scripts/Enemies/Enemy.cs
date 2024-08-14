@@ -70,7 +70,7 @@ public class Enemy : MonoBehaviour
             currentWaypointIndex++;
             if (currentWaypointIndex >= waypoints.Count)
             {
-                gameManager.TakeDamage(true, 1); // Reduce player health
+                gameManager.TakeDamage(); // Reduce player health
                 Destroy(gameObject);
                 //Die();
             }
@@ -125,7 +125,7 @@ public class Enemy : MonoBehaviour
 
     void OnDestroy()
     {
-        gameManager.AddGold(unitData.rewardGold); // Reward gold
+        if (currentHp <= 0) gameManager.AddGold(unitData.rewardGold); // Reward gold
     }
 
     IEnumerator FadeIn()

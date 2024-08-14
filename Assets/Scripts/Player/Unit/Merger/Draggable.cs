@@ -31,6 +31,18 @@ public class Draggable : MonoBehaviour
         }
     }
 
+    private bool CheckIsSameUnit(GameObject otherObj)
+    {
+        Unit unitset = this.gameObject.GetComponent<Unit>();
+        Unit otherUnitset = otherObj.GetComponent<Unit>();
+        if (otherObj.CompareTag("Ally") && // 같은 유닛일때
+            unitset.unitData.id == otherUnitset.unitData.id && // 같은 아이디
+            unitset.unitData.grade == otherUnitset.unitData.grade) // 같은 등급
+        {
+            return true;
+        }
+        return false;
+    }
 
     private void OnMouseDown()
     {
@@ -42,7 +54,7 @@ public class Draggable : MonoBehaviour
             {
 
                 //Debug.Log(obj.name);
-                if (this.gameObject.name != obj.name) // 이름이 다를때
+                if (!CheckIsSameUnit(obj))
                 {
                     SpriteRenderer objSp = obj.GetComponent<SpriteRenderer>();
                     objSp.color = new Color(0.5f, 0.5f, 0.5f, 1f); // 어둡게
@@ -89,8 +101,9 @@ public class Draggable : MonoBehaviour
         {
             if (collider.gameObject != this.gameObject)
             {
-                if (collider.gameObject.CompareTag("Ally") && this.gameObject.name == collider.gameObject.name)
-                { // 같은 유닛일때
+               
+                if (CheckIsSameUnit(collider.gameObject)) 
+                { 
                     UnitMerger merger = collider.gameObject.GetComponent<UnitMerger>();
                     if (merger != null)
                     {

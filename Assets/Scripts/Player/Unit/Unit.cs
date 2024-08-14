@@ -20,15 +20,10 @@ public class Unit : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
-        //if (unitData != null)
-        //{
-        //    // 유닛의 이름과 프리팹을 출력
-        //    //Debug.Log("Unit Name: " + unitData.unitName);
-        //}
     }
     public void Initialize(UnitData data)
     {
-        unitData = data;
+        unitData = data.DeepCopy();
         currentHp = unitData.hp; // 유닛의 체력을 초기화
         unitSkill = new Skill(data);  // UnitData에서 스킬 생성
     }
@@ -68,7 +63,7 @@ public class Unit : MonoBehaviour
         if (Random.value < unitData.cri / 100f)
         {
             damage *= 2; // 치명타 시 공격력 2배
-            Debug.Log(unitData.unitName + " has landed a critical hit!");
+            //Debug.Log(unitData.unitName + " has landed a critical hit!");
         }
 
         return damage;
@@ -79,15 +74,15 @@ public class Unit : MonoBehaviour
         animator.SetTrigger("AttackTrigger"); // 공격 애니메이션을 트리거
 
         attackCount++;
-        //target.TakeDamage(CalculateDamage()); // 공격 부여하는 방식
+        // 공격 부여하는 방식
+        //target.TakeDamage(CalculateDamage());
         ThrowBullet(target, CalculateDamage());
-        //Debug.Log(unitData.unitName + " attacks " + target.unitData.unitName + " for " + damage + " damage.");
-
         CheckAndApplySkill();
     }
     private void ThrowBullet(Enemy target, int damage)
     {
-        Vector2 spawnPosition = new Vector2(this.gameObject.transform.position.x -1f, this.gameObject.transform.position.y - 0.7f); // x축으로 0.5 단위 이동
+        // 날아가는 불렛 위치조정 - 유닛 기준으로 이동
+        Vector2 spawnPosition = new Vector2(this.gameObject.transform.position.x -1f, this.gameObject.transform.position.y - 0.7f); 
         GameObject bullet = Instantiate(bulletPrefab, spawnPosition, this.gameObject.transform.rotation);
         Bullet bulletScript = bullet.GetComponent<Bullet>();
         bulletScript.Initialize(target.transform, damage);
@@ -140,19 +135,18 @@ public class Unit : MonoBehaviour
         }
         return closestEnemy;
     }
-
-    //public void UpgradeUnit()
-    //{
-    //    if (unitData != null && unitData.upgradedUnit != null)
-    //    {
-    //        // 업그레이드된 유닛의 데이터를 현재 유닛 데이터로 설정
-    //        unitData = unitData.upgradedUnit;
-
-    //        // 기존 프리팹을 파괴하고 새로운 프리팹을 생성
-    //        Destroy(gameObject);
-    //        Instantiate(unitData.unitPrefab, transform.position, Quaternion.identity);
-    //    }
-    //}
+    public void UpgradeUnitMerged(UnitData beforeUnitData)
+    {
+        Debug.Log("beforeUnitData.grade: " + beforeUnitData.grade);
+        if (unitData != null && unitData.grade < 5)
+        {
+            unitData.grade = beforeUnitData.grade + 1;
+            unitData.atk = beforeUnitData.atk + 10;
+            // 등급이 올라갈 때 크기 증가
+            float scaleFactor = 1.0f + (unitData.grade * 0.1f);
+            this.gameObject.transform.localScale *= scaleFactor;
+        }
+    }
 
     void Update()
     {

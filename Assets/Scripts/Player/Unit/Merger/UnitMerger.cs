@@ -30,15 +30,9 @@ public class UnitMerger : MonoBehaviour
         Debug.Log("localPos"+ localPos);
         //// 기존 유닛 자리에 새 유닛 생성
         GameObject unit = unitSpawnManager.SpawnNextAlly(localPos);
-        
-
-        //unit.transform.SetParent(parentTransform, false);
-        //unit.transform.position = this.transform.position; // 현위치 랜덤생성
-        //unit.transform.localScale *= 1.2f; // Adjust the scale factor as needed
-        unit.transform.localScale *= 1.2f; // Adjust the scale factor as needed
-
-
-
+        // 새 유닛 업그레이드
+        Unit newunitset = unit.GetComponent<Unit>();
+        newunitset.UpgradeUnitMerged(unitset.unitData);
         // 기존 유닛 지우기
         unitSpawnManager.KillUnit(this.gameObject);
     }
