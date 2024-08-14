@@ -8,25 +8,47 @@ using Unity.VisualScripting;
 /// </summary>
 public class SpawnButton : MonoBehaviour
 {
-    public UnitDatabase unitDatabase;
-    public Transform parentTransform; // 아군을 배치할 부모 오브젝트
-    public Vector2 startSpawnPosition = new Vector2(0, 0); // 시작 위치
-    public Vector2 spawnOffset = new Vector2(140, 140); // 스폰 간격
-    public int rows = 3; // 행 수
-    public int columns = 5; // 열 수
-
     private Button spawnButton;
     private List<Vector2> availablePositions;
     private UnitSpawnManager unitSpawnManager;
+    private GameManager gameManager;
 
     void Start()
     {
         // 버튼 컴포넌트를 가져와 클릭 이벤트에 메서드 연결
         spawnButton = GetComponent<Button>();
         unitSpawnManager = FindAnyObjectByType<UnitSpawnManager>();
+        gameManager = FindAnyObjectByType<GameManager>();
+
         if (spawnButton != null)
         {
-            spawnButton.onClick.AddListener(() => { unitSpawnManager.SpawnNextAlly(); });
+            spawnButton.onClick.AddListener(() => {
+                if(gameManager.SummonUnit())
+                {
+                    unitSpawnManager.SpawnNextAlly();
+                } else
+                {
+                    Debug.Log("소환불가");
+                }
+                
+            });
+        }
+
+        // 이벤트 구독
+        if (gameManager != null)
+        {
+            gameManager.OnCurrencyChanged += changeState;
+        }
+    }
+
+    public void changeState()
+    {
+        if(gameManager.CheckButtonState())
+        {
+            spawnButton.interactable = true;
+        } else
+        {
+            spawnButton.interactable = false;
         }
     }
 }

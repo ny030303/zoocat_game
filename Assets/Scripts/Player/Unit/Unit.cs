@@ -14,6 +14,7 @@ public class Unit : MonoBehaviour
 
     private Animator animator;
 
+    public int level;
     public delegate void UnitDestroyedHandler();
     public event UnitDestroyedHandler OnUnitDestroyed;
     void Start()
@@ -30,6 +31,11 @@ public class Unit : MonoBehaviour
         unitData = data;
         currentHp = unitData.hp; // 유닛의 체력을 초기화
         unitSkill = new Skill(data);  // UnitData에서 스킬 생성
+    }
+
+    internal void LevelUpgrade()
+    {
+        throw new System.NotImplementedException();
     }
 
     public void Kill()

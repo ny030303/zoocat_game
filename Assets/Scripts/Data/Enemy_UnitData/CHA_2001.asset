@@ -24,6 +24,7 @@ MonoBehaviour:
   hp: 100
   def: 2
   moveSpeed: 50
+  rewardGold: 10
   skillId: 
   skillValue: 0
   skillDuration: 0

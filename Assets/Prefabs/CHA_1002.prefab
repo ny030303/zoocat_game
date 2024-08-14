@@ -197,7 +197,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitData: {fileID: 0}
   currentHp: 0
-  bulletPrefab: {fileID: 1659952485978467794, guid: 4a797b8385fe2f647b8f11932b12a270, type: 3}
+  bulletPrefab: {fileID: 1659952485978467794, guid: d5e60c451477a0b4ca175eee82ea443a, type: 3}
+  level: 0
 --- !u!114 &2995197482696956195
 MonoBehaviour:
   m_ObjectHideFlags: 0

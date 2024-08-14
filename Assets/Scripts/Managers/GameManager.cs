@@ -1,63 +1,79 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    public int playerHealth = 3;
-    public int enemyHealth = 3;
-    public int playerGold = 100;
-    public Text playerHealthText;
-    public Text playerGoldText;
-    public GameObject victoryScreen;
-    public GameObject defeatScreen;
+    private int lifePoints = 3;
+    private int currency = 100;
+    public TextMeshPro currencyTextObj;
+
+    private int summonCost = 10;
+    private int maxSummonCost = 50;
+    private int upgradeCost = 100;
+    private int maxUpgradeLevel = 5;
+    private int waveNumber = 1;
+
+    // currency 바뀌었을때 핸들러
+    public delegate void SummonStateHandler();
+    public event SummonStateHandler OnCurrencyChanged;
 
     void Start()
     {
-        UpdateUI();
     }
-
-    void UpdateUI()
+    public bool CheckButtonState()
     {
-        playerHealthText.text = "Health: " + playerHealth;
-        playerGoldText.text = "Gold: " + playerGold;
+      return currency >= summonCost ? true : false;
     }
-
-    public void TakeDamage(bool isPlayer, int damage)
+    public bool SummonUnit()
     {
-        if (isPlayer)
+        if (currency >= summonCost)
         {
-            playerHealth -= damage;
-            if (playerHealth <= 0)
-            {
-                Defeat();
-            }
+            // 유닛 소환 로직
+            currency -= summonCost;
+            ChangeCurrency();
+            summonCost = Mathf.Min(summonCost + 10, maxSummonCost);
+            return true;
         }
         else
         {
-            enemyHealth -= damage;
-            if (enemyHealth <= 0)
-            {
-                Victory();
-            }
+            // 재화 부족 알림
+            return false;
         }
-        UpdateUI();
     }
 
-    void Victory()
+    public void UpgradeUnit(Unit unit)
     {
-        victoryScreen.SetActive(true);
-        // 추가 리워드 계산
+        if (unit.level < maxUpgradeLevel && currency >= upgradeCost)
+        {
+            unit.LevelUpgrade();
+            currency -= upgradeCost;
+            ChangeCurrency();
+            upgradeCost += 100;
+        }
+        else
+        {
+            // 업그레이드 불가능 알림
+        }
+    }
+    public void AddGold(int rewardGold)
+    {
+        currency += rewardGold;
+        ChangeCurrency();
     }
 
-    void Defeat()
+    private void ChangeCurrency()
     {
-        defeatScreen.SetActive(true);
-        // 추가 패배 처리
+        currencyTextObj.text = currency.ToString();
+        if (OnCurrencyChanged != null)
+        {
+            OnCurrencyChanged();
+        }
     }
 
-    public void AddGold(int amount)
+    public void TakeDamage(bool v1, int v2)
     {
-        playerGold += amount;
-        UpdateUI();
+        lifePoints -= v2;
     }
 }

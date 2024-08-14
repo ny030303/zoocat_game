@@ -9,6 +9,7 @@ public class RoundManager : MonoBehaviour
     public WaypointManager waypointManager; // WaypointManager ÂüÁ¶
     List<Transform> waypoints;
     private int currentWaveIndex = 0;
+    public Transform enemyParent;
 
     void Start()
     {
@@ -37,7 +38,8 @@ public class RoundManager : MonoBehaviour
         {
             for (int j = 0; j < currentWave.enemyCounts[i]; j++)
             {
-                GameObject enemyObj = Instantiate(currentWave.enemies[i].unitPrefab, waypoints[0].position, Quaternion.identity);
+                // Instantiate with parent
+                GameObject enemyObj = Instantiate(currentWave.enemies[i].unitPrefab, waypoints[0].position, Quaternion.identity, enemyParent);
                 Enemy enemy = enemyObj.GetComponent<Enemy>();
 
                 if (enemy == null)

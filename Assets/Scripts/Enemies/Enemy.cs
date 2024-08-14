@@ -14,9 +14,11 @@ public class Enemy : MonoBehaviour
     private float totalDistance; // 전체 경로의 총 길이
     private float requiredSpeed; // 조정된 이동 속도
     private SpriteRenderer spriteRenderer;
-
+    private GameManager gameManager;
     public void Initialize(List<Transform> waypoints, UnitData data)
     {
+
+        gameManager = FindAnyObjectByType<GameManager>();
         unitData = data;
         currentHp = unitData.hp; // 유닛의 체력을 초기화
         this.waypoints = waypoints;
@@ -68,7 +70,7 @@ public class Enemy : MonoBehaviour
             currentWaypointIndex++;
             if (currentWaypointIndex >= waypoints.Count)
             {
-                FindObjectOfType<GameManager>().TakeDamage(true, 1); // Reduce player health
+                gameManager.TakeDamage(true, 1); // Reduce player health
                 Destroy(gameObject);
                 //Die();
             }
@@ -95,9 +97,21 @@ public class Enemy : MonoBehaviour
 
     void ShowDamageText(int damage)
     {
-        GameObject damageText = Instantiate(damageTextPrefab, transform.position + new Vector3(0, 1, 0), Quaternion.identity);
-        DamageTextController controller = damageText.GetComponent<DamageTextController>();
-        controller.SetText(damage);
+
+        // Instantiate the damage text prefab at the enemy's position
+        GameObject damageText = Instantiate(damageTextPrefab, transform.position + new Vector3(0, (float)2, 0), Quaternion.identity);
+
+        // Access the DamageTxt script attached to the damage text prefab
+        DamageTextController damageTxtScript = damageText.GetComponent<DamageTextController>();
+
+        // Set the damage value to the text
+        damageTxtScript.damage = damage.ToString();
+
+        // Optionally adjust the prefab's properties based on the type of damage (e.g., critical damage)
+        if (damage > 10) // Example condition for critical damage
+        {
+            damageText.name = "CriticalDmgTxt";
+        }
     }
 
     void Die()
@@ -106,8 +120,12 @@ public class Enemy : MonoBehaviour
         animator.SetBool("IsDead", true);
         StartCoroutine(FadeOut()); // 사망할 때 FadeOut
         //Debug.Log(unitData.unitName + " has died.");
-        //FindObjectOfType<GameManager>().AddGold(10); // Reward gold
         Destroy(gameObject, 3f); // Destroy after 1 second to allow death animation to play
+    }
+
+    void OnDestroy()
+    {
+        gameManager.AddGold(unitData.rewardGold); // Reward gold
     }
 
     IEnumerator FadeIn()

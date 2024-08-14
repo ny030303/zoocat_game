@@ -18,6 +18,7 @@ public class UnitData : ScriptableObject
     public int hp;                // 체력
     public int def;               // 방어력
     public float moveSpeed;         // 이동 속도
+    public int rewardGold;          // 처치 보상
 
     [Header("Skill Information")]
     public string skillId;        // 스킬의 고유 식별자

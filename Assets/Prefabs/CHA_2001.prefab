@@ -149,4 +149,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unitData: {fileID: 0}
   currentHp: 0
-  damageTextPrefab: {fileID: 3970041924635391896, guid: 4702bdc7c4ca61b4395993f144e2283e, type: 3}
+  damageTextPrefab: {fileID: 4750699696325542298, guid: 4702bdc7c4ca61b4395993f144e2283e, type: 3}
+  damageTextSpawnOffset: {fileID: 0}

@@ -1,45 +1,80 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
+using System;
 
 public class DamageTextController : MonoBehaviour
 {
-    public Text damageText;
-    public float fadeDuration = 1f; // FadeOut 지속 시간
-    public float moveSpeed = 0.5f;  // 텍스트가 위로 이동하는 속도
+    // Set Font Size
+    private float minFontSize;
+    private float sizeChangeSpeed;
 
-    private float startAlpha;
+    // Set LifeTime
+    private float moveSpeed = 0.15f;
+    private float alphaSpeed = 1.5f;
+    public float destroyTime = 0.4f;
 
-    void Start()
+    // Set Timer
+    private float time;
+
+    // Set Damage Text
+    public string damage;
+
+    Color alpha;
+    TextMeshPro txt;
+
+    private void Awake()
     {
-        startAlpha = damageText.color.a;
-        StartCoroutine(FadeOutAndMove());
-    }
-
-    public void SetText(int damage)
-    {
-        damageText.text = damage.ToString();
-    }
-
-    IEnumerator FadeOutAndMove()
-    {
-        float currentTime = 0f;
-        CanvasGroup canvasGroup = GetComponent<CanvasGroup>();
-        Vector3 originalPosition = transform.position;
-
-        while (currentTime < fadeDuration)
+        if (gameObject.name == "CriticalDmgTxt")
         {
-            currentTime += Time.deltaTime;
+            minFontSize = 2f;
+            sizeChangeSpeed = 2f;
+        }
+        else
+        {
+            minFontSize = 1f;
+            sizeChangeSpeed = 1.5f;
+        }
+    }
 
-            // 텍스트를 위로 이동
-            transform.position = originalPosition + new Vector3(0, moveSpeed * currentTime, 0);
+    private void Start()
+    {
+        time = 0;
 
-            // 투명도 조절
-            canvasGroup.alpha = Mathf.Clamp01(1f - (currentTime / fadeDuration));
+        txt = GetComponent<TextMeshPro>();
+        txt.text = damage;
+        alpha = txt.color;
 
-            yield return null;
+        Destroy(gameObject, destroyTime);
+    }
+
+    private void Update()
+    {
+        // Move the Damage Text Upward
+        transform.Translate(new Vector3(0, moveSpeed * Time.deltaTime, 0));
+
+        if (time < 0.2f)
+        {
+            txt.fontSize += Time.deltaTime * sizeChangeSpeed;
+        }
+        else
+        {
+            // If the font size hasn't reached the minimum size, keep decreasing
+            if (txt.fontSize > minFontSize)
+            {
+                txt.fontSize -= Time.deltaTime * sizeChangeSpeed;
+            }
         }
 
-        Destroy(gameObject); // 텍스트가 사라지면 오브젝트 삭제
+        time += Time.deltaTime * sizeChangeSpeed;
+
+        alpha.a = Mathf.Lerp(alpha.a, 0, Time.deltaTime * alphaSpeed);
+        txt.color = alpha;
+    }
+
+    internal void SetText(int damage)
+    {
+        throw new NotImplementedException();
     }
 }
