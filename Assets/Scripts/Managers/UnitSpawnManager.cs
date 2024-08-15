@@ -31,7 +31,7 @@ public class UnitSpawnManager : MonoBehaviour
                 Vector2 position = startSpawnPosition + new Vector2(col * spawnOffset.x, -row * spawnOffset.y);
                 availablePositions.Add(position);
                 availableState[row * columns + col] = 0;
-                Debug.Log(position);
+                //Debug.Log(position);
             }
         }
     }

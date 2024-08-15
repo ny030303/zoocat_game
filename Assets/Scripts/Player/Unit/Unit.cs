@@ -83,7 +83,7 @@ public class Unit : MonoBehaviour
     {
         // 날아가는 불렛 위치조정 - 유닛 기준으로 이동
         Vector2 spawnPosition = new Vector2(this.gameObject.transform.position.x -1f, this.gameObject.transform.position.y - 0.7f); 
-        GameObject bullet = Instantiate(bulletPrefab, spawnPosition, this.gameObject.transform.rotation);
+        GameObject bullet = Instantiate(bulletPrefab, spawnPosition, this.gameObject.transform.rotation, this.gameObject.transform.parent.parent);
         Bullet bulletScript = bullet.GetComponent<Bullet>();
         bulletScript.Initialize(target.transform, damage);
     }

@@ -24,9 +24,16 @@ MonoBehaviour:
   hp: 1
   def: 0
   moveSpeed: 0
+  rewardGold: 0
   skillId: 1002
   skillValue: 0.3
   skillDuration: 5
   target: {fileID: 0}
   unitSprite: {fileID: 0}
   unitPrefab: {fileID: 5217732830659251268, guid: d1aa02c7ae15cf9428edf8485e63779d, type: 3}
+  level: 0
+  upgradeCost: 100
+  maxUpgradeLevel: 5
+  statIncreases:
+  - statName: atk
+    increaseAmount: 10

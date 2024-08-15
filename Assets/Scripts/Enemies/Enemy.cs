@@ -99,7 +99,7 @@ public class Enemy : MonoBehaviour
     {
 
         // Instantiate the damage text prefab at the enemy's position
-        GameObject damageText = Instantiate(damageTextPrefab, transform.position + new Vector3(0, (float)2, 0), Quaternion.identity);
+        GameObject damageText = Instantiate(damageTextPrefab, transform.position + new Vector3(0, (float)2, 0), Quaternion.identity, this.gameObject.transform.parent.parent);
 
         // Access the DamageTxt script attached to the damage text prefab
         DamageTextController damageTxtScript = damageText.GetComponent<DamageTextController>();

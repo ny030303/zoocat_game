@@ -9,7 +9,6 @@ using Unity.VisualScripting;
 public class SpawnButton : MonoBehaviour
 {
     private Button spawnButton;
-    private List<Vector2> availablePositions;
     private UnitSpawnManager unitSpawnManager;
     private GameManager gameManager;
 

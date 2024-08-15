@@ -9,11 +9,10 @@ public class GameManager : MonoBehaviour
     private int currency = 100;
     public TextMeshPro currencyTextObj;
     private LifeManager lifeManager;
+    public UnitDatabase unitDatabase;
 
     private int summonCost = 10;
     private int maxSummonCost = 50;
-    private int upgradeCost = 100;
-    private int maxUpgradeLevel = 5;
     private int waveNumber = 1;
 
     // currency 바뀌었을때 핸들러
@@ -23,8 +22,10 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         lifeManager = FindObjectOfType<LifeManager>();
+        unitDatabase.Initialize();
     }
     public bool CheckButtonState()  { return currency >= summonCost ? true : false; }
+    public bool CheckLevelUpgradeState(int upgradeCost) { return currency >= upgradeCost ? true : false; }
     public bool SummonUnit()
     {
         if (currency >= summonCost)
@@ -42,14 +43,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void UpgradeUnit(Unit unit)
+    public void UpgradeUnit(int upgradeCost)
     {
-        if (unit.level < maxUpgradeLevel && currency >= upgradeCost)
+        if (currency >= upgradeCost)
         {
-            unit.LevelUpgrade();
             currency -= upgradeCost;
             ChangeCurrency();
-            upgradeCost += 100;
         }
         else
         {
