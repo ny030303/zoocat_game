@@ -6,11 +6,10 @@ public class UnitDatabase : ScriptableObject
 {
     public List<UnitData> unitDeck;
 
-    public static List<UnitData> unitList;
+    public static List<UnitData> unitList = new List<UnitData>();
 
     public void Initialize()
     {
-        unitList = new List<UnitData>(); // unitList √ ±‚»≠
 
         foreach (var unit in unitDeck)
         {

@@ -6,7 +6,7 @@ using UnityEngine;
 public struct StatIncrease
 {
     public string statName;  // 스탯 이름
-    public int increaseAmount; // 증가량
+    public float increaseAmount; // 증가량
 }
 
 [CreateAssetMenu(fileName = "NewUnit", menuName = "scriptable Object/Create New Unit", order = int.MaxValue)]
@@ -52,30 +52,37 @@ public class UnitData : ScriptableObject
     public void LevelUp()
     {
         level++;
-        foreach (var statIncrease in statIncreases)
-        {
-            ApplyStatIncrease(statIncrease);
-        }
+        ApplyStatIncrease(level);
         upgradeCost += 100; // Example: Increase upgrade cost by 100 per level
     }
-
-    private void ApplyStatIncrease(StatIncrease statIncrease)
+    public class StatIncrease
     {
-        switch (statIncrease.statName)
+        public float AtkIncrease { get; set; }
+        public float CriIncrease { get; set; }
+        public float AttackSpeedIncrease { get; set; }
+    }
+
+    private Dictionary<int, StatIncrease> levelStatIncreases = new Dictionary<int, StatIncrease>
+    {
+        { 1, new StatIncrease { AtkIncrease = 10f, CriIncrease = 0f, AttackSpeedIncrease = 5f } },
+        { 2, new StatIncrease { AtkIncrease = 20f, CriIncrease = 5f, AttackSpeedIncrease = 10f } },
+        { 3, new StatIncrease { AtkIncrease = 30f, CriIncrease = 8f, AttackSpeedIncrease = 15f } },
+        { 4, new StatIncrease { AtkIncrease = 40f, CriIncrease = 10f, AttackSpeedIncrease = 20f } },
+        { 5, new StatIncrease { AtkIncrease = 50f, CriIncrease = 15f, AttackSpeedIncrease = 30f } }
+        // 필요에 따라 추가
+    };
+
+    private void ApplyStatIncrease(int level)
+    {
+        if (levelStatIncreases.TryGetValue(level, out var statIncrease))
         {
-            case "atk":
-                atk += statIncrease.increaseAmount;
-                break;
-            case "hp":
-                hp += statIncrease.increaseAmount;
-                break;
-            case "def":
-                def += statIncrease.increaseAmount;
-                break;
-            // Add cases for other stats as needed
-            default:
-                Debug.LogWarning($"Unknown stat: {statIncrease.statName}");
-                break;
+            atk += (int)(atk * (statIncrease.AtkIncrease / 100f));
+            cri += (int)(cri * (statIncrease.CriIncrease / 100f));
+            attackSpeed += (int)(attackSpeed * (statIncrease.AttackSpeedIncrease / 100f));
+        }
+        else
+        {
+            Debug.LogWarning($"Unknown level: {level}");
         }
     }
 
@@ -115,15 +122,15 @@ public class UnitData : ScriptableObject
         clone.maxUpgradeLevel = this.maxUpgradeLevel;
 
         // List<StatIncrease> 복사
-        clone.statIncreases = new List<StatIncrease>(this.statIncreases.Count);
-        foreach (var statIncrease in this.statIncreases)
-        {
-            clone.statIncreases.Add(new StatIncrease
-            {
-                statName = statIncrease.statName,
-                increaseAmount = statIncrease.increaseAmount
-            });
-        }
+        //clone.statIncreases = new List<StatIncrease>(this.statIncreases.Count);
+        //foreach (var statIncrease in this.statIncreases)
+        //{
+        //    clone.statIncreases.Add(new StatIncrease
+        //    {
+        //        statName = statIncrease.statName,
+        //        increaseAmount = statIncrease.increaseAmount
+        //    });
+        //}
 
         return clone;
     }

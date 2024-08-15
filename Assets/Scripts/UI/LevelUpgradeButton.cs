@@ -39,7 +39,7 @@ public class LevelUpgradeButton : MonoBehaviour
     {
         if (isInUnitData()) unitData = unitDatabase.GetUnitDataToIdx(unitNumber);
 
-        if (unitData != null && gameManager.CheckLevelUpgradeState(unitData.upgradeCost))
+        if (unitData != null && unitData.level < unitData.maxUpgradeLevel && gameManager.CheckLevelUpgradeState(unitData.upgradeCost))
         {
             gameManager.UpgradeUnit(unitData.upgradeCost); // 게임 재화 사용
             // 업그레이드 로직 추가
@@ -54,18 +54,22 @@ public class LevelUpgradeButton : MonoBehaviour
             }
             // UI 텍스트 업데이트
             TextMeshProUGUI[] TextMeshes = this.gameObject.GetComponentsInChildren<TextMeshProUGUI>();
+            string currencyText = unitData.level == unitData.maxUpgradeLevel ? "---" : unitData.upgradeCost.ToString();
+            string levelText = unitData.level == unitData.maxUpgradeLevel ? "Lv. MAX" : "Lv. " + unitData.level.ToString();
+
             foreach (TextMeshProUGUI txtMesh in TextMeshes)
             {
                 switch (txtMesh.gameObject.name)
                 {
                     case "CurrencyText":
-                        txtMesh.text = unitData.upgradeCost.ToString();
+                        txtMesh.text = currencyText;
                         break;
                     case "LevelText":
-                        txtMesh.text = "Lv. " + unitData.level.ToString();
+                        txtMesh.text = levelText;
                         break;
                 }
             }
+            if(unitData.level == unitData.maxUpgradeLevel) spawnButton.interactable = false;
         }
         else
         {
@@ -78,10 +82,9 @@ public class LevelUpgradeButton : MonoBehaviour
         if (isInUnitData())
         {
             unitData = unitDatabase.GetUnitDataToIdx(unitNumber);
-            Debug.Log(unitData);
-            if (gameManager.CheckLevelUpgradeState(unitData.upgradeCost))
+            if (gameManager.CheckLevelUpgradeState(unitData.upgradeCost)) 
             {
-                spawnButton.interactable = true;
+                spawnButton.interactable = unitData.level == unitData.maxUpgradeLevel ? false : true;
             }
             else
             {
@@ -98,7 +101,7 @@ public class LevelUpgradeButton : MonoBehaviour
     private bool isInUnitData()
     {
         // unitDatabase가 null이 아닌지, 그리고 unitNumber가 유효한 범위 내에 있는지 확인
-        return unitDatabase.IsNull() && unitNumber >= 0 && unitNumber < unitDatabase.GetUnitListCount();
+        return unitDatabase != null && unitNumber >= 0 && unitNumber < unitDatabase.GetUnitListCount();
     }
 
     void OnDestroy()

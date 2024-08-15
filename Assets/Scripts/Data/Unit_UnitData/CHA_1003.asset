@@ -34,6 +34,4 @@ MonoBehaviour:
   level: 0
   upgradeCost: 100
   maxUpgradeLevel: 5
-  statIncreases:
-  - statName: atk
-    increaseAmount: 10
+  statIncreases: []

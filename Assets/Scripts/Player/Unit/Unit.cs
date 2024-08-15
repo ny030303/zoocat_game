@@ -141,7 +141,7 @@ public class Unit : MonoBehaviour
         if (unitData != null && unitData.grade < 5)
         {
             unitData.grade = beforeUnitData.grade + 1;
-            unitData.atk = beforeUnitData.atk + 10;
+            unitData.atk = beforeUnitData.atk + (int)(beforeUnitData.atk * 0.5f);
             // 등급이 올라갈 때 크기 증가
             float scaleFactor = 1.0f + (unitData.grade * 0.1f);
             this.gameObject.transform.localScale *= scaleFactor;

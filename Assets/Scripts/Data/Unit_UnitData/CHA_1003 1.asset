@@ -10,28 +10,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5737c762d7af02469078d1794312abd, type: 3}
-  m_Name: CHA_1002
+  m_Name: CHA_1003 1
   m_EditorClassIdentifier: 
-  id: CHA_1002
-  unitName: "\uACE0\uC591\uC774B"
+  id: CHA_1003 1
+  unitName: "\uACE0\uC591\uC774C1"
   grade: 1
   atk: 10
   hit: 100
   cri: 10
-  attackSpeed: 1
+  attackSpeed: 1.5
   attackRange: 9999
-  splashRange: 1
+  splashRange: 0
   hp: 1
   def: 0
   moveSpeed: 0
   rewardGold: 0
-  skillId: 1002
-  skillValue: 0.3
+  skillId: 1003
+  skillValue: 0.2
   skillDuration: 5
   target: {fileID: 0}
   unitSprite: {fileID: 0}
-  unitPrefab: {fileID: 5217732830659251268, guid: d1aa02c7ae15cf9428edf8485e63779d, type: 3}
+  unitPrefab: {fileID: 8424795513748287105, guid: 6525d96b1b3a8a547bac0a1eeeba63d7, type: 3}
   level: 0
   upgradeCost: 100
   maxUpgradeLevel: 5
-  statIncreases: []

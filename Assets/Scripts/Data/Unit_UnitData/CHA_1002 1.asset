@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5737c762d7af02469078d1794312abd, type: 3}
-  m_Name: CHA_1002
+  m_Name: CHA_1002 1
   m_EditorClassIdentifier: 
-  id: CHA_1002
-  unitName: "\uACE0\uC591\uC774B"
+  id: CHA_1002 1
+  unitName: "\uACE0\uC591\uC774B1"
   grade: 1
   atk: 10
   hit: 100
@@ -30,8 +30,7 @@ MonoBehaviour:
   skillDuration: 5
   target: {fileID: 0}
   unitSprite: {fileID: 0}
-  unitPrefab: {fileID: 5217732830659251268, guid: d1aa02c7ae15cf9428edf8485e63779d, type: 3}
+  unitPrefab: {fileID: 5217732830659251268, guid: 7442fa0502d040048b21fb43f0e90c62, type: 3}
   level: 0
   upgradeCost: 100
   maxUpgradeLevel: 5
-  statIncreases: []
