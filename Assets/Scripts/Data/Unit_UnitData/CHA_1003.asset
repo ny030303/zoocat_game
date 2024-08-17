@@ -15,6 +15,7 @@ MonoBehaviour:
   id: CHA_1003
   unitName: "\uACE0\uC591\uC774C"
   grade: 1
+  tag: UNIT
   atk: 10
   hit: 100
   cri: 10
@@ -28,10 +29,14 @@ MonoBehaviour:
   skillId: 1003
   skillValue: 0.2
   skillDuration: 5
-  target: {fileID: 0}
+  skillCooltime: 0
   unitSprite: {fileID: 0}
-  unitPrefab: {fileID: 8424795513748287105, guid: f17ab9e244644d845b21c5c13b25b3c4, type: 3}
+  unitPrefab: {fileID: 4444498513996445510, guid: f17ab9e244644d845b21c5c13b25b3c4, type: 3}
+  idleSprite: Assets/Sprites/Chactor/idleC.png
+  attackSprite: Assets/Sprites/Chactor/attackC.png
+  walkSprite: 
+  dieSprite: 
+  animatorController: {fileID: 0}
   level: 0
   upgradeCost: 100
   maxUpgradeLevel: 5
-  statIncreases: []

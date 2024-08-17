@@ -37,6 +37,7 @@ public class SpriteSheetLoader : MonoBehaviour
     public static Sprite[] LoadSpritesFromSheet(string path)
     {
         string assetPath = path.Replace(Application.dataPath, "Assets");
+        Debug.Log(assetPath);
         Sprite[] sprites = AssetDatabase.LoadAllAssetsAtPath(assetPath) as Sprite[];
 
         if (sprites == null || sprites.Length == 0)

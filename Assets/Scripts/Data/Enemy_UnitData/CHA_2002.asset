@@ -15,6 +15,7 @@ MonoBehaviour:
   id: CHA_2002
   unitName: "\uC0DD\uC950A"
   grade: 1
+  tag: ENEMY
   atk: 0
   hit: 0
   cri: 0
@@ -29,9 +30,13 @@ MonoBehaviour:
   skillValue: 0
   skillDuration: 0
   skillCooltime: 0
-  target: {fileID: 0}
   unitSprite: {fileID: 0}
   unitPrefab: {fileID: 8857024659114893825, guid: 0d8e6c88c66bf574e852b55cf3dec72e, type: 3}
+  idleSprite: 
+  attackSprite: 
+  walkSprite: 
+  dieSprite: 
+  animatorController: {fileID: 0}
   level: 1
   upgradeCost: 100
   maxUpgradeLevel: 5

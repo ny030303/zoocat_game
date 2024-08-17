@@ -19,6 +19,7 @@ public class Draggable : MonoBehaviour
     private void Start()
     {
         LoadedPos = this.transform.position;
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
     public void SetSpriteRenderer(SpriteRenderer renderer)
     {
@@ -89,7 +90,7 @@ public class Draggable : MonoBehaviour
             objSp.color = new Color(1f, 1f, 1f, 1f); // ฟ๘บน
         }
 
-            spriteRenderer.color = new Color(1f, 1f, 1f, 1f);
+        spriteRenderer.color = new Color(1f, 1f, 1f, 1f);
         isBeingHeld = false;
 
         CheckTriggerOnDrop();

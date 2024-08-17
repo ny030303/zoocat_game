@@ -67,6 +67,8 @@ public partial class PrefabCreatorWindow : EditorWindow
         rb.mass = 1;
         rb.angularDrag = 0.05f;
         rb.gravityScale = 0;
+        rb.freezeRotation = true;
+        rb.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
 
         // Add BoxCollider2D
         BoxCollider2D collider = newPrefab.AddComponent<BoxCollider2D>();
