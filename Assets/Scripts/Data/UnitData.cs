@@ -1,12 +1,15 @@
+using Newtonsoft.Json;
 using System.Collections.Generic;
+using UnityEditor.Animations;
 using UnityEngine;
 
 //각 유닛마다 레벨업 시 증가할 스탯과 그 증가량을 정의하는 구조체
 [System.Serializable]
-public struct StatIncrease
+public class StatIncrease
 {
-    public string statName;  // 스탯 이름
-    public float increaseAmount; // 증가량
+    public float AtkIncrease { get; set; }
+    public float CriIncrease { get; set; }
+    public float AttackSpeedIncrease { get; set; }
 }
 
 [CreateAssetMenu(fileName = "NewUnit", menuName = "scriptable Object/Create New Unit", order = int.MaxValue)]
@@ -16,6 +19,7 @@ public class UnitData : ScriptableObject
     public string id;             // 유닛 또는 스킬의 고유 식별자
     public string unitName;       // 유닛 또는 스킬 이름
     public int grade;             // 유닛의 등급
+    public string tag;               // UNIT | ENEMY 로 구별
 
     [Header("Combat Stats")]
     public int atk;               // 공격력
@@ -33,36 +37,35 @@ public class UnitData : ScriptableObject
     public string skillId;        // 스킬의 고유 식별자
     public float skillValue;      // 스킬 효과 값 (백분율로 표현)
     public float skillDuration;   // 스킬 지속 시간 (초 단위)
+    public float skillCooltime;   // 효과 발동 후 다시 발동되는데 걸리는 시간(초)
 
     [Header("Render Setting")]
-    public Collider2D target;
     public Sprite unitSprite;
     public GameObject unitPrefab; // 프리펩 참조 추가
+    public string idleSprite;
+    public string attackSprite;
+    public string walkSprite;
+    public string dieSprite;
+
+    [Header("Animation Template")]
+    public AnimatorController animatorController;  // 애니메이션 컨트롤러 추가
 
     [Header("Upgrade Information")]
     public int level = 1;         // 유닛의 레벨 (기본값 1)
     public int upgradeCost = 100;       // 업그레이드 비용
     public int maxUpgradeLevel = 5;     // 최대치
 
-    [Header("Level Up Stat Increases")]
-    public List<StatIncrease> statIncreases;
-    private object axUpgradeLevel;
-
     // Method to Level Up the Unit
     public void LevelUp()
     {
         level++;
         ApplyStatIncrease(level);
-        upgradeCost += 100; // Example: Increase upgrade cost by 100 per level
+        // Example: Increase upgrade cost by 100 per level
+        upgradeCost += 100; 
     }
-    public class StatIncrease
-    {
-        public float AtkIncrease { get; set; }
-        public float CriIncrease { get; set; }
-        public float AttackSpeedIncrease { get; set; }
-    }
+    
 
-    private Dictionary<int, StatIncrease> levelStatIncreases = new Dictionary<int, StatIncrease>
+    private readonly Dictionary<int, StatIncrease> levelStatIncreases = new Dictionary<int, StatIncrease>
     {
         { 1, new StatIncrease { AtkIncrease = 10f, CriIncrease = 0f, AttackSpeedIncrease = 5f } },
         { 2, new StatIncrease { AtkIncrease = 20f, CriIncrease = 5f, AttackSpeedIncrease = 10f } },
@@ -72,13 +75,13 @@ public class UnitData : ScriptableObject
         // 필요에 따라 추가
     };
 
-    private void ApplyStatIncrease(int level)
+    public void ApplyStatIncrease(int level)
     {
         if (levelStatIncreases.TryGetValue(level, out var statIncrease))
-        {
+        {   // 기존에 적용된 수치에 비율을 적용
             atk += (int)(atk * (statIncrease.AtkIncrease / 100f));
-            cri += (int)(cri * (statIncrease.CriIncrease / 100f));
-            attackSpeed += (int)(attackSpeed * (statIncrease.AttackSpeedIncrease / 100f));
+            cri += (cri * (statIncrease.CriIncrease / 100f));
+            attackSpeed += (attackSpeed * (statIncrease.AttackSpeedIncrease / 100f));
         }
         else
         {
@@ -111,9 +114,9 @@ public class UnitData : ScriptableObject
         clone.skillId = this.skillId;
         clone.skillValue = this.skillValue;
         clone.skillDuration = this.skillDuration;
+        clone.skillCooltime = this.skillCooltime;
 
-        // 타겟, 스프라이트, 프리팹 복사 (이 객체들은 참조형이므로 깊은 복사가 필요 없다)
-        clone.target = this.target;
+        // 참조형 변수 복사 (타겟, 스프라이트, 프리팹 등)
         clone.unitSprite = this.unitSprite;
         clone.unitPrefab = this.unitPrefab;
 
@@ -121,14 +124,17 @@ public class UnitData : ScriptableObject
         clone.upgradeCost = this.upgradeCost;
         clone.maxUpgradeLevel = this.maxUpgradeLevel;
 
-        // List<StatIncrease> 복사
-        //clone.statIncreases = new List<StatIncrease>(this.statIncreases.Count);
-        //foreach (var statIncrease in this.statIncreases)
+        clone.animatorController = this.animatorController;  // 애니메이션 컨트롤러 추가
+
+        // 딕셔너리 복사
+        //foreach (var kvp in this.levelStatIncreases)
         //{
-        //    clone.statIncreases.Add(new StatIncrease
+        //    // StatIncrease 객체도 새로운 인스턴스로 복사
+        //    clone.levelStatIncreases.Add(kvp.Key, new StatIncrease
         //    {
-        //        statName = statIncrease.statName,
-        //        increaseAmount = statIncrease.increaseAmount
+        //        AtkIncrease = kvp.Value.AtkIncrease,
+        //        CriIncrease = kvp.Value.CriIncrease,
+        //        AttackSpeedIncrease = kvp.Value.AttackSpeedIncrease
         //    });
         //}
 

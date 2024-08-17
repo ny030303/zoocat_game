@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: -3625420591103377935}
   - component: {fileID: 241123000109858980}
   m_Layer: 3
-  m_Name: CHA_1003 1
+  m_Name: CHA_1006
   m_TagString: Ally
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -167,7 +167,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0.045493603, y: 0.0072791874}

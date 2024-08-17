@@ -26,6 +26,7 @@ public class Unit : MonoBehaviour
         unitData = data.DeepCopy();
         currentHp = unitData.hp; // 유닛의 체력을 초기화
         unitSkill = new Skill(data);  // UnitData에서 스킬 생성
+        unitData.ApplyStatIncrease(unitData.level); // 레벨 수치에 맞게 적용
     }
 
     internal void LevelUpgrade()

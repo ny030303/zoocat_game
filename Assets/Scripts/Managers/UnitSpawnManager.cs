@@ -62,6 +62,7 @@ public class UnitSpawnManager : MonoBehaviour
         return -1;
     }
 
+    public bool IsSpawnNext() { return GetSumOfAvailableState() < (rows * columns) ? true : false; }
     //생성 로직
     public GameObject SpawnNextAlly(Vector2? defpos = null)
     {

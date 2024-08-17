@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5737c762d7af02469078d1794312abd, type: 3}
-  m_Name: CHA_1003 1
+  m_Name: CHA_1006
   m_EditorClassIdentifier: 
-  id: CHA_1003 1
+  id: CHA_1006
   unitName: "\uACE0\uC591\uC774C1"
   grade: 1
   atk: 10
@@ -28,6 +28,7 @@ MonoBehaviour:
   skillId: 1003
   skillValue: 0.2
   skillDuration: 5
+  skillCooltime: 0
   target: {fileID: 0}
   unitSprite: {fileID: 0}
   unitPrefab: {fileID: 8424795513748287105, guid: 6525d96b1b3a8a547bac0a1eeeba63d7, type: 3}

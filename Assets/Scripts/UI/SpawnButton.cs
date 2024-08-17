@@ -22,8 +22,9 @@ public class SpawnButton : MonoBehaviour
         if (spawnButton != null)
         {
             spawnButton.onClick.AddListener(() => {
-                if(gameManager.SummonUnit())
+                if(gameManager.CheckButtonState() && unitSpawnManager.IsSpawnNext())
                 {
+                    gameManager.SummonUnit();
                     unitSpawnManager.SpawnNextAlly();
                 } else
                 {

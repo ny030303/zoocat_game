@@ -825,6 +825,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   waves:
   - {fileID: 11400000, guid: 4a1032d6ace0dbb4d89228739e735879, type: 2}
+  - {fileID: 11400000, guid: 23414c93061a8944fb8590986ae59d27, type: 2}
   waypointManager: {fileID: 775920999}
   enemyParent: {fileID: 1572981590}
 --- !u!4 &434285008
@@ -4626,5 +4627,5 @@ SceneRoots:
   - {fileID: 2006840148}
   - {fileID: 775920998}
   - {fileID: 434285008}
-  - {fileID: 1836749995}
   - {fileID: 528436117}
+  - {fileID: 1836749995}

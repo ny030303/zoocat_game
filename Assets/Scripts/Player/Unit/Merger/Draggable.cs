@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 public class Draggable : MonoBehaviour
 {
-    [SerializeField] SpriteRenderer spriteRenderer;
+    private SpriteRenderer spriteRenderer;
 
     public Vector3 LoadedPos;
     float startPosx;
@@ -20,6 +20,11 @@ public class Draggable : MonoBehaviour
     {
         LoadedPos = this.transform.position;
     }
+    public void SetSpriteRenderer(SpriteRenderer renderer)
+    {
+        spriteRenderer = renderer;
+    }
+
     private void Update()
     {
         if (isBeingHeld)

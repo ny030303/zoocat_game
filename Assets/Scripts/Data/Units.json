@@ -1,0 +1,30 @@
+[
+    {
+      "Id": "CHA_1001",
+      "UnitName": "고양이A",
+      "Grade": 1,
+      "Tag": "UNIT",
+      "Atk": 10,
+      "Hit": 100,
+      "Cri": 10,
+      "AttackSpeed": 2,
+      "AttackRange": 9999,
+      "SplashRange": 0,
+      "Hp": 1,
+      "Def": 0,
+      "MoveSpeed": 0,
+      "RewardGold": 0,
+
+      "SkillId": 1001,
+      "SkillValue": 1,
+      "SkillDuration": 0,
+      "SkillCooltime": 0,
+
+      "attackSprite": "Assets/Sprites/Chactor2/렉돌 공격.png",
+      "idleSprite": "Assets/Sprites/Chactor2/렉돌 대기.png",
+      "Level": 0,
+      "UpgradeCost": 100,
+      "MaxUpgradeLevel": 5
+    }
+    
+]
