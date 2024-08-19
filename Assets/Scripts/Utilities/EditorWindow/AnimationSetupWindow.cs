@@ -178,7 +178,7 @@ public partial class AnimationSetupWindow : EditorWindow
         }
 
         AnimationClip animationClip = new AnimationClip();
-        animationClip.frameRate = 12; // 프레임 레이트 설정
+        animationClip.frameRate = 3; // 프레임 레이트 설정
 
         EditorCurveBinding spriteBinding = new EditorCurveBinding
         {
