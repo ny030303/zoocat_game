@@ -26,16 +26,16 @@ MonoBehaviour:
   def: 2
   moveSpeed: 50
   rewardGold: 10
-  skillId: 
+  skillId: 0
   skillValue: 0
   skillDuration: 0
   skillCooltime: 0
   unitSprite: {fileID: 0}
-  unitPrefab: {fileID: 8857024659114893825, guid: 6412932cc9eeca84181b619742398cc4, type: 3}
+  unitPrefab: {fileID: 6670990414929071043, guid: 6412932cc9eeca84181b619742398cc4, type: 3}
   idleSprite: 
   attackSprite: 
-  walkSprite: 
-  dieSprite: 
+  walkSprite: Assets/Sprites/Chactor/walk2001.png
+  dieSprite: Assets/Sprites/Chactor/die2001.png
   animatorController: {fileID: 0}
   level: 1
   upgradeCost: 100

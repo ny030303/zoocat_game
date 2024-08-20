@@ -31,9 +31,9 @@ MonoBehaviour:
   skillDuration: 5
   skillCooltime: 0
   unitSprite: {fileID: 0}
-  unitPrefab: {fileID: 5788493017391169552, guid: d1aa02c7ae15cf9428edf8485e63779d, type: 3}
-  idleSprite: Assets/Sprites/Chactor/idleB.png
-  attackSprite: Assets/Sprites/Chactor/attackB.png
+  unitPrefab: {fileID: 7299577776503959954, guid: d1aa02c7ae15cf9428edf8485e63779d, type: 3}
+  idleSprite: Assets/Sprites/Chactor/idle1002.png
+  attackSprite: Assets/Sprites/Chactor/attack1002.png
   walkSprite: 
   dieSprite: 
   animatorController: {fileID: 0}

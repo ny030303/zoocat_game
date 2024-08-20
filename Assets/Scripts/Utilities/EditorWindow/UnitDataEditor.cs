@@ -121,13 +121,20 @@ public partial class PrefabCreatorWindow : EditorWindow
         // unitData를 사용하여 프리팹의 스프라이트, 애니메이터 등을 설정합니다.
         // 예시:
         this.prefabName = unitData.id;
-        this.unitDatabase = (ScriptableObject) AssetDatabase.LoadAssetAtPath("Assets/Scripts/Data/UnitDatabase.asset", typeof(ScriptableObject));
-        this.bulletPrefab = (GameObject) AssetDatabase.LoadAssetAtPath("Assets/Prefabs/UI_shot.prefab", typeof(GameObject));
         this.animatorController = aniController;
         this.sprite = preSprite;
+        if (unitData.tag == "UNIT")
+        {
+            this.unitDatabase = (ScriptableObject)AssetDatabase.LoadAssetAtPath("Assets/Scripts/Data/UnitDatabase.asset", typeof(ScriptableObject));
+            this.bulletPrefab = (GameObject)AssetDatabase.LoadAssetAtPath("Assets/Prefabs/UI_shot.prefab", typeof(GameObject));
+            CreateUnitPrefab();
+        }
+        else if (unitData.tag == "ENEMY") {
+            CreateEnemyPrefab(unitData); 
+        }
+            
         // 필요한 추가 설정
-        CreatePrefab();
-        unitData.unitPrefab = (GameObject)AssetDatabase.LoadAssetAtPath("Assets/Prefabs/"+ unitData.id + ".prefab", typeof(GameObject));
+        unitData.unitPrefab = (GameObject) AssetDatabase.LoadAssetAtPath("Assets/Prefabs/"+ unitData.id + ".prefab", typeof(GameObject));
         CreateMyAsset(unitData);
     }
 
@@ -136,7 +143,10 @@ public partial class PrefabCreatorWindow : EditorWindow
         // ScriptableObject 인스턴스 생성
 
         // 원하는 경로 설정
-        string path = "Assets/Scripts/Data/Unit_UnitData"; // 원하는 경로로 변경 가능
+        string path = "";
+        if (asset.tag == "UNIT") path = "Assets/Scripts/Data/Unit_UnitData";
+        else if (asset.tag == "ENEMY") path = "Assets/Scripts/Data/Enemy_UnitData"; 
+
         if (!Directory.Exists(path))
         {
             Directory.CreateDirectory(path);
@@ -158,6 +168,5 @@ public partial class PrefabCreatorWindow : EditorWindow
         // AssetDatabase 업데이트
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-
     }
 }

@@ -135,10 +135,35 @@ public partial class AnimationSetupWindow : EditorWindow
 
                 // Any State -> Die Transition
                 AnimatorStateTransition anyToDieTransition = animatorController.layers[0].stateMachine.AddAnyStateTransition(dieState);
-                anyToDieTransition.AddCondition(AnimatorConditionMode.If, 0, "IsDead");
+                anyToDieTransition.AddCondition(AnimatorConditionMode.If, 1, "IsDead");
+                anyToDieTransition.hasExitTime = false; // 즉시 전환되도록 설정
+                anyToDieTransition.interruptionSource = TransitionInterruptionSource.None; // 중단되지 않도록 설정
+                anyToDieTransition.canTransitionToSelf = false; // 자기 자신으로의 전환을 방지
 
                 // Die -> Exit Transition
                 AnimatorStateTransition dieToExitTransition = dieState.AddExitTransition();
+                dieToExitTransition.AddCondition(AnimatorConditionMode.IfNot, 0, "IsDead"); // IsDead가 false일 때 전환
+                dieToExitTransition.hasExitTime = true;
+                dieToExitTransition.exitTime = 1.0f; // 전체 애니메이션이 재생된 후 전환되도록 설정
+
+                AnimationClip dieClip = dieState.motion as AnimationClip;
+
+                if (dieClip != null)
+                {
+                    // AnimationEvent를 생성합니다.
+                    AnimationEvent animationEvent = new AnimationEvent
+                    {
+                        functionName = "ResetIsDead",
+                        time = dieClip.length // 애니메이션의 끝 부분에서 실행되도록 설정
+                    };
+
+                    // 애니메이션 클립에 이벤트를 추가합니다.
+                    dieClip.AddEvent(animationEvent);
+                }
+                else
+                {
+                    Debug.LogWarning("Die Animation Clip이 null입니다. Motion이 올바른 AnimationClip인지 확인하세요.");
+                }
             }
             else
             {
@@ -198,6 +223,17 @@ public partial class AnimationSetupWindow : EditorWindow
         }
 
         AnimationUtility.SetObjectReferenceCurve(animationClip, spriteBinding, keyframes);
+
+        // Die 애니메이션의 경우 루프를 해제
+        if (animationName.ToLower().Contains("die"))
+        {
+            animationClip.wrapMode = WrapMode.Once; // 한 번만 재생
+
+            // 루프 설정 해제
+            var settings = AnimationUtility.GetAnimationClipSettings(animationClip);
+            settings.loopTime = false;
+            AnimationUtility.SetAnimationClipSettings(animationClip, settings);
+        }
 
         string animationPath = $"{outputFolderPath}/{animationName}.anim";
         AssetDatabase.CreateAsset(animationClip, animationPath);

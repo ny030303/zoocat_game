@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CHA_2002
   m_EditorClassIdentifier: 
   id: CHA_2002
-  unitName: "\uC0DD\uC950A"
+  unitName: "\uC0DD\uC950B"
   grade: 1
   tag: ENEMY
   atk: 0
@@ -26,16 +26,16 @@ MonoBehaviour:
   def: 2
   moveSpeed: 50
   rewardGold: 10
-  skillId: 
+  skillId: 0
   skillValue: 0
   skillDuration: 0
   skillCooltime: 0
   unitSprite: {fileID: 0}
-  unitPrefab: {fileID: 8857024659114893825, guid: 0d8e6c88c66bf574e852b55cf3dec72e, type: 3}
+  unitPrefab: {fileID: 130511113003637606, guid: 0d8e6c88c66bf574e852b55cf3dec72e, type: 3}
   idleSprite: 
   attackSprite: 
-  walkSprite: 
-  dieSprite: 
+  walkSprite: Assets/Sprites/Chactor/walk2002.png
+  dieSprite: Assets/Sprites/Chactor/die2002.png
   animatorController: {fileID: 0}
   level: 1
   upgradeCost: 100

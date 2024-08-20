@@ -5,6 +5,7 @@ using System.Collections;
 public class Enemy : MonoBehaviour
 {
     public UnitData unitData;
+    public bool isDie;
     public int currentHp;
     public GameObject damageTextPrefab; // DamageText 프리팹 레퍼런스
 
@@ -89,7 +90,7 @@ public class Enemy : MonoBehaviour
 
         ShowDamageText(actualDamage); // 데미지를 받은 후 데미지 텍스트 표시
 
-        if (currentHp <= 0)
+        if (currentHp <= 0 && !isDie) 
         {
             Die();
         }
@@ -117,12 +118,17 @@ public class Enemy : MonoBehaviour
     void Die()
     {
         // Update isDead parameter for the Animator
+        isDie = true;
         animator.SetBool("IsDead", true);
         StartCoroutine(FadeOut()); // 사망할 때 FadeOut
         //Debug.Log(unitData.unitName + " has died.");
         Destroy(gameObject, 3f); // Destroy after 1 second to allow death animation to play
     }
-
+    // 트리거나 Bool 값을 리셋하는 함수
+    void ResetIsDead()
+    {
+        animator.SetBool("IsDead", false);
+    }
     void OnDestroy()
     {
         if (currentHp <= 0) gameManager.AddGold(unitData.rewardGold); // Reward gold
