@@ -5,6 +5,9 @@ using UnityEngine;
 public class WaypointManager : MonoBehaviour
 {
     public List<Transform> waypoints;
+
+
+    public List<Transform> AIWaypoints;
     void Start()
     {
         

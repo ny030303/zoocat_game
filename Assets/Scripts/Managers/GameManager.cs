@@ -5,15 +5,17 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    private int lifePoints = 3;
-    private int currency = 100;
-    public TextMeshPro currencyTextObj;
-    private LifeManager lifeManager;
-    public UnitDatabase unitDatabase;
+    private int playerLifePoints = 3;
+    public LifeManager playerLifeManager;
+
+    private int aiLifePoints = 3;
+    public LifeManager aiLifeManager;
 
     private int summonCost = 10;
     private int maxSummonCost = 50;
-    private int waveNumber = 1;
+    private int currency = 100;
+    public TextMeshPro currencyTextObj;
+    public UnitDatabase unitDatabase;
 
     // currency 바뀌었을때 핸들러
     public delegate void SummonStateHandler();
@@ -21,7 +23,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        lifeManager = FindObjectOfType<LifeManager>();
+        //playerLifeManager = FindObjectOfType<LifeManager>();
         unitDatabase.Initialize();
     }
     public bool CheckButtonState()  { return currency >= summonCost ? true : false; }
@@ -67,23 +69,43 @@ public class GameManager : MonoBehaviour
         if (OnCurrencyChanged != null) OnCurrencyChanged();
     }
 
-    public void TakeDamage()
+    public void TakeDamage(string owner)
     {
-        if (lifePoints > 0)
+        if(owner == "player")
         {
-            lifePoints--;
-            UpdateLifeUI();
-        }
+            if (playerLifePoints > 0)
+            {
+                playerLifePoints--;
+                UpdateLifeUI(playerLifeManager, playerLifePoints);
+            }
 
-        if (lifePoints <= 0) GameOver();
+            if (playerLifePoints <= 0) GameOver();
+        } else if(owner == "ai")
+        {
+            if (aiLifePoints > 0)
+            {
+                aiLifePoints--;
+                UpdateLifeUI(aiLifeManager, aiLifePoints);
+            }
+
+            if (aiLifePoints <= 0) Win();
+        }
+        
     }
-    void UpdateLifeUI()
+    void UpdateLifeUI(LifeManager lifeManager, int lifePoints)
     {
         if (lifeManager != null) lifeManager.UpdateLifeUI(lifePoints);
     }
     void GameOver()
     {
-        if (lifeManager != null) lifeManager.GameOver();
+        Time.timeScale = 0;
+        if (playerLifeManager != null) playerLifeManager.GameOver();
         // 추가적인 게임 오버 처리 (예: 게임 중지, 점수 저장 등)
+    }
+    void Win()
+    {
+        Time.timeScale = 0;
+        if (aiLifeManager != null) aiLifeManager.GameOver();
+        // 추가적인 게임 승리 처리 (예: 게임 중지, 점수 저장 등)
     }
 }

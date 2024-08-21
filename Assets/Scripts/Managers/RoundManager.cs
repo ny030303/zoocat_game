@@ -8,7 +8,8 @@ public class RoundManager : MonoBehaviour
     public WaypointManager waypointManager;
     private List<Transform> waypoints;
     private int currentWaveIndex = 0;
-    public Transform enemyParent;
+    public Transform enemyParentToPlayer;
+    public Transform enemyParentToAI;
     public float waveTimeLimit = 60f; // 웨이브별 시간 제한 (초 단위)
 
     void Start()
@@ -67,19 +68,24 @@ public class RoundManager : MonoBehaviour
                     }
 
                     // 부모 오브젝트와 함께 Instantiate
-                    GameObject enemyObj = Instantiate(currentWave.enemies[i].unitPrefab, waypoints[0].position, Quaternion.identity, enemyParent);
+                    GameObject enemyObj = Instantiate(currentWave.enemies[i].unitPrefab, waypoints[0].position, Quaternion.identity, enemyParentToPlayer);
                     Enemy enemy = enemyObj.GetComponent<Enemy>();
 
-                    if (enemy == null)
+                    GameObject AIEnemyObj = Instantiate(currentWave.enemies[i].unitPrefab, waypointManager.AIWaypoints[0].position, Quaternion.identity, enemyParentToAI);
+                    AIEnemyObj.GetComponent<SpriteRenderer>().flipX = !AIEnemyObj.GetComponent<SpriteRenderer>().flipX;
+                    Enemy AIenemy = AIEnemyObj.GetComponent<Enemy>();
+                    if (enemy == null || AIenemy == null)
                     {
                         Debug.LogError("생성된 오브젝트에 Enemy 컴포넌트가 없습니다!");
                         Destroy(enemyObj); // 추가 문제 방지를 위해 오브젝트 파괴
+                        Destroy(AIEnemyObj); // 추가 문제 방지를 위해 오브젝트 파괴
                         yield break;
                     }
 
                     // 웨이브 번호에 따른 몬스터 스펙 증가
                     float statMultiplier = 1f + (currentWaveIndex * 0.1f);
-                    enemy.Initialize(waypoints, currentWave.enemies[i], statMultiplier);
+                    enemy.Initialize("player", waypoints, currentWave.enemies[i], statMultiplier);
+                    AIenemy.Initialize("ai", waypointManager.AIWaypoints, currentWave.enemies[i], statMultiplier);
                     yield return new WaitForSeconds(1.5f); // 에너미 사이의 스폰 간격
 
                     waveProgressTime += 3f; // 웨이브 경과 시간 업데이트

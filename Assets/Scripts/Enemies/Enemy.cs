@@ -17,7 +17,8 @@ public class Enemy : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private GameManager gameManager; 
     private float startTime;
-    public void Initialize(List<Transform> waypoints, UnitData data, float statMultiplier)
+    private string owner;
+    public void Initialize(string owner, List<Transform> waypoints, UnitData data, float statMultiplier)
     {
 
         gameManager = FindAnyObjectByType<GameManager>();
@@ -28,6 +29,7 @@ public class Enemy : MonoBehaviour
 
         currentHp = unitData.hp;
         this.waypoints = waypoints;
+        this.owner = owner;
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -84,7 +86,7 @@ public class Enemy : MonoBehaviour
                 //float endTime = Time.time;
                 //float totalTime = endTime - startTime;
                 //Debug.Log($"유닛이 도착했습니다. 총 경과 시간: {totalTime}초");
-                gameManager.TakeDamage(); // 플레이어의 체력을 감소시킵니다.
+                gameManager.TakeDamage(owner); // 플레이어의 체력을 감소시킵니다.
                 Destroy(gameObject);
             }
         }
