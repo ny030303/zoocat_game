@@ -12,25 +12,32 @@ public class Enemy : MonoBehaviour
     private List<Transform> waypoints;
     private int currentWaypointIndex = 0;
     private Animator animator;
-    private float totalDistance; // 전체 경로의 총 길이
+    private float totalDistance;
     private float requiredSpeed; // 조정된 이동 속도
     private SpriteRenderer spriteRenderer;
-    private GameManager gameManager;
-    public void Initialize(List<Transform> waypoints, UnitData data)
+    private GameManager gameManager; 
+    private float startTime;
+    public void Initialize(List<Transform> waypoints, UnitData data, float statMultiplier)
     {
 
         gameManager = FindAnyObjectByType<GameManager>();
-        unitData = data;
-        currentHp = unitData.hp; // 유닛의 체력을 초기화
+        unitData = data.DeepCopy();
+        unitData.hp = (int)(unitData.hp * statMultiplier);
+        unitData.def = (int)(unitData.def * statMultiplier);
+        unitData.moveSpeed = unitData.moveSpeed * statMultiplier;
+
+        currentHp = unitData.hp;
         this.waypoints = waypoints;
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
 
-        //시작지점부터 엔드지점까지 1000이라고 과정하고 MoveSPD 수치만큼 1초마다 상승한다고 과정하고 구현
-        CalculateTotalDistance(); //모든 웨이포인트 간의 총 거리를 계산
-        requiredSpeed = totalDistance / unitData.moveSpeed; // 20초 동안 이동하기 위한 속도
+        // 모든 웨이포인트 간의 총 거리를 계산
+        CalculateTotalDistance();
 
-        StartCoroutine(FadeIn()); // 유닛이 생성될 때 FadeIn
+        // requiredSpeed를 유닛이 목표 시간에 도착하도록 계산
+        requiredSpeed = totalDistance / (1000f / unitData.moveSpeed); // 1000을 이동하려면 moveSpeed에 따른 시간에 도달하도록 설정
+        startTime = Time.time;  // 유닛이 이동을 시작한 시간 기록
+        StartCoroutine(FadeIn());
     }
 
     void Update()
@@ -54,15 +61,18 @@ public class Enemy : MonoBehaviour
     {
         if (waypoints == null || waypoints.Count == 0 || currentWaypointIndex >= waypoints.Count)
         {
-            Destroy(gameObject); // Destroy if no waypoints or reached the end
+            //float endTime = Time.time;
+            //float totalTime = endTime - startTime;
+            //Debug.Log($"유닛이 도착했습니다. 총 경과 시간: {totalTime}초");
+            Destroy(gameObject); // 웨이포인트가 없거나 마지막 웨이포인트에 도달한 경우 객체 파괴
             return;
         }
 
         Transform target = waypoints[currentWaypointIndex];
         Vector3 direction = target.position - transform.position;
-        float step = requiredSpeed * Time.deltaTime;
+        float step = requiredSpeed * Time.deltaTime; // 여기에 계산된 requiredSpeed를 사용합니다.
 
-        // Update speed parameter for the Animator
+        // Animator의 속도 파라미터 업데이트
         animator.SetFloat("Speed", requiredSpeed);
 
         if (direction.magnitude <= step)
@@ -71,9 +81,11 @@ public class Enemy : MonoBehaviour
             currentWaypointIndex++;
             if (currentWaypointIndex >= waypoints.Count)
             {
-                gameManager.TakeDamage(); // Reduce player health
+                //float endTime = Time.time;
+                //float totalTime = endTime - startTime;
+                //Debug.Log($"유닛이 도착했습니다. 총 경과 시간: {totalTime}초");
+                gameManager.TakeDamage(); // 플레이어의 체력을 감소시킵니다.
                 Destroy(gameObject);
-                //Die();
             }
         }
         else

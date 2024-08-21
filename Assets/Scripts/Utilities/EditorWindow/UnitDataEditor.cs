@@ -144,8 +144,8 @@ public partial class PrefabCreatorWindow : EditorWindow
 
         // 원하는 경로 설정
         string path = "";
-        if (asset.tag == "UNIT") path = "Assets/Scripts/Data/Unit_UnitData";
-        else if (asset.tag == "ENEMY") path = "Assets/Scripts/Data/Enemy_UnitData"; 
+        if (asset.tag == "UNIT") path = "Assets/Scripts/Data/UnitData/Unit_UnitData";
+        else if (asset.tag == "ENEMY") path = "Assets/Scripts/Data/UnitData/Enemy_UnitData"; 
 
         if (!Directory.Exists(path))
         {

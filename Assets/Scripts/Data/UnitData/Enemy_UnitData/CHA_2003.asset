@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5737c762d7af02469078d1794312abd, type: 3}
-  m_Name: CHA_2001
+  m_Name: CHA_2003
   m_EditorClassIdentifier: 
-  id: CHA_2001
-  unitName: "\uC0DD\uC950A"
+  id: CHA_2003
+  unitName: "\uC0DD\uC950C"
   grade: 1
   tag: ENEMY
   atk: 0
@@ -22,20 +22,20 @@ MonoBehaviour:
   attackSpeed: 0
   attackRange: 0
   splashRange: 0
-  hp: 100
-  def: 2
-  moveSpeed: 50
-  rewardGold: 10
+  hp: 200
+  def: 4
+  moveSpeed: 80
+  rewardGold: 50
   skillId: 0
   skillValue: 0
   skillDuration: 0
   skillCooltime: 0
   unitSprite: {fileID: 0}
-  unitPrefab: {fileID: 7934616629234854902, guid: 6412932cc9eeca84181b619742398cc4, type: 3}
+  unitPrefab: {fileID: 2586483653938445812, guid: 3d34ad8b98510a344beb5e80a5edafcc, type: 3}
   idleSprite: 
   attackSprite: 
-  walkSprite: Assets/Sprites/Chactor/walk2001.png
-  dieSprite: Assets/Sprites/Chactor/die2001.png
+  walkSprite: Assets/Sprites/Chactor/walk2003.png
+  dieSprite: Assets/Sprites/Chactor/die2003.png
   animatorController: {fileID: 0}
   level: 1
   upgradeCost: 100

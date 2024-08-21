@@ -5,11 +5,11 @@ using UnityEngine;
 public class RoundManager : MonoBehaviour
 {
     public WaveScriptableObject[] waves;
-    //public Transform spawnPoint;
-    public WaypointManager waypointManager; // WaypointManager 참조
-    List<Transform> waypoints;
+    public WaypointManager waypointManager;
+    private List<Transform> waypoints;
     private int currentWaveIndex = 0;
     public Transform enemyParent;
+    public float waveTimeLimit = 60f; // 웨이브별 시간 제한 (초 단위)
 
     void Start()
     {
@@ -23,43 +23,73 @@ public class RoundManager : MonoBehaviour
 
         if (waypoints == null || waypoints.Count == 0)
         {
-            Debug.LogError("Waypoints list is empty! Cannot spawn monsters.");
+            Debug.LogError("Waypoints 리스트가 비어 있습니다! 몬스터를 생성할 수 없습니다.");
             return;
         }
 
-        StartCoroutine(SpawnWave());
+        StartCoroutine(ManageWaves());
+    }
+
+    IEnumerator ManageWaves()
+    {
+        while (true) // 무한 루프, 마지막 웨이브가 반복되도록 설정
+        {
+            yield return StartCoroutine(SpawnWave());
+
+            currentWaveIndex++;
+            if (currentWaveIndex >= waves.Length)
+            {
+                currentWaveIndex = waves.Length - 1; // 마지막 웨이브를 반복하도록 인덱스 고정
+                Debug.Log("마지막 웨이브를 반복합니다! 몬스터의 스펙이 계속 증가합니다.");
+            }
+
+            yield return new WaitForSeconds(5f); // 웨이브 간 대기 시간
+        }
     }
 
     IEnumerator SpawnWave()
     {
         WaveScriptableObject currentWave = waves[currentWaveIndex];
+        float waveProgressTime = 0f; // 현재 웨이브에서 경과된 시간 추적
+        bool timeLimitReached = false; // 시간 제한 도달 여부
 
-        for (int i = 0; i < currentWave.enemies.Length; i++)
+        while (!timeLimitReached)
         {
-            for (int j = 0; j < currentWave.enemyCounts[i]; j++)
+            for (int i = 0; i < currentWave.enemies.Length; i++)
             {
-                // Instantiate with parent
-                GameObject enemyObj = Instantiate(currentWave.enemies[i].unitPrefab, waypoints[0].position, Quaternion.identity, enemyParent);
-                Enemy enemy = enemyObj.GetComponent<Enemy>();
-
-                if (enemy == null)
+                for (int j = 0; j < currentWave.enemyCounts[i]; j++)
                 {
-                    Debug.LogError("The instantiated object does not have a Monster component!");
-                    Destroy(enemyObj); // Optionally destroy the object to prevent further issues
-                    yield break;
+                    if (waveProgressTime >= waveTimeLimit)
+                    {
+                        Debug.Log("웨이브 시간 제한에 도달했습니다! 다음 웨이브로 진행합니다.");
+                        timeLimitReached = true;
+                        break;
+                    }
+
+                    // 부모 오브젝트와 함께 Instantiate
+                    GameObject enemyObj = Instantiate(currentWave.enemies[i].unitPrefab, waypoints[0].position, Quaternion.identity, enemyParent);
+                    Enemy enemy = enemyObj.GetComponent<Enemy>();
+
+                    if (enemy == null)
+                    {
+                        Debug.LogError("생성된 오브젝트에 Enemy 컴포넌트가 없습니다!");
+                        Destroy(enemyObj); // 추가 문제 방지를 위해 오브젝트 파괴
+                        yield break;
+                    }
+
+                    // 웨이브 번호에 따른 몬스터 스펙 증가
+                    float statMultiplier = 1f + (currentWaveIndex * 0.1f);
+                    enemy.Initialize(waypoints, currentWave.enemies[i], statMultiplier);
+                    yield return new WaitForSeconds(1.5f); // 에너미 사이의 스폰 간격
+
+                    waveProgressTime += 3f; // 웨이브 경과 시간 업데이트
                 }
 
-                enemy.Initialize(waypoints, currentWave.enemies[i]);
-                yield return new WaitForSeconds(3f); // 에너미 사이의 스폰 간격
+                if (timeLimitReached)
+                {
+                    break;
+                }
             }
-        }
-
-        // 라운드가 끝나면 다음 라운드를 기다리거나 다음 라운드로 넘어가는 로직
-        yield return new WaitForSeconds(5f); // 라운드 간 대기 시간
-        currentWaveIndex++;
-        if (currentWaveIndex < waves.Length)
-        {
-            StartCoroutine(SpawnWave());
         }
     }
 }

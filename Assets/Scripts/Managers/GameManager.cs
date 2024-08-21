@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     private int lifePoints = 3;
-    private int currency = 9999;
+    private int currency = 100;
     public TextMeshPro currencyTextObj;
     private LifeManager lifeManager;
     public UnitDatabase unitDatabase;

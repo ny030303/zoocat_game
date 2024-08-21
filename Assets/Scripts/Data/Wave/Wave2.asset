@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roundNumber: 1
   enemies:
-  - {fileID: 11400000, guid: b59bd0e3c0e40f3419cd736bb192fa2e, type: 2}
   - {fileID: 11400000, guid: 61fb32362fd8ca340a0adace663e99ca, type: 2}
-  enemyCounts: 1e0000001e000000
+  - {fileID: 11400000, guid: 6aa07055c99541c4098c51dc58d34557, type: 2}
+  enemyCounts: 0a00000001000000

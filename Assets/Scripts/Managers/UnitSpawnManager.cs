@@ -13,6 +13,7 @@ public class UnitSpawnManager : MonoBehaviour
     public Vector2 spawnOffset = new Vector2((float)1.2, (float)1.2); // 스폰 간격
     public int rows = 3; // 행 수
     public int columns = 5; // 열 수
+    private GameEventManager eventManager;
     private List<Vector2> availablePositions;
     private int[] availableState;
     private int mergeIdx = -1;
@@ -21,6 +22,8 @@ public class UnitSpawnManager : MonoBehaviour
 
     void Start()
     {
+        eventManager = FindAnyObjectByType<GameEventManager>();
+
         availableState = new int[rows * columns];
         // 가능한 모든 위치를 계산하여 리스트에 저장
         availablePositions = new List<Vector2>();
@@ -117,6 +120,8 @@ public class UnitSpawnManager : MonoBehaviour
             }
             
             Debug.Log("availableState: " + string.Join(", ", availableState) );
+            // 랜덤소환 일때만 스폰이벤트 기록
+            if (defpos == null) eventManager.OnUnitSpawned(unitData.id, spawnPos);
         }
         return newAlly;
     }
