@@ -1,6 +1,7 @@
 using System.IO;
 using UnityEngine;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 public class LogManager : MonoBehaviour
 {
@@ -32,5 +33,41 @@ public class LogManager : MonoBehaviour
 
         string json = JsonConvert.SerializeObject(action, settings);
         File.AppendAllText(filePath, json + "\n");
+    }
+
+    public List<PlayerAction> LoadActionsFromFile(int index)
+    {
+        string filePath = Application.persistentDataPath + $"/log_{index}.json";
+        List<PlayerAction> events = new List<PlayerAction>();
+
+        try
+        {
+            using (StreamReader sr = new StreamReader(filePath))
+            using (JsonTextReader reader = new JsonTextReader(sr))
+            {
+                reader.SupportMultipleContent = true;
+
+                JsonSerializer serializer = new JsonSerializer();
+
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonToken.StartObject)
+                    {
+                        PlayerAction gameEvent = serializer.Deserialize<PlayerAction>(reader);
+                        events.Add(gameEvent);
+                    }
+                }
+            }
+        }
+        catch (JsonReaderException ex)
+        {
+            Debug.LogError($"Error reading JSON file: {ex.Message}");
+        }
+        catch (IOException ex)
+        {
+            Debug.LogError($"Error reading file: {ex.Message}");
+        }
+
+        return events;
     }
 }

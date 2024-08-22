@@ -52,14 +52,18 @@ public class Draggable : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (Input.GetMouseButtonDown(0))
+        Unit unitset = this.gameObject.GetComponent<Unit>();
+        if (Input.GetMouseButtonDown(0) && unitset.owner == "player")
         {
             //// 같은 유닛인지 검사하여 색 변경
-            GameObject[] objectsWithTag = GameObject.FindGameObjectsWithTag("Ally");
-            foreach (GameObject obj in objectsWithTag)
-            {
+            GameObject locationObj = this.gameObject.transform.parent.gameObject;
+            int childCount = locationObj.transform.childCount;
 
-                //Debug.Log(obj.name);
+            // 자식 오브젝트들을 GameObject 배열로 가져오기
+            GameObject[] childObjects = new GameObject[childCount];
+            for (int i = 0; i < childCount; i++) {  childObjects[i] = locationObj.transform.GetChild(i).gameObject; }
+            foreach (GameObject obj in childObjects)
+            {
                 if (!CheckIsSameUnit(obj))
                 {
                     SpriteRenderer objSp = obj.GetComponent<SpriteRenderer>();
@@ -83,17 +87,26 @@ public class Draggable : MonoBehaviour
 
     private void OnMouseUp()
     {
-        GameObject[] objectsWithTag = GameObject.FindGameObjectsWithTag("Ally");
-        foreach (GameObject obj in objectsWithTag)
+        Unit unitset = this.gameObject.GetComponent<Unit>();
+        if (unitset.owner == "player")
         {
-            SpriteRenderer objSp = obj.GetComponent<SpriteRenderer>();
-            objSp.color = new Color(1f, 1f, 1f, 1f); // 원복
+            GameObject locationObj = this.gameObject.transform.parent.gameObject;
+            int childCount = locationObj.transform.childCount;
+
+            // 자식 오브젝트들을 GameObject 배열로 가져오기
+            GameObject[] childObjects = new GameObject[childCount];
+            for (int i = 0; i < childCount; i++) { childObjects[i] = locationObj.transform.GetChild(i).gameObject; }
+            foreach (GameObject obj in childObjects)
+            {
+                SpriteRenderer objSp = obj.GetComponent<SpriteRenderer>();
+                objSp.color = new Color(1f, 1f, 1f, 1f); // 원복
+            }
+
+            spriteRenderer.color = new Color(1f, 1f, 1f, 1f);
+            isBeingHeld = false;
+
+            CheckTriggerOnDrop();
         }
-
-        spriteRenderer.color = new Color(1f, 1f, 1f, 1f);
-        isBeingHeld = false;
-
-        CheckTriggerOnDrop();
     }
 
     // 드래그 종료 시점에 트리거 이벤트를 수동으로 처리하는 메서드

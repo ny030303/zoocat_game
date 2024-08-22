@@ -14,8 +14,16 @@ public class UnitMerger : MonoBehaviour
     public void Start()
     {
         eventManager = FindAnyObjectByType<GameEventManager>();
-        unitSpawnManager = FindAnyObjectByType<UnitSpawnManager>();
+        //unitSpawnManager = FindAnyObjectByType<UnitSpawnManager>();
         unitset = this.gameObject.GetComponent<Unit>();
+        if (unitset.owner == "player") {
+            GameObject manager = GameObject.Find("UnitSpawnManager");
+            unitSpawnManager = manager.GetComponent<UnitSpawnManager>();
+        }
+        else if (unitset.owner == "ai")  {
+            GameObject manager = GameObject.Find("AIUnitSpawnManager");
+            unitSpawnManager = manager.GetComponent<UnitSpawnManager>();
+        }
 
         // 부모 오브젝트 좌표
         parentTransform = this.gameObject.transform.parent;
@@ -58,5 +66,36 @@ public class UnitMerger : MonoBehaviour
         Debug.Log(unitID1 + unitID2 + resultUnitID + localPos);
         // 이벤트 트리거
         eventManager.OnUnitMerged(unitID1, ve1, unitID2, localPos, resultUnitID, localPos);
+    }
+
+    public void MergeAIUnits(GameObject otherUnit)
+    {
+        string unitID1;
+        string unitID2;
+        string resultUnitID;
+
+        Unit otherUnitset = otherUnit.GetComponent<Unit>();
+
+        //로그용 저장
+        unitID1 = otherUnitset.unitData.id;
+        unitID2 = unitset.unitData.id;
+        Vector2 ve1 = cpyLocalPos(otherUnit);
+
+        // 끌어온 대상은 Unit 속성 Kill
+        otherUnitset.Kill();
+
+        Debug.Log("localPos" + localPos);
+        //// 기존 유닛 자리에 새 유닛 생성
+        GameObject unit = unitSpawnManager.SpawnNextAlly(localPos);
+        // 새 유닛 업그레이드
+        Unit newunitset = unit.GetComponent<Unit>();
+        resultUnitID = newunitset.unitData.id;
+        newunitset.UpgradeUnitMerged(unitset.unitData);
+        // 기존 유닛 지우기
+        unitSpawnManager.KillUnit(this.gameObject);
+
+        Debug.Log(unitID1 + unitID2 + resultUnitID + localPos);
+        //// 이벤트 트리거
+        //eventManager.OnUnitMerged(unitID1, ve1, unitID2, localPos, resultUnitID, localPos);
     }
 }

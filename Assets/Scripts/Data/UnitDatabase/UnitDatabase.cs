@@ -5,39 +5,86 @@ using UnityEngine;
 public class UnitDatabase : ScriptableObject
 {
     public List<UnitData> unitDeck;
+    public List<UnitData> aiUnitDeck;
 
     public static List<UnitData> unitList = new List<UnitData>();
+    public static List<UnitData> aiUnitList = new List<UnitData>();
 
     public void Initialize()
     {
+        foreach (var unit in unitDeck)  { unitList.Add(unit.DeepCopy()); }
+        foreach (var aiunit in aiUnitDeck) { aiUnitList.Add(aiunit.DeepCopy()); }
+    }
 
-        foreach (var unit in unitDeck)
+    public bool IsNull(string owner)  { 
+        switch(owner)
         {
-            unitList.Add(unit.DeepCopy());
-            //unit.Initialize();
+            case "player":
+                return unitList != null;
+            case "ai":
+                return aiUnitList != null;
+            default:
+                return unitList != null;
+        }
+    }
+    public int GetUnitListCount(string owner) {
+        switch (owner) {
+            case "player":
+                return unitList.Count;
+            case "ai":
+                return aiUnitList.Count;
+            default:
+                return unitList.Count;
+        }
+        
+    }
+
+    public UnitData GetUnitDataToIdx(string owner, int idx) {
+        switch (owner)
+        {
+            case "player":
+                return unitList[idx];
+            case "ai":
+                return aiUnitList[idx];
+            default:
+                return unitList[idx];
         }
     }
 
-    public bool IsNull()
+    public UnitData GetUnitData(string owner, string id)
     {
-        return unitList != null;
-    }
-    public int GetUnitListCount()
-    {
-        return unitList.Count;
+        List<UnitData> targetList = null;
+
+        switch (owner)
+        {
+            case "player":
+                targetList = unitList;
+                break;
+            case "ai":
+                targetList = aiUnitList;
+                break;
+            default:
+                targetList = unitList;
+                break;
+        }
+
+        if (targetList == null || targetList.Count == 0)
+        {
+            Debug.LogWarning("Target list is empty or null.");
+            return null;
+        }
+
+        UnitData foundUnit = targetList.Find(unit => unit.id == id);
+
+        if (foundUnit == null)
+        {
+            Debug.LogWarning($"No unit found with id: {id} in {owner}'s unit list.");
+        }
+
+        return foundUnit;
     }
 
-    public UnitData GetUnitDataToIdx(int idx)
-    {
-        return unitList[idx];
-    }
-
-    public UnitData GetUnitData(string unitName)
-    {
-        return unitList.Find(unit => unit.unitName == unitName);
-    }
-
-    public UnitData GetUnitDataRandom()
+    public UnitData GetUnitDataRandom(string owner)
     {
         if (unitList == null || unitList.Count == 0)
         {
@@ -45,22 +92,7 @@ public class UnitDatabase : ScriptableObject
             return null;
         }
 
-        int randomIndex = Random.Range(0, GetUnitListCount());
+        int randomIndex = Random.Range(0, GetUnitListCount(owner));
         return unitList[randomIndex];
-    }
-
-    public GameObject[] GetUnitPrefabs()
-    {
-        List<GameObject> prefabs = new List<GameObject>();
-
-        foreach (var unit in unitList)
-        {
-            if (unit.unitPrefab != null)
-            {
-                prefabs.Add(unit.unitPrefab);
-            }
-        }
-
-        return prefabs.ToArray();
     }
 }

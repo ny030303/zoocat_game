@@ -20,11 +20,13 @@ public class GameManager : MonoBehaviour
     // currency 바뀌었을때 핸들러
     public delegate void SummonStateHandler();
     public event SummonStateHandler OnCurrencyChanged;
-
-    void Start()
+    void Awake()
+    {
+        unitDatabase.Initialize();
+    }
+     void Start()
     {
         //playerLifeManager = FindObjectOfType<LifeManager>();
-        unitDatabase.Initialize();
     }
     public bool CheckButtonState()  { return currency >= summonCost ? true : false; }
     public bool CheckLevelUpgradeState(int upgradeCost) { return currency >= upgradeCost ? true : false; }

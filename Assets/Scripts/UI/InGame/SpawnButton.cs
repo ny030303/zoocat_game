@@ -16,7 +16,10 @@ public class SpawnButton : MonoBehaviour
     {
         // 버튼 컴포넌트를 가져와 클릭 이벤트에 메서드 연결
         spawnButton = GetComponent<Button>();
-        unitSpawnManager = FindAnyObjectByType<UnitSpawnManager>();
+        //unitSpawnManager = FindAnyObjectByType<UnitSpawnManager>();
+        GameObject manager = GameObject.Find("UnitSpawnManager");
+        unitSpawnManager = manager.GetComponent<UnitSpawnManager>();
+
         gameManager = FindAnyObjectByType<GameManager>();
 
         if (spawnButton != null)

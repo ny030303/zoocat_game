@@ -112,7 +112,7 @@ public class UnitMergeEvent
     public float timestamp;
 }
 
-// 유닛 옮기기 이벤트 예시
+// 유닛 스폰 이벤트 예시
 public class UnitSpawnEvent
 {
     public string unitID;

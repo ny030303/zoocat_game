@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
+    public string owner;
     public UnitData unitData;
     public int currentHp;
     public GameObject bulletPrefab;  // 불릿 프리팹 레퍼런스
@@ -21,8 +22,9 @@ public class Unit : MonoBehaviour
     {
         animator = GetComponent<Animator>();
     }
-    public void Initialize(UnitData data)
+    public void Initialize(UnitData data, string owner)
     {
+        this.owner = owner;
         unitData = data.DeepCopy();
         currentHp = unitData.hp; // 유닛의 체력을 초기화
         unitSkill = new Skill(data);  // UnitData에서 스킬 생성
@@ -120,7 +122,18 @@ public class Unit : MonoBehaviour
 
     private Enemy FindClosestEnemy()
     {
-        Enemy[] enemies = FindObjectsOfType<Enemy>(); // 씬 내의 모든 몬스터 찾기
+        Enemy[] enemies = null;
+        if (owner == "player")
+        {
+            GameObject manager = GameObject.Find("EnemiesSpawnLocation");
+            enemies = manager.GetComponentsInChildren<Enemy>();
+        }
+        else if (owner == "ai")
+        {
+            GameObject manager = GameObject.Find("AIEnemiesSpawnLocation");
+            enemies = manager.GetComponentsInChildren<Enemy>();
+        }
+        //Enemy[] enemies = FindObjectsOfType<Enemy>(); // 씬 내의 모든 몬스터 찾기
         Enemy closestEnemy = null;
         float closestDistance = Mathf.Infinity;
 
