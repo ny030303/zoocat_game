@@ -60,7 +60,7 @@ public class UnitSpawnManager : MonoBehaviour
         return sum; // 최종 합을 반환
     }
 
-    private int getAvailablePosition(Vector2 targetPosition)
+    public int getAvailablePosition(Vector2 targetPosition)
     {
         foreach (Vector2 pos in availablePositions)
         {
@@ -71,7 +71,7 @@ public class UnitSpawnManager : MonoBehaviour
         }
         return -1;
     }
-
+    public Transform GetParentTransform() { return parentTransform ? parentTransform : null; }
     public bool IsSpawnNext() { return GetSumOfAvailableState() < (rows * columns) ? true : false; }
     //생성 로직
     public GameObject SpawnNextAlly(Vector2? defpos = null, string unitID = null)
@@ -120,7 +120,7 @@ public class UnitSpawnManager : MonoBehaviour
             Unit unitset = newAlly.GetComponent<Unit>();
             if (unitset != null)
             {
-                unitset.Initialize(unitData, owner);
+                unitset.Initialize(unitData, owner, spawnPos);
                 // 유닛 삭제 시 위치를 다시 추가하도록 이벤트 등록
                 unitset.OnUnitDestroyed += () => OnUnitDestroyed(spawnPos);
             }

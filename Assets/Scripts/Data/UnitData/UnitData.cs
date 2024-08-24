@@ -85,7 +85,7 @@ public class UnitData : ScriptableObject
         }
         else
         {
-            Debug.LogWarning($"Unknown level: {level}");
+            //Debug.LogWarning($"Unknown level: {level}");
         }
     }
 

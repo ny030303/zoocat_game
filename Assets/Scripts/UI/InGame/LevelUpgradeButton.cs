@@ -8,6 +8,7 @@ public class LevelUpgradeButton : MonoBehaviour
 {
     private Button spawnButton;
     private GameManager gameManager;
+    private GameEventManager eventManager;
     public UnitDatabase unitDatabase;
     public int unitNumber;
     private UnitData unitData;
@@ -18,6 +19,7 @@ public class LevelUpgradeButton : MonoBehaviour
         // 버튼 컴포넌트를 가져와 클릭 이벤트에 메서드 연결
         spawnButton = GetComponent<Button>();
         gameManager = FindAnyObjectByType<GameManager>();
+        eventManager = FindObjectOfType<GameEventManager>();
 
         if (spawnButton != null)
         {
@@ -70,6 +72,7 @@ public class LevelUpgradeButton : MonoBehaviour
                 }
             }
             if(unitData.level == unitData.maxUpgradeLevel) spawnButton.interactable = false;
+            eventManager.OnUnitLevelUpgraded(unitData.id, unitNumber);
         }
         else
         {

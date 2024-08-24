@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RoundManager : MonoBehaviour
 {
@@ -11,6 +13,9 @@ public class RoundManager : MonoBehaviour
     public Transform enemyParentToPlayer;
     public Transform enemyParentToAI;
     public float waveTimeLimit = 60f; // 웨이브별 시간 제한 (초 단위)
+    public Slider waveProgressSlider; // Slider 참조 변수
+    public TextMeshPro waveText; // Slider 참조 변수
+    public GameObject nextWaveText; // next wave Text
 
     void Start()
     {
@@ -28,6 +33,15 @@ public class RoundManager : MonoBehaviour
             return;
         }
 
+        if (waveProgressSlider == null)
+        {
+            Debug.LogError("WaveProgressSlider가 할당되지 않았습니다!");
+            return;
+        }
+
+        waveProgressSlider.maxValue = waveTimeLimit; // Slider의 최대값 설정
+        waveProgressSlider.value = 0; // Slider 초기화
+
         StartCoroutine(ManageWaves());
     }
 
@@ -35,8 +49,9 @@ public class RoundManager : MonoBehaviour
     {
         while (true) // 무한 루프, 마지막 웨이브가 반복되도록 설정
         {
+            nextWaveText.SetActive(false);
             yield return StartCoroutine(SpawnWave());
-
+            nextWaveText.SetActive(true);
             currentWaveIndex++;
             if (currentWaveIndex >= waves.Length)
             {
@@ -51,19 +66,28 @@ public class RoundManager : MonoBehaviour
     IEnumerator SpawnWave()
     {
         WaveScriptableObject currentWave = waves[currentWaveIndex];
-        float waveProgressTime = 0f; // 현재 웨이브에서 경과된 시간 추적
+        float waveStartTime = Time.time; // 웨이브 시작 시간
         bool timeLimitReached = false; // 시간 제한 도달 여부
+
+        waveProgressSlider.value = 0; // Slider 초기화
 
         while (!timeLimitReached)
         {
+            float waveProgressTime = Time.time - waveStartTime; // 현재 웨이브 경과 시간 계산
+
+            if (waveProgressTime >= waveTimeLimit)
+            {
+                Debug.Log("웨이브 시간 제한에 도달했습니다! 다음 웨이브로 진행합니다.");
+                timeLimitReached = true;
+                break;
+            }
+
             for (int i = 0; i < currentWave.enemies.Length; i++)
             {
                 for (int j = 0; j < currentWave.enemyCounts[i]; j++)
                 {
-                    if (waveProgressTime >= waveTimeLimit)
+                    if (timeLimitReached)
                     {
-                        Debug.Log("웨이브 시간 제한에 도달했습니다! 다음 웨이브로 진행합니다.");
-                        timeLimitReached = true;
                         break;
                     }
 
@@ -88,12 +112,9 @@ public class RoundManager : MonoBehaviour
                     AIenemy.Initialize("ai", waypointManager.AIWaypoints, currentWave.enemies[i], statMultiplier);
                     yield return new WaitForSeconds(1.5f); // 에너미 사이의 스폰 간격
 
-                    waveProgressTime += 3f; // 웨이브 경과 시간 업데이트
-                }
-
-                if (timeLimitReached)
-                {
-                    break;
+                    waveProgressTime = Time.time - waveStartTime; // 웨이브 경과 시간 업데이트
+                    waveProgressSlider.value = waveProgressTime; // Slider 값 업데이트
+                    waveText.text = waveProgressTime.ToString();
                 }
             }
         }

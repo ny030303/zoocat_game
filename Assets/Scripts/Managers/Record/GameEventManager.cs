@@ -40,6 +40,17 @@ public class GameEventManager : MonoBehaviour
         };
         RecordSpawnEvent(spawnEvent);
     }
+    // 유닛 레벨 업그레이드 이벤트
+    public void OnUnitLevelUpgraded(string unitID, int unitNumber)
+    {
+        UnitLevelUpgradeEvent unitLevelUpgradeEvent = new UnitLevelUpgradeEvent
+        {
+            unitID = unitID,
+            unitNumber = unitNumber,
+            timestamp = Time.time
+        };
+        RecordLevelUpgradedEvent(unitLevelUpgradeEvent);
+    }
 
     // ==== 이벤트별 플레이 기록 영역 ====
     private void RecordMergeEvent(UnitMergeEvent mergeEvent)
@@ -61,8 +72,19 @@ public class GameEventManager : MonoBehaviour
         {
             timestamp = spawnEvent.timestamp,
             actionType = "UnitSpawn",
-            position = spawnEvent.position,
             actionData = spawnEvent
+        };
+
+        actionLog.Add(action);
+        logManager.RecordAction(action); // LogManager에 로그 기록
+    }
+    private void RecordLevelUpgradedEvent(UnitLevelUpgradeEvent unitLevelUpgradeEvent)
+    {
+        PlayerAction action = new PlayerAction
+        {
+            timestamp = unitLevelUpgradeEvent.timestamp,
+            actionType = "UnitLevelUpgrade",
+            actionData = unitLevelUpgradeEvent
         };
 
         actionLog.Add(action);
@@ -78,7 +100,7 @@ public class GameEventManager : MonoBehaviour
     {
         foreach (var action in actionLog)
         {
-            Debug.Log($"Action Type: {action.actionType}, Timestamp: {action.timestamp}, Position: {action.position}, Rotation: {action.rotation}");
+            Debug.Log($"Action Type: {action.actionType}, Timestamp: {action.timestamp}");
 
             // actionData에 추가 정보가 있을 경우, 출력
             if (action.actionData != null)
@@ -94,8 +116,6 @@ public class GameEventManager : MonoBehaviour
 public class PlayerAction
 {
     public float timestamp;
-    public Vector3 position;
-    public Quaternion rotation;
     public string actionType; // 예: "Move", "Attack" 등
     public object actionData; // 필요한 추가 정보
 }
@@ -117,5 +137,13 @@ public class UnitSpawnEvent
 {
     public string unitID;
     public Vector3 position;
+    public float timestamp;
+}
+
+// 유닛 스폰 이벤트 예시
+public class UnitLevelUpgradeEvent
+{
+    public string unitID;
+    public int unitNumber;
     public float timestamp;
 }

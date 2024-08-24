@@ -3,6 +3,7 @@ using UnityEngine;
 public class Unit : MonoBehaviour
 {
     public string owner;
+    public Vector2 spawnPos;
     public UnitData unitData;
     public int currentHp;
     public GameObject bulletPrefab;  // 불릿 프리팹 레퍼런스
@@ -22,9 +23,10 @@ public class Unit : MonoBehaviour
     {
         animator = GetComponent<Animator>();
     }
-    public void Initialize(UnitData data, string owner)
+    public void Initialize(UnitData data, string owner, Vector2 spawnPos)
     {
         this.owner = owner;
+        this.spawnPos = spawnPos;
         unitData = data.DeepCopy();
         currentHp = unitData.hp; // 유닛의 체력을 초기화
         unitSkill = new Skill(data);  // UnitData에서 스킬 생성
