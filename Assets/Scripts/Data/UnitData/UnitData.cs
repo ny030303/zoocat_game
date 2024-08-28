@@ -1,6 +1,5 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using UnityEditor.Animations;
 using UnityEngine;
 
 //각 유닛마다 레벨업 시 증가할 스탯과 그 증가량을 정의하는 구조체
@@ -46,9 +45,6 @@ public class UnitData : ScriptableObject
     public string attackSprite;
     public string walkSprite;
     public string dieSprite;
-
-    [Header("Animation Template")]
-    public AnimatorController animatorController;  // 애니메이션 컨트롤러 추가
 
     [Header("Upgrade Information")]
     public int level = 1;         // 유닛의 레벨 (기본값 1)
@@ -123,8 +119,6 @@ public class UnitData : ScriptableObject
         clone.level = this.level;
         clone.upgradeCost = this.upgradeCost;
         clone.maxUpgradeLevel = this.maxUpgradeLevel;
-
-        clone.animatorController = this.animatorController;  // 애니메이션 컨트롤러 추가
 
         // 딕셔너리 복사
         //foreach (var kvp in this.levelStatIncreases)
