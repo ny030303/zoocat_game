@@ -1,7 +1,8 @@
+using Newtonsoft.Json;
 using System;
+using System.Net.Sockets;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class LoginManager : MonoBehaviour
 {
@@ -15,8 +16,7 @@ public class LoginManager : MonoBehaviour
 
     void Start()
     {
-        if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.ExternalStorageWrite))
-        {
+        if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.ExternalStorageWrite)) {
             UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.ExternalStorageWrite);
         }
         // 클래스 수준의 Guestform 변수를 초기화합니다.
@@ -25,34 +25,62 @@ public class LoginManager : MonoBehaviour
         LobbyEntryPanel = GameObject.Find("Lobby Entry Panel");
 
         // 정상적으로 찾아졌는지 확인하는 것이 좋습니다.
-        if (GuestformPanel != null && LobbyEntryPanel != null)
-        {
-            GuestformPanel.SetActive(false);
-            LobbyEntryPanel.SetActive(false);
-        }
+        if (GuestformPanel != null && LobbyEntryPanel != null && LobbyEntryPanel != null) { GuestformPanel.SetActive(false); }
         else { Debug.LogError("Panel을 찾을 수 없습니다. 이름을 확인하세요."); }
-        if(GPGSBinder.Inst.IsLoggedIn())
+
+        GPGSBinder.Inst.Init((isLoggedIn) =>
         {
-            LobbyEntryPanel.SetActive(!LobbyEntryPanel.activeSelf);
-        }
+            if (isLoggedIn)
+            {
+                Debug.Log("User is logged in.");
+                // 게임의 로그인 후 로직 처리
+                LoginPanel.SetActive(false);
+                LobbyEntryPanel.SetActive(true);
+            }
+            else {
+                Debug.Log("User failed to log in.");
+                // 로그인 실패 시 처리할 로직
+                LoginPanel.SetActive(true);
+                LobbyEntryPanel.SetActive(false);
+            }
+        });
         GuestUUIDInit();
     }
     public void Logout()
     {
         GPGSBinder.Inst.Logout();
         FileManager.DeleteDataFile();
-        LobbyEntryPanel.SetActive(!LobbyEntryPanel.activeSelf);
-        LoginPanel.SetActive(!LoginPanel.activeSelf);
+        LoginPanel.SetActive(true);
+        LobbyEntryPanel.SetActive(false);
     }
     public void GooglePlayLogin()
     {
-        GPGSBinder.Inst.Login((success, localUser) =>
+        GPGSBinder.Inst.Login((success, localUser) => 
         {
+            if (success) {
+                UserCredentials obj = new UserCredentials { userName = localUser.userName, id = localUser.id, underage = localUser.underage };
+                Debug.Log("JsonUtility: " + JsonUtility.ToJson(obj));
+                SocketManager.socket.Emit("login", JsonUtility.ToJson(obj));
+                SocketManager.socket.On("loginSuccess", (response) =>
+                {
+                    // 서버로부터 받은 데이터를 처리 (예: JSON 파싱 등)
+                    var userData = response.ToString();
+                    Debug.Log("Received user data: " + userData);
+                });
+            }
             string log = $"{success}, {localUser.userName}, {localUser.id}, {localUser.state}, {localUser.underage}";
             Debug.Log(log);  // 디버깅을 위해 로그인 결과를 출력합니다.
-            LoginPanel.SetActive(!LoginPanel.activeSelf);
-            LobbyEntryPanel.SetActive(!LobbyEntryPanel.activeSelf);
+
+            LoginPanel.SetActive(false);
+            LobbyEntryPanel.SetActive(true);
         });
+    }
+    [System.Serializable]
+    public class UserCredentials
+    {
+        public string userName;
+        public string id;
+        public bool underage;
     }
 
     public void GuestLogin()
@@ -60,13 +88,11 @@ public class LoginManager : MonoBehaviour
         // 새 UUID 생성 및 저장
         string newUUID = Guid.NewGuid().ToString();
 
-        try
-        {
+        try {
             FileManager.SaveData(UUID_KEY, newUUID);
             Debug.Log("New Guest UUID created and saved: " + newUUID);
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             Debug.LogError("Failed to save UUID: " + e.Message);
             return; // 저장에 실패하면 메서드를 종료합니다.
         }
@@ -125,8 +151,8 @@ public class LoginManager : MonoBehaviour
             // UUID가 존재하면 로드된 UUID를 출력
             string existingUUID = gamedata.dataDictionary[UUID_KEY];
             Debug.Log("Existing Guest UUID: " + existingUUID);
-            LoginPanel.SetActive(!LoginPanel.activeSelf);
-            LobbyEntryPanel.SetActive(!LobbyEntryPanel.activeSelf);
+            LoginPanel.SetActive(false);
+            LobbyEntryPanel.SetActive(true);
         }
     }
 

@@ -7,13 +7,10 @@ using GooglePlayGames.BasicApi;
 using GooglePlayGames.BasicApi.SavedGame;
 using GooglePlayGames.BasicApi.Events;
 
-
 public class GPGSBinder
 {
     static GPGSBinder inst = new GPGSBinder();
     public static GPGSBinder Inst => inst;
-
-
 
     ISavedGameClient SavedGame =>
         PlayGamesPlatform.Instance.SavedGame;
@@ -21,20 +18,23 @@ public class GPGSBinder
     IEventsClient Events =>
         PlayGamesPlatform.Instance.Events;
 
-
-
-    void Init()
+    public void Init(Action<bool> onInitComplete = null)
     {
         var config = new PlayGamesClientConfiguration.Builder().EnableSavedGames().Build();
         PlayGamesPlatform.InitializeInstance(config);
         PlayGamesPlatform.DebugLogEnabled = true;
         PlayGamesPlatform.Activate();
-    }
 
+        // SignInInteractivity.CanPromptOnce를 사용하여 자동 로그인 시도
+        PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.CanPromptOnce, (success) =>
+        {
+            bool isLoggedIn = success == SignInStatus.Success;
+            onInitComplete?.Invoke(isLoggedIn);
+        });
+    }
 
     public void Login(Action<bool, UnityEngine.SocialPlatforms.ILocalUser> onLoginSuccess = null)
     {
-        Init();
         PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.CanPromptAlways, (success) =>
         {
             onLoginSuccess?.Invoke(success == SignInStatus.Success, Social.localUser);
@@ -46,6 +46,10 @@ public class GPGSBinder
         PlayGamesPlatform.Instance.SignOut();
     }
 
+    public bool IsUserLoggedIn()
+    {
+        return PlayGamesPlatform.Instance.localUser.authenticated;
+    }
 
     public void SaveCloud(string fileName, string saveData, Action<bool> onCloudSaved = null)
     {
@@ -100,7 +104,6 @@ public class GPGSBinder
             });
     }
 
-    public bool IsLoggedIn() { return PlayGamesPlatform.Instance.localUser.authenticated;  }
     public void ShowAchievementUI() =>
         Social.ShowAchievementsUI();
 
@@ -109,7 +112,6 @@ public class GPGSBinder
 
     public void IncrementAchievement(string gpgsId, int steps, Action<bool> onUnlocked = null) =>
         PlayGamesPlatform.Instance.IncrementAchievement(gpgsId, steps, success => onUnlocked?.Invoke(success));
-
 
     public void ShowAllLeaderboardUI() =>
         Social.ShowLeaderboardUI();
@@ -132,7 +134,6 @@ public class GPGSBinder
         });
     }
 
-
     public void IncrementEvent(string gpgsId, uint steps)
     {
         Events.IncrementEvent(gpgsId, steps);
@@ -153,5 +154,4 @@ public class GPGSBinder
             onEventsLoaded?.Invoke(status == ResponseStatus.Success, events);
         });
     }
-
 }
