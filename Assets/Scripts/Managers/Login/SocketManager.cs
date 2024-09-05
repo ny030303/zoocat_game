@@ -4,7 +4,6 @@ using SocketIOClient;
 using SocketIOClient.Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.UI;
-using Newtonsoft.Json;
 
 using Newtonsoft.Json.Linq;
 

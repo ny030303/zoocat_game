@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+using LitJson;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,7 +25,7 @@ public static class FileManager
 
         try
         {
-            string jsonData = JsonConvert.SerializeObject(data, Formatting.Indented);
+            string jsonData = JsonMapper.ToJson(data); 
             File.WriteAllText(filePath, jsonData);
             Debug.Log($"Data saved successfully to {filePath}. Key: {key}, Value: {value}");
         }
@@ -51,7 +51,7 @@ public static class FileManager
             try
             {
                 string jsonData = File.ReadAllText(filePath);
-                return JsonConvert.DeserializeObject<GameData>(jsonData);
+                return JsonMapper.ToObject<GameData>(jsonData);
             }
             catch (Exception ex)
             {

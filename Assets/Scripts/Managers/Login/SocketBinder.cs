@@ -1,13 +1,14 @@
-using Newtonsoft.Json;
+using LitJson;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 using WebSocketSharp;//웹 소켓 라이브러리를 사용한다
+using WebSocket = WebSocketSharp.WebSocket;
 
 public class SocketBinder : MonoBehaviour
 {
+   
+
     private static WebSocket ws;//소켓 선언
 
     public static WebSocket getWs() { return ws; }
@@ -30,11 +31,20 @@ public class SocketBinder : MonoBehaviour
         };
 
         // JSON 문자열로 변환
-        string jsonMessage = JsonConvert.SerializeObject(messageToSend);
+        //string jsonMessage = JsonConvert.SerializeObject(messageToSend, settings);
+        string jsonMessage = JsonMapper.ToJson(messageToSend);
 
-        // 서버에 메시지 전송
-        ws.Send(jsonMessage);
-        Console.WriteLine("서버로 메시지 전송: " + jsonMessage);
+        try
+        {
+            // 서버에 메시지 전송
+            ws.Send(jsonMessage);
+            Console.WriteLine("서버로 메시지 전송: " + jsonMessage);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Log and handle the error
+            Debug.LogError("WebSocket is not open: " + ex.Message);
+        }
 
     }
     void ws_OnMessage(object sender, MessageEventArgs e)
