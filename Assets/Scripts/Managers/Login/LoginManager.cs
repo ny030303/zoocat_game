@@ -1,3 +1,4 @@
+using LitJson;
 using System;
 using TMPro;
 using UnityEngine;
@@ -56,30 +57,43 @@ public class LoginManager : MonoBehaviour
         GPGSBinder.Inst.Login((success, localUser) => 
         {
             if (success) {
-                UserCredentials obj = new UserCredentials { userName = localUser.userName, id = localUser.id, underage = localUser.underage };
-                Debug.Log("JsonUtility: " + JsonUtility.ToJson(obj));
-                SocketManager.socket.Emit("login", JsonUtility.ToJson(obj));
-                SocketManager.socket.On("loginSuccess", (response) =>
+                var messageToSend = new
                 {
-                    // 서버로부터 받은 데이터를 처리 (예: JSON 파싱 등)
-                    var userData = response.ToString();
-                    Debug.Log("Received user data: " + userData);
-                });
+                    @event = "login",  // @ 기호를 사용하여 예약어 사용
+                    data = new
+                    {
+                        id = localUser.id,
+                        userName = localUser.userName,
+                        underage = localUser.underage,
+                    }
+                };
+                // JSON 문자열로 변환
+                string jsonMessage = JsonMapper.ToJson(messageToSend);
+                try
+                {
+                    // 서버에 메시지 전송
+                    SocketBinder.GetWs().Send(jsonMessage);
+                    Console.WriteLine("서버로 메시지 전송: " + jsonMessage);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Log and handle the error
+                    Debug.LogError("WebSocket is not open: " + ex.Message);
+                }
             }
-            string log = $"{success}, {localUser.userName}, {localUser.id}, {localUser.state}, {localUser.underage}";
-            Debug.Log(log);  // 디버깅을 위해 로그인 결과를 출력합니다.
 
             LoginPanel.SetActive(false);
             LobbyEntryPanel.SetActive(true);
         });
     }
-    [System.Serializable]
-    public class UserCredentials
-    {
-        public string userName;
-        public string id;
-        public bool underage;
-    }
+
+    //[System.Serializable]
+    //public class UserCredentials
+    //{
+    //    public string userName;
+    //    public string id;
+    //    public bool underage;
+    //}
 
     public void GuestLogin()
     {
