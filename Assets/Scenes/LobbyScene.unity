@@ -10866,8 +10866,8 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 189821912}
   - {fileID: 848325325}
+  - {fileID: 189821912}
   m_Father: {fileID: 1179051975}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
@@ -17162,6 +17162,7 @@ GameObject:
   - component: {fileID: 1179051975}
   - component: {fileID: 1179051977}
   - component: {fileID: 1179051976}
+  - component: {fileID: 1179051978}
   m_Layer: 5
   m_Name: Header
   m_TagString: Untagged
@@ -17230,6 +17231,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1179051974}
   m_CullTransparentMesh: 1
+--- !u!114 &1179051978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1179051974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d55f8230c388bd447b14dc3c888b75e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  userNameText: {fileID: 1462037310}
+  freeCurrencyText: {fileID: 1227569815}
+  paidCurrencyText: {fileID: 848325326}
 --- !u!1 &1187858998
 GameObject:
   m_ObjectHideFlags: 0
@@ -19626,8 +19642,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1643215933}
-  - {fileID: 866955223}
   - {fileID: 343609843}
+  - {fileID: 866955223}
   m_Father: {fileID: 330141782}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}

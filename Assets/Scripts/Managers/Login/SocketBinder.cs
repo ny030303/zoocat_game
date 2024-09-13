@@ -1,5 +1,6 @@
 using LitJson;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 using WebSocketSharp;//웹 소켓 라이브러리를 사용한다
@@ -11,6 +12,8 @@ public class SocketBinder : MonoBehaviour
     public static SocketBinder Instance;
 
     private WebSocket ws;//소켓 선언
+
+    public event Action<string> OnWebSocketMessageReceived;
 
     void Awake()
     {
@@ -67,35 +70,18 @@ public class SocketBinder : MonoBehaviour
 
         // Parse the received message as JSON
         JsonData jsonData = JsonMapper.ToObject(e.Data);
-        Debug.Log("jsonData event: " + jsonData["event"].ToString()); // Received message logged
-                                                                // Check if the message contains an "event" and that it's "loginSuccess"
-
-        Debug.Log("jsonData true?" + jsonData["event"].ToString().Equals("loginSuccess"));
-        if (jsonData["event"].ToString().Equals("loginSuccess"))
-        {
-            try
-            {
+        if (jsonData["event"].ToString().Equals("loginSuccess")) {
+            try {
              // Extract user profile data
-            Debug.Log("userProfile data: " + jsonData["data"]["userProfile"].ToJson());
-            JsonData userProfile = jsonData["data"]["userProfile"];
-            string username = userProfile["username"].ToString();
-            int level = int.Parse(userProfile["level"].ToString());
-            int experience = int.Parse(userProfile["experience"].ToString());
-            int gold = int.Parse(userProfile["gold"].ToString());
-            int gems = int.Parse(userProfile["gems"].ToString());
-
-            // Update UserManager singleton with the received data
-            UserManager.Instance.userName = username;
-            UserManager.Instance.userScore = level; // Or any other relevant field in your UserManager
-
-            // Additional data can be stored or logged as needed
-            Debug.Log("User data updated: " + username);
-            }
-            catch (Exception ex)
-            {
+                JsonData userProfile = jsonData["data"]["userProfile"];
+                UserManager.Instance.LoadUserFromJson(userProfile);
+            } catch (Exception ex) {
                 Debug.LogError("An error occurred: " + ex.Message);
             }
         }
+
+        // Broadcast the received message to all listeners
+        OnWebSocketMessageReceived?.Invoke(e.Data);
     }
 
     void ws_OnOpen(object sender, System.EventArgs e)
