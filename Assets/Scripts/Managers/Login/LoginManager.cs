@@ -2,6 +2,8 @@ using LitJson;
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class LoginManager : MonoBehaviour
 {
@@ -27,11 +29,11 @@ public class LoginManager : MonoBehaviour
         if (GuestformPanel != null && LobbyEntryPanel != null && LobbyEntryPanel != null) { GuestformPanel.SetActive(false); }
         else { Debug.LogError("Panel을 찾을 수 없습니다. 이름을 확인하세요."); }
 
-        GPGSBinder.Inst.Init((isLoggedIn) =>
-        {
+        GPGSBinder.Inst.Init((isLoggedIn, localUser) => {
             if (isLoggedIn)
             {
-                Debug.Log("User is logged in.");
+                Debug.Log("User is logged in." + localUser);
+                SendGoogleLoginEventMessageToServer(localUser);
                 // 게임의 로그인 후 로직 처리
                 LoginPanel.SetActive(false);
                 LobbyEntryPanel.SetActive(true);
@@ -52,48 +54,39 @@ public class LoginManager : MonoBehaviour
         LoginPanel.SetActive(true);
         LobbyEntryPanel.SetActive(false);
     }
-    public void GooglePlayLogin()
-    {
-        GPGSBinder.Inst.Login((success, localUser) => 
-        {
-            if (success) {
-                var messageToSend = new
-                {
-                    @event = "login",  // @ 기호를 사용하여 예약어 사용
-                    data = new
-                    {
-                        id = localUser.id,
-                        userName = localUser.userName,
-                        underage = localUser.underage,
-                    }
-                };
-                // JSON 문자열로 변환
-                string jsonMessage = JsonMapper.ToJson(messageToSend);
-                try
-                {
-                    // 서버에 메시지 전송
-                    SocketBinder.GetWs().Send(jsonMessage);
-                    Console.WriteLine("서버로 메시지 전송: " + jsonMessage);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    // Log and handle the error
-                    Debug.LogError("WebSocket is not open: " + ex.Message);
-                }
-            }
+    public void GooglePlayLogin() {
+        GPGSBinder.Inst.Login((success, localUser) => {
+            if (success) { SendGoogleLoginEventMessageToServer(localUser); }
 
             LoginPanel.SetActive(false);
             LobbyEntryPanel.SetActive(true);
         });
     }
 
-    //[System.Serializable]
-    //public class UserCredentials
-    //{
-    //    public string userName;
-    //    public string id;
-    //    public bool underage;
-    //}
+    public void SendGoogleLoginEventMessageToServer(ILocalUser localUser)
+    {
+        var messageToSend = new
+        {
+            @event = "login",  // @ 기호를 사용하여 예약어 사용
+            data = new
+            {
+                id = localUser.id,
+                userName = localUser.userName,
+                underage = localUser.underage,
+            }
+        };
+        // JSON 문자열로 변환
+        string jsonMessage = JsonMapper.ToJson(messageToSend);
+        try {
+            // 서버에 메시지 전송
+            SocketBinder.Instance.GetWs().Send(jsonMessage);
+            Console.WriteLine("서버로 메시지 전송: " + jsonMessage);
+        }
+        catch (InvalidOperationException ex) {
+            // Log and handle the error
+            Debug.LogError("WebSocket is not open: " + ex.Message);
+        }
+    }
 
     public void GuestLogin()
     {

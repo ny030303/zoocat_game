@@ -18,18 +18,30 @@ public class GPGSBinder
     IEventsClient Events =>
         PlayGamesPlatform.Instance.Events;
 
-    public void Init(Action<bool> onInitComplete = null)
+    public void Init(Action<bool, UnityEngine.SocialPlatforms.ILocalUser> onInitComplete = null)
     {
-        var config = new PlayGamesClientConfiguration.Builder().EnableSavedGames().Build();
+        var config = new PlayGamesClientConfiguration.Builder()
+            .EnableSavedGames()
+            .Build();
+
         PlayGamesPlatform.InitializeInstance(config);
         PlayGamesPlatform.DebugLogEnabled = true;
         PlayGamesPlatform.Activate();
 
-        // SignInInteractivity.CanPromptOnce를 사용하여 자동 로그인 시도
-        PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.CanPromptOnce, (success) =>
+        // Silent Login: SignInInteractivity.NoPrompt를 사용하여 자동으로 로그인 창을 띄우지 않음
+        PlayGamesPlatform.Instance.Authenticate(SignInInteractivity.NoPrompt, (success) =>
         {
             bool isLoggedIn = success == SignInStatus.Success;
-            onInitComplete?.Invoke(isLoggedIn);
+            if (isLoggedIn)
+            {
+                // 로그인 성공 후 유저 정보 확인
+                var localUser = Social.localUser;
+                //Debug.Log($"User ID: {localUser.id}");
+                //Debug.Log($"User Name: {localUser.userName}");
+                //Debug.Log($"Is Underage: {localUser.underage}");
+            }
+
+            onInitComplete?.Invoke(isLoggedIn, Social.localUser); // 로그인 성공 시 유저 정보 전달
         });
     }
 
