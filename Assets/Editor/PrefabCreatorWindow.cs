@@ -90,7 +90,7 @@ public partial class PrefabCreatorWindow : EditorWindow
         unitMerger.unitDatabase = (UnitDatabase) unitDatabase;
 
         // Create the prefab
-        string localPath = "Assets/Prefabs/" + prefabName + ".prefab";
+        string localPath = "Assets/Resources/Prefabs/" + prefabName + ".prefab";
         localPath = AssetDatabase.GenerateUniqueAssetPath(localPath);
 
         PrefabUtility.SaveAsPrefabAsset(newPrefab, localPath);
@@ -136,10 +136,10 @@ public partial class PrefabCreatorWindow : EditorWindow
         // Add custom scripts
         Enemy enemy = newPrefab.AddComponent<Enemy>();
         // Set the SpriteRenderer reference in Draggable script
-        enemy.damageTextPrefab = (GameObject)AssetDatabase.LoadAssetAtPath("Assets/Prefabs/DamageText.prefab", typeof(GameObject));
+        enemy.damageTextPrefab = (GameObject)AssetDatabase.LoadAssetAtPath("Assets/Resources/Prefabs/DamageText.prefab", typeof(GameObject));
         enemy.unitData = unitData;
         // Create the prefab
-        string localPath = "Assets/Prefabs/" + prefabName + ".prefab";
+        string localPath = "Assets/Resources/Prefabs/" + prefabName + ".prefab";
         localPath = AssetDatabase.GenerateUniqueAssetPath(localPath);
 
         PrefabUtility.SaveAsPrefabAsset(newPrefab, localPath);

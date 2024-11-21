@@ -118,15 +118,24 @@ public partial class PrefabCreatorWindow : EditorWindow
 {
     public void CreatePrefabFromUnitData(UnitData unitData, AnimatorController aniController, Sprite preSprite)
     {
-        // unitData를 사용하여 프리팹의 스프라이트, 애니메이터 등을 설정합니다.
-        // 예시:
+        // 프리팹 경로 설정
+        string prefabPath = "Assets/Resources/Prefabs/" + unitData.id + ".prefab";
+
+        // 동일한 이름의 프리팹이 이미 존재하는지 확인
+        if (File.Exists(prefabPath))
+        {
+            Debug.LogWarning("같은 이름의 프리팹이 이미 존재합니다: " + prefabPath);
+            return; // 동일한 이름의 파일이 있으면 생성하지 않음
+        }
+
+        // 프리팹 이름 및 초기 설정
         this.prefabName = unitData.id;
         this.animatorController = aniController;
         this.sprite = preSprite;
         if (unitData.tag == "UNIT")
         {
-            this.unitDatabase = (ScriptableObject)AssetDatabase.LoadAssetAtPath("Assets/Scripts/Data/UnitDatabase.asset", typeof(ScriptableObject));
-            this.bulletPrefab = (GameObject)AssetDatabase.LoadAssetAtPath("Assets/Prefabs/UI_shot.prefab", typeof(GameObject));
+            this.unitDatabase = (ScriptableObject)AssetDatabase.LoadAssetAtPath("Assets/Resources/Scripts/Data/UnitDatabase.asset", typeof(ScriptableObject));
+            this.bulletPrefab = (GameObject)AssetDatabase.LoadAssetAtPath("Assets/Resources/Prefabs/UI_shot.prefab", typeof(GameObject));
             CreateUnitPrefab();
         }
         else if (unitData.tag == "ENEMY") {
@@ -134,7 +143,7 @@ public partial class PrefabCreatorWindow : EditorWindow
         }
             
         // 필요한 추가 설정
-        unitData.unitPrefab = (GameObject) AssetDatabase.LoadAssetAtPath("Assets/Prefabs/"+ unitData.id + ".prefab", typeof(GameObject));
+        unitData.unitPrefab = (GameObject) AssetDatabase.LoadAssetAtPath("Assets/Resources/Prefabs/" + unitData.id + ".prefab", typeof(GameObject));
         CreateMyAsset(unitData);
     }
 
@@ -144,8 +153,8 @@ public partial class PrefabCreatorWindow : EditorWindow
 
         // 원하는 경로 설정
         string path = "";
-        if (asset.tag == "UNIT") path = "Assets/Scripts/Data/UnitData/Unit_UnitData";
-        else if (asset.tag == "ENEMY") path = "Assets/Scripts/Data/UnitData/Enemy_UnitData"; 
+        if (asset.tag == "UNIT") path = "Assets/Resources/Scripts/Data/UnitData/Unit_UnitData";
+        else if (asset.tag == "ENEMY") path = "Assets/Resources/Scripts/Data/UnitData/Enemy_UnitData"; 
 
         if (!Directory.Exists(path))
         {

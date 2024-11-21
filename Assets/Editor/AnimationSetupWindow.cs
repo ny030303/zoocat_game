@@ -14,7 +14,7 @@ public partial class AnimationSetupWindow : EditorWindow
     private List<string> animationNames = new List<string>();
     private bool isEnemy;
     private string animatorControllerName = "CHA_";
-    private string folderPath = "Assets/Animations"; // 폴더 경로를 설정할 수 있는 필드 추가
+    private string folderPath = "Assets/Resources/Animations"; // 폴더 경로를 설정할 수 있는 필드 추가
 
     [MenuItem("Tools/Animation Creator Window")]
     public static void ShowWindow()
