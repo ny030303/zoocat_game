@@ -11,33 +11,25 @@ public class SelectedUnitsUpdater : MonoBehaviour
 
     private void Start()
     {
-        // 유저 데이터 로드
-        //UserData userdata = UserManager.Instance.currentUser;
-        //Debug.Log("Selected Units[0]: " + userdata.selectedUnits[0]);
-
-        // 유닛 정보를 업데이트
-        int[] selectedUnits = { 1001, 1002, 1003, 1004, 1005 };
-        UpdateUnitImages(selectedUnits);
-    }
-
-    // 정보를 업데이트하는 함수
-    public void UpdateUnitImages(int[] selectedUnits)
-    {
-        // 유닛 컨테이너 초기화 (기존 UI 클리어)
-        foreach (Transform child in unitContainer.transform)
-        {
-            Destroy(child.gameObject);
-        }
 
         // UnitData 목록 가져오기
         List<UnitData> allUnits = lobbyUserManager.unitDatabase.unitDeck;
+        UpdateUnitImages(allUnits);
+    }
+
+    // 정보를 업데이트하는 함수
+    public void UpdateUnitImages(List<UnitData> selectedUnits)
+    {
+        // 유닛 컨테이너 초기화 (기존 UI 클리어)
+        foreach (Transform child in unitContainer.transform) { Destroy(child.gameObject); }
+
 
         // 선택된 유닛 정보 업데이트
-        foreach (int unitId in selectedUnits)
+        foreach (UnitData unit in selectedUnits)
         {
             // "CHA_XXXX" 형식의 ID를 가진 유닛 찾기
-            string formattedId = $"CHA_{unitId:D4}";
-            UnitData unit = allUnits.Find(u => u.id == formattedId);
+            //string formattedId = $"CHA_{unitId:D4}";
+            //UnitData unit = allUnits.Find(u => u.id == formattedId);
 
             if (unit != null)
             {
@@ -63,7 +55,7 @@ public class SelectedUnitsUpdater : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"유닛 ID {formattedId}을(를) 찾을 수 없습니다.");
+                Debug.LogWarning($"유닛을(를) 찾을 수 없습니다.");
             }
         }
 
@@ -79,7 +71,7 @@ public class SelectedUnitsUpdater : MonoBehaviour
         }
 
         // Resources 폴더 기준으로 경로에서 확장자 제거
-        string resourcePath = profilePath.Replace("Assets/Resources/", "");
+        string resourcePath = profilePath.Replace("Assets/Resources/", "").Replace(".png", "");
 
         Sprite sprite = Resources.Load<Sprite>(resourcePath);
         if (sprite == null)
