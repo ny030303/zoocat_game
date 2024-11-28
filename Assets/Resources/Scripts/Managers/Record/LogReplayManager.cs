@@ -20,7 +20,7 @@ public class LogReplayManager : MonoBehaviour
         unitDatabase = gameManager.unitDatabase;
         // 로그를 로드합니다.
         LogManager logManager = gameObject.AddComponent<LogManager>();
-        string ymdhms = "20240824_181253";
+        string ymdhms = "20241128_160812";
         events = logManager.LoadActionsFromFile(ymdhms, 0);
 
         GameObject manager = GameObject.Find("AIUnitSpawnManager");
