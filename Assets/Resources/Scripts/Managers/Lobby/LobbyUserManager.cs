@@ -1,3 +1,4 @@
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,12 +9,25 @@ public class LobbyUserManager : MonoBehaviour
 
     void Awake()
     {
+        if (UserManager.Instance == null)
+        {
+            Debug.LogWarning("UserManager.Instance is null!");
+            return;
+        }
+
         // 유저 데이터 로드
         UserData userdata = UserManager.Instance.currentUser;
-
-        // selectedUnits 데이터를 기반으로 덱 초기화
-        InitializeUnitDeck(userdata.selectedUnits);
+        if (userdata != null)
+        {
+            // selectedUnits 데이터를 기반으로 덱 초기화
+            InitializeUnitDeck(userdata.selectedUnits);
+        }
+        else
+        {
+            Debug.LogWarning("userdata is null!");
+        }
     }
+
 
     // 유닛 덱 초기화
     private void InitializeUnitDeck(int[] selectedUnitIds)

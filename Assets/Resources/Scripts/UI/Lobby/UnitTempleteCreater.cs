@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class UnitTempleteCreater : MonoBehaviour
 { // 유닛 프로필 템플릿 크리에이터
 
-    public static void CreateUnitTemplete(UnitData unit, GameObject unitTemplate, GameObject unitContainer, Sprite defaultSprite) {
+    public static GameObject CreateUnitTemplete(UnitData unit, GameObject unitTemplate, GameObject unitContainer, Sprite defaultSprite) {
         // 유닛 UI 생성
         GameObject unitUI = Instantiate(unitTemplate, unitContainer.transform);
 
@@ -27,6 +27,7 @@ public class UnitTempleteCreater : MonoBehaviour
 
 
         LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)unitContainer.GetComponent<RectTransform>());
+        return unitUI;
     }
 
     // 이미지 경로를 기반으로 Sprite 로드

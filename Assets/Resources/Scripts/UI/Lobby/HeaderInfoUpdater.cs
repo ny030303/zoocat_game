@@ -11,9 +11,24 @@ public class HeaderInfoUpdater : MonoBehaviour
 
     private void Start()
     {
+        if (UserManager.Instance == null)
+        {
+            Debug.LogWarning("UserManager.Instance is null!");
+            return;
+        }
+
+        // 유저 데이터 로드
         UserData userdata = UserManager.Instance.currentUser;
-        Debug.Log("userdata: " + userdata.username);
-        UpdateHeaderInfo(userdata.username, "0", "0");
+        if (userdata != null)
+        {
+            //Debug.Log("userdata: " + userdata.username);
+            //UpdateHeaderInfo(userdata.username, "0", "0");
+        }
+        else
+        {
+            Debug.LogWarning("userdata is null!");
+        }
+       
     }
     // 정보를 업데이트하는 함수
     public void UpdateHeaderInfo(string name, string freeCurrency, string paidCurrency)
