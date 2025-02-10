@@ -30,12 +30,12 @@ public class LobbyUserManager : MonoBehaviour
 
 
     // ¿Ø¥÷ µ¶ √ ±‚»≠
-    private void InitializeUnitDeck(int[] selectedUnitIds)
+    private void InitializeUnitDeck(string[] selectedUnitIds)
     {
         // µ¶ √ ±‚»≠
         unitDatabase.unitDeck.Clear();
 
-        foreach (int unitId in selectedUnitIds)
+        foreach (string unitId in selectedUnitIds)
         {
             // ScriptableObject ∞Ê∑Œ º≥¡§
             string unitPath = $"Scripts/Data/UnitData/Unit_UnitData/CHA_{unitId:D4}";

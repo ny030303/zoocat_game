@@ -164,6 +164,6 @@ public class LoginManager : MonoBehaviour
     public void OnLobbyEnterButtonClicked()
     {
         // 로비 씬으로 전환
-        sceneLoader.LoadScene("LobbyScene");
+        sceneLoader.LoadScene("LobbyTestScene");
     }
 }

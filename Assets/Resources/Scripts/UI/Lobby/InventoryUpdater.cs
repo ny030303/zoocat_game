@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.U2D.Animation;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,11 +7,13 @@ public class InventoryUpdater : MonoBehaviour
     public GameObject unitTemplate; // 캐릭터 Prefab
     public GameObject unitContainer; // 캐릭터 컨테이너(부모)
     public Sprite defaultSprite; // 기본프로필
-    public List<UnitData> unitList;
+    public List<UnitData> unitList; // 실제 게임의 유닛 데이터 모음
+    public UserUnit[] userUnitList; // 유저가 같고있는 유닛들 (모든 유닛중 표시된 항목)
 
     void Start()
     {
         unitList = UnitListLoader.Instance.unitList;
+        //userUnitList = UserManager.Instance.units;
         GenerateCharacterList();
     }
     void GenerateCharacterList()
