@@ -25,7 +25,7 @@ public static class FileManager
 
         try
         {
-            string jsonData = JsonMapper.ToJson(data); 
+            string jsonData = JsonMapper.ToJson(data);
             File.WriteAllText(filePath, jsonData);
             Debug.Log($"Data saved successfully to {filePath}. Key: {key}, Value: {value}");
         }
@@ -33,14 +33,50 @@ public static class FileManager
         {
             Debug.LogError($"Failed to save data. Exception: {ex.Message}");
         }
+    }
+    public static void SaveUserData(UserData userData)
+    {
+        GameData data = LoadData() ?? new GameData();
+        data.userData = userData; // 유저 정보 저장
 
-        if (File.Exists(filePath))
+        try
         {
-            Debug.Log($"File exists at {filePath}.");
+            string jsonData = JsonMapper.ToJson(data);
+            File.WriteAllText(filePath, jsonData);
+            Debug.Log($"UserData saved successfully to {filePath}");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to save UserData. Exception: {ex.Message}");
+        }
+    }
+
+
+    //유닛 데이터 저장하는 SaveUnits() 함수 추가
+    public static void SaveUnits(UserUnit[] unitList)
+    {
+        GameData data = LoadData() ?? new GameData();
+
+        if (unitList != null && unitList.Length > 0)
+        {
+            data.units = unitList; // 유닛 데이터 업데이트
+            Debug.Log($"Saved {unitList.Length} units.");
         }
         else
         {
-            Debug.LogError($"File not found at {filePath} after saving attempt.");
+            Debug.LogWarning("Unit list is empty. Skipping save operation.");
+            return;
+        }
+
+        try
+        {
+            string jsonData = JsonMapper.ToJson(data);
+            File.WriteAllText(filePath, jsonData);
+            Debug.Log($"Unit data saved successfully to {filePath}");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to save unit data. Exception: {ex.Message}");
         }
     }
 
@@ -62,6 +98,34 @@ public static class FileManager
         {
             Debug.LogWarning($"File not found: {filePath}");
         }
+        return null;
+    }
+    public static UserData LoadUserData()
+    {
+        GameData data = LoadData();
+
+        if (data != null && data.userData != null)
+        {
+            Debug.Log($"UserData loaded. Username: {data.userData.username}, Level: {data.userData.level}");
+            return data.userData;
+        }
+
+        Debug.LogWarning("No UserData found in saved data.");
+        return new UserData(); // 기본값 반환
+    }
+
+    //유닛 데이터 로드하는 LoadUnits() 함수 추가
+    public static UserUnit[] LoadUnits()
+    {
+        GameData data = LoadData();
+
+        if (data != null && data.units != null)
+        {
+            Debug.Log($"Loaded {data.units.Length} units.");
+            return data.units;
+        }
+
+        Debug.LogWarning("No units found in saved data.");
         return null;
     }
 
@@ -90,4 +154,6 @@ public static class FileManager
 public class GameData
 {
     public Dictionary<string, string> dataDictionary = new Dictionary<string, string>();
+    public UserUnit[] units = { }; // 유닛 데이터 저장
+    public UserData userData = new UserData(); // 유저 데이터
 }

@@ -1,5 +1,6 @@
 using LitJson;
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
@@ -20,7 +21,7 @@ public class LoginManager : MonoBehaviour
         if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.ExternalStorageWrite)) {
             UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.ExternalStorageWrite);
         }
-        // 클래스 수준의 Guestform 변수를 초기화합니다.
+        // 클래스 수준의 Guestform 변수를 초기화
         LoginPanel = GameObject.Find("Login Panel");
         GuestformPanel = GameObject.Find("Guest Form Panel");
         LobbyEntryPanel = GameObject.Find("Lobby Entry Panel");
@@ -34,12 +35,13 @@ public class LoginManager : MonoBehaviour
             {
                 Debug.Log("User is logged in." + localUser);
                 SendGoogleLoginEventMessageToServer(localUser);
+                UserManager.Instance.isGuest = 1;
                 // 게임의 로그인 후 로직 처리
                 LoginPanel.SetActive(false);
                 LobbyEntryPanel.SetActive(true);
             }
             else {
-                Debug.Log("User failed to log in.");
+                Debug.Log("Googlegames User failed to log in.");
                 // 로그인 실패 시 처리할 로직
                 LoginPanel.SetActive(true);
                 LobbyEntryPanel.SetActive(false);
@@ -87,8 +89,16 @@ public class LoginManager : MonoBehaviour
             Debug.LogError("WebSocket is not open: " + ex.Message);
         }
     }
-
+    //게스트 로그인
     public void GuestLogin()
+    {
+
+        UserManager.Instance.isGuest = 0;
+        UserManager.Instance.currentUser = FileManager.LoadUserData();
+        UserManager.Instance.units = FileManager.LoadUnits();
+    }
+    //게스트 회원가입
+    public void GuestSignup()
     {
         // 새 UUID 생성 및 저장
         string newUUID = Guid.NewGuid().ToString();
@@ -115,8 +125,37 @@ public class LoginManager : MonoBehaviour
 
             try
             {
-                FileManager.SaveData("GuestPlayerName", playerName);
-                Debug.Log($"Guest Player Name saved: {playerName}");
+                //FileManager.SaveData("units", )
+                //FileManager.SaveData("GuestPlayerName", playerName); // 네임 저장
+                //UserUnit[] units =  {
+                //    new UserUnit { id = "1001", unlock = 1, lv = 1, exp = 0, piece = 30 },
+                //    new UserUnit { id = "1002", unlock = 1, lv = 1, exp = 0, piece = 20 },
+                //    new UserUnit { id = "1003", unlock = 1, lv = 1, exp = 0, piece = 0 },
+                //    new UserUnit { id = "1004", unlock = 1, lv = 1, exp = 0, piece = 0 },
+                //    new UserUnit { id = "1005", unlock = 1, lv = 1, exp = 0, piece = 0 },
+                //    new UserUnit { id = "1006", unlock = 0, lv = 0, exp = 0, piece = 0 }
+                //};
+
+                //UserData user = new UserData
+                //{
+                //    id = newUUID,
+                //    underage = true,
+                //    username = playerName,
+                //    level = 1,
+                //    experience = 0,
+                //    friends = new string[] { },
+                //    country = "",
+                //    language = "ko",
+                //    selectedUnits = new string[] { "1001", "1002", "1003", "1004", "1005" },
+                //    gold = 1000,
+                //    gems = 0
+                //};
+
+                //// 저장 실행
+                //FileManager.SaveUnits(units);
+                //FileManager.SaveUserData(user);
+                //this.GuestLogin();
+                //Debug.Log($"Guest Player Name saved: {playerName}");
             }
             catch (Exception e)
             {
@@ -158,6 +197,7 @@ public class LoginManager : MonoBehaviour
             Debug.Log("Existing Guest UUID: " + existingUUID);
             LoginPanel.SetActive(false);
             LobbyEntryPanel.SetActive(true);
+            this.GuestLogin();
         }
     }
 

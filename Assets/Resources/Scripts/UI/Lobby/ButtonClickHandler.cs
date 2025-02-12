@@ -14,4 +14,12 @@ public class ButtonClickHandler : MonoBehaviour
             targetObject.SetActive(false); // GameObject를 비활성화
         }
     }
+
+    public void ShowObject()
+    {
+        if (targetObject != null)
+        {
+            targetObject.SetActive(true); // GameObject를 활성화
+        }
+    }
 }

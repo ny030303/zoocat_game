@@ -40,7 +40,7 @@ public class UnitDetails : MonoBehaviour
         }
     }
 
-    public void ShowDetails(UnitData unit)
+    public void ShowDetails(UnitData unit, UserUnit userUnit)
     {
         // 텍스트 정보 업데이트
         nameText.text = "Name: " + unit.name;
@@ -95,5 +95,10 @@ public class UnitDetails : MonoBehaviour
         {
             Destroy(currentUnitInstance);
         }
+    }
+
+    public void ChangeUnitDeck()
+    {
+        HideDetails();
     }
 }

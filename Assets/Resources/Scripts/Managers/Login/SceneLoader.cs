@@ -45,7 +45,9 @@ public class SceneLoader : MonoBehaviour
         if (jsonData["event"].ToString() == "userJoined")
         {
             // Extract the user data
-            units = jsonData["data"]["units"];
+            units = jsonData["data"]["units"]["units"];
+            UserManager.Instance.LoadUserUnitsFromJson(units);
+            //Debug.Log("scene_units unlock:" + UserManager.Instance.units[0].unlock);
             isUserDataLoaded = true;
         }
     }
@@ -59,8 +61,17 @@ public class SceneLoader : MonoBehaviour
     // 유저 데이터를 소켓을 통해 로드하고, 씬을 비동기적으로 로드하는 코루틴
     private IEnumerator LoadUserDataAndScene(string sceneName)
     {
-        // 1. 소켓을 통해 서버에서 유저 데이터를 요청
-        yield return StartCoroutine(LoadUserDataFromServer());
+        if (UserManager.Instance.isGuest != 0)
+        {
+            // 서버를 통해 데이터를 가져오는 경우.(google play games)
+            // 1. 소켓을 통해 서버에서 유저 데이터를 요청
+            yield return StartCoroutine(LoadUserDataFromServer());
+            Debug.Log("Logged-in user detected. Fetching user data from server...");
+        }
+        else
+        {
+            Debug.Log("Guest login detected. Skipping server data load.");
+        }
 
         // 2. 유저 데이터를 로드한 후 씬을 로드
         yield return StartCoroutine(LoadSceneAsync(sceneName));
@@ -101,7 +112,6 @@ public class SceneLoader : MonoBehaviour
         }
         // TODO: userData를 파싱하고 게임 내에서 사용할 수 있도록 처리
         // 예시: var user = JsonUtility.FromJson<UserData>(userData);
-        UserManager.Instance.LoadUserUnitsFromJson(units);
     }
 
     // 비동기 씬 로드 및 로딩 화면 표시

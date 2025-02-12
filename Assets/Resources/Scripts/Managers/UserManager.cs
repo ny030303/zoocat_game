@@ -36,8 +36,9 @@ public class UserManager : MonoBehaviour
 {
     public static UserManager Instance;
 
+    public int isGuest = 0; // 0 = guest, 1 = 구글 게임즈 계정연결 유저
     public UserData currentUser;
-    public List<UserUnit> units;  // 유저의 유닛 데이터 배열
+    public UserUnit[] units;  // 유저의 유닛 데이터 배열
 
     void Awake()
     {
@@ -64,7 +65,7 @@ public class UserManager : MonoBehaviour
     public void LoadUserUnitsFromJson(JsonData jsonData)
     {
         // LitJson을 사용해 JSON 데이터를 UserUnit[] 배열로 변환
-        units = JsonMapper.ToObject<List<UserUnit>>(jsonData.ToJson());
+        units = JsonMapper.ToObject<UserUnit[]>(jsonData.ToJson());
         Debug.Log("User units loaded using LitJson.");
     }
 

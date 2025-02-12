@@ -208,7 +208,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 525251956}
         m_TargetAssemblyTypeName: LoginManager, Assembly-CSharp
-        m_MethodName: GuestLogin
+        m_MethodName: GuestSignup
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1774,6 +1774,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a380430f4d81fbe4f9a870991cd630c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  serverAddress: ws://192.168.1.62:3000
 --- !u!1 &1110393403
 GameObject:
   m_ObjectHideFlags: 0
@@ -2795,8 +2796,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c1583a2a14b7c547a9026db12484376, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  userName: 
-  userScore: 0
+  isGuest: 0
+  currentUser:
+    id: 
+    underage: 0
+    username: 
+    level: 0
+    experience: 0
+    friends: []
+    country: 
+    language: 
+    selectedUnits: []
+    gold: 0
+    gems: 0
+  units: []
 --- !u!4 &1468524254
 Transform:
   m_ObjectHideFlags: 0
