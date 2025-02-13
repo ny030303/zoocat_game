@@ -82,24 +82,24 @@ public static class FileManager
 
     public static GameData LoadData()
     {
-        if (File.Exists(filePath))
+        if (!File.Exists(filePath))
         {
-            try
-            {
-                string jsonData = File.ReadAllText(filePath);
-                return JsonMapper.ToObject<GameData>(jsonData);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Failed to load data. Exception: {ex.Message}");
-            }
+            Debug.LogWarning($"File not found: {filePath}. Creating default data...");
+            //SaveDefaultData();  // 기본 데이터 저장
         }
-        else
+
+        try
         {
-            Debug.LogWarning($"File not found: {filePath}");
+            string jsonData = File.ReadAllText(filePath);
+            return JsonMapper.ToObject<GameData>(jsonData);
         }
-        return null;
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to load data. Exception: {ex.Message}");
+            return null;
+        }
     }
+
     public static UserData LoadUserData()
     {
         GameData data = LoadData();

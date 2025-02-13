@@ -126,36 +126,39 @@ public class LoginManager : MonoBehaviour
             try
             {
                 //FileManager.SaveData("units", )
-                //FileManager.SaveData("GuestPlayerName", playerName); // 네임 저장
-                //UserUnit[] units =  {
-                //    new UserUnit { id = "1001", unlock = 1, lv = 1, exp = 0, piece = 30 },
-                //    new UserUnit { id = "1002", unlock = 1, lv = 1, exp = 0, piece = 20 },
-                //    new UserUnit { id = "1003", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                //    new UserUnit { id = "1004", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                //    new UserUnit { id = "1005", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                //    new UserUnit { id = "1006", unlock = 0, lv = 0, exp = 0, piece = 0 }
-                //};
+                FileManager.SaveData("GuestPlayerName", playerName); // 네임 저장
+                UserUnit[] units =  {
+                    new UserUnit { id = "1001", unlock = 1, lv = 1, exp = 0, piece = 30 },
+                    new UserUnit { id = "1002", unlock = 1, lv = 1, exp = 0, piece = 20 },
+                    new UserUnit { id = "1003", unlock = 1, lv = 1, exp = 0, piece = 0 },
+                    new UserUnit { id = "1004", unlock = 1, lv = 1, exp = 0, piece = 0 },
+                    new UserUnit { id = "1005", unlock = 1, lv = 1, exp = 0, piece = 0 },
+                    new UserUnit { id = "1006", unlock = 0, lv = 0, exp = 0, piece = 0 },
+                    new UserUnit { id = "1007", unlock = 1, lv = 1, exp = 0, piece = 0 },
+                    new UserUnit { id = "1008", unlock = 0, lv = 0, exp = 0, piece = 0 },
+                    new UserUnit { id = "1009", unlock = 0, lv = 0, exp = 0, piece = 0 }
+                };
 
-                //UserData user = new UserData
-                //{
-                //    id = newUUID,
-                //    underage = true,
-                //    username = playerName,
-                //    level = 1,
-                //    experience = 0,
-                //    friends = new string[] { },
-                //    country = "",
-                //    language = "ko",
-                //    selectedUnits = new string[] { "1001", "1002", "1003", "1004", "1005" },
-                //    gold = 1000,
-                //    gems = 0
-                //};
+                UserData user = new UserData
+                {
+                    id = newUUID,
+                    underage = true,
+                    username = playerName,
+                    level = 1,
+                    experience = 0,
+                    friends = new string[] { },
+                    country = "",
+                    language = "ko",
+                    selectedUnits = new string[] { "1001", "1002", "1003", "1004", "1005" },
+                    gold = 1000,
+                    gems = 0
+                };
 
-                //// 저장 실행
-                //FileManager.SaveUnits(units);
-                //FileManager.SaveUserData(user);
-                //this.GuestLogin();
-                //Debug.Log($"Guest Player Name saved: {playerName}");
+                // 저장 실행
+                FileManager.SaveUnits(units);
+                FileManager.SaveUserData(user);
+                this.GuestLogin();
+                Debug.Log($"Guest Player Name saved: {playerName}");
             }
             catch (Exception e)
             {

@@ -4,6 +4,7 @@ using TMPro;
 public class UnitDetails : MonoBehaviour
 {
     public GameObject detailsPanel; // 상세보기 패널
+    public GameObject ChangeUnitPanel; // 덱 변경 패널
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI levelText;
     public TextMeshProUGUI healthText;
@@ -84,6 +85,7 @@ public class UnitDetails : MonoBehaviour
 
         // 패널 활성화
         detailsPanel.SetActive(true);
+        ChangeUnitPanel.GetComponent<ChangeUnitPanel>().OnShowPanel(unit, userUnit);
     }
 
     public void HideDetails()

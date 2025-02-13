@@ -11,7 +11,7 @@ public class UnitDeckManager : MonoBehaviour
         //Debug.Log("Selected Units[0]: " + userdata.selectedUnits[0]);
 
         // 유닛 정보를 업데이트
-        int[] selectedUnits = { 1001, 1002, 1003, 1004, 1005 };
+        //int[] selectedUnits = { 1001, 1002, 1003, 1004, 1005 };
         //UpdateUnitImages(selectedUnits);
     }
     // 유닛 추가

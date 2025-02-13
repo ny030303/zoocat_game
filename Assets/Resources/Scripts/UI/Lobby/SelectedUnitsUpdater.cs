@@ -14,7 +14,14 @@ public class SelectedUnitsUpdater : MonoBehaviour
 
         // UnitData 목록 가져오기
         List<UnitData> allUnits = lobbyUserManager.unitDatabase.unitDeck;
+        // 유닛 덱 변경 이벤트 구독
+        lobbyUserManager.OnUnitDeckChanged += UpdateUnitImages;
         UpdateUnitImages(allUnits);
+    }
+    private void OnDestroy()
+    {
+        // 이벤트 구독 해제 (메모리 누수 방지)
+        lobbyUserManager.OnUnitDeckChanged -= UpdateUnitImages;
     }
 
     // 정보를 업데이트하는 함수

@@ -1,3 +1,4 @@
+using System;
 using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ using UnityEngine;
 public class LobbyUserManager : MonoBehaviour
 {
     public UnitDatabase unitDatabase;
+    // 덱 변경 이벤트 추가
+    public Action<List<UnitData>> OnUnitDeckChanged;
 
     void Awake()
     {
@@ -28,6 +31,23 @@ public class LobbyUserManager : MonoBehaviour
         }
     }
 
+    public void AddUnitToDeck(UnitData unit)
+    {
+        if (!unitDatabase.unitDeck.Contains(unit))
+        {
+            unitDatabase.unitDeck.Add(unit);
+            OnUnitDeckChanged?.Invoke(unitDatabase.unitDeck); // 이벤트 호출
+        }
+    }
+
+    public void RemoveUnitFromDeck(UnitData unit)
+    {
+        if (unitDatabase.unitDeck.Contains(unit))
+        {
+            unitDatabase.unitDeck.Remove(unit);
+            OnUnitDeckChanged?.Invoke(unitDatabase.unitDeck); // 이벤트 호출
+        }
+    }
 
     // 유닛 덱 초기화
     private void InitializeUnitDeck(string[] selectedUnitIds)
@@ -54,34 +74,6 @@ public class LobbyUserManager : MonoBehaviour
 
         Debug.Log("유닛 덱 초기화 완료");
         PrintUnitDeck(); // 초기화 후 결과 출력
-    }
-
-    // 유닛 추가
-    public void AddUnitToDeck(UnitData unit)
-    {
-        if (!unitDatabase.unitDeck.Contains(unit))
-        {
-            unitDatabase.unitDeck.Add(unit);
-            Debug.Log($"{unit.unitName}이(가) 덱에 추가되었습니다.");
-        }
-        else
-        {
-            Debug.LogWarning($"{unit.unitName}은(는) 이미 덱에 존재합니다.");
-        }
-    }
-
-    // 유닛 제거
-    public void RemoveUnitFromDeck(UnitData unit)
-    {
-        if (unitDatabase.unitDeck.Contains(unit))
-        {
-            unitDatabase.unitDeck.Remove(unit);
-            Debug.Log($"{unit.unitName}이(가) 덱에서 제거되었습니다.");
-        }
-        else
-        {
-            Debug.LogWarning($"{unit.unitName}은(는) 덱에 존재하지 않습니다.");
-        }
     }
 
     // 덱 초기화
