@@ -1,0 +1,2 @@
+{"timestamp":1.53825939,"actionType":"UnitLevelUpgrade","actionData":{"unitID":"CHA_1001","unitNumber":0,"timestamp":1.53825939}}
+{"timestamp":7.301741,"actionType":"UnitSpawn","actionData":{"unitID":"CHA_1002","position":{"x":5.25,"y":0.15,"z":0.0,"normalized":{"x":0.999592066,"y":0.0285597742,"z":0.0,"magnitude":1.0,"sqrMagnitude":0.99999994},"magnitude":5.25214243,"sqrMagnitude":27.585},"timestamp":7.301741}}

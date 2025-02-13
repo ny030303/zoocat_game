@@ -30,6 +30,31 @@ public class UnitTempleteCreater : MonoBehaviour
         return unitUI;
     }
 
+    public static GameObject CreateUnitTempleteInGame(UnitData unit, GameObject unitTemplate, GameObject unitContainer, Sprite defaultSprite)
+    {
+        // 유닛 UI 생성
+        GameObject unitUI = Instantiate(unitTemplate, unitContainer.transform);
+
+        // 프로필 이미지 업데이트
+        Image profileImage = unitUI.GetComponentInChildren<Image>();
+        if (profileImage != null)
+        {
+            Sprite loadedSprite = LoadSprite(unit.profile);
+            profileImage.sprite = loadedSprite != null ? loadedSprite : defaultSprite;
+        }
+
+        //// 유닛 이름 업데이트 (TextMeshPro 사용)
+        //TMPro.TextMeshProUGUI nameText = unitUI.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+        //if (nameText != null)
+        //{
+        //    nameText.text = unit.unitName;
+        //}
+
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)unitContainer.GetComponent<RectTransform>());
+        return unitUI;
+    }
+
     // 이미지 경로를 기반으로 Sprite 로드
     private static Sprite LoadSprite(string profilePath)
     {

@@ -95,7 +95,7 @@ public class InventoryUpdater : MonoBehaviour
                 Button button = unitObject.GetComponent<Button>();
                 if (button != null)
                 {
-                    Debug.Log($"Button found for unit: {unit.name}");
+                    //Debug.Log($"Button found for unit: {unit.name}");
                     button.onClick.AddListener(() => OnUnitClicked(unit, matchedUserUnit));
                 }
                 else

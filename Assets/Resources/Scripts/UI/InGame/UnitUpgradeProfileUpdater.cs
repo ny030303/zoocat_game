@@ -1,0 +1,48 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class UnitUpgradeProfileUpdater : MonoBehaviour
+{
+    // Start is called before the first frame update
+    public GameManager GameManager;
+    public GameObject unitContainer; // 유닛 정보를 업데이트할 UI 컨테이너
+    public GameObject unitTemplate;  // 유닛 UI 템플릿 (Prefab)
+    public Sprite defaultSprite;    // 기본 이미지 (null일 때 대체)
+    private void Start()
+    {
+
+        // UnitData 목록 가져오기
+        List<UnitData> allUnits = GameManager.unitDatabase.unitDeck;
+        UpdateUnitImages(allUnits);
+    }
+
+    // 정보를 업데이트하는 함수
+    public void UpdateUnitImages(List<UnitData> selectedUnits)
+    {
+        // 유닛 컨테이너 초기화 (기존 UI 클리어)
+        foreach (Transform child in unitContainer.transform) { Destroy(child.gameObject); }
+
+
+        // 선택된 유닛 정보 업데이트
+        foreach (UnitData unit in selectedUnits)
+        {
+            // "CHA_XXXX" 형식의 ID를 가진 유닛 찾기
+            //string formattedId = $"CHA_{unitId:D4}";
+            //UnitData unit = allUnits.Find(u => u.id == formattedId);
+
+            if (unit != null)
+            {
+                Debug.Log($"유닛 찾음: {unit.unitName}");
+
+                // 유닛 UI 생성
+                UnitTempleteCreater.CreateUnitTempleteInGame(unit, unitTemplate, unitContainer, defaultSprite);
+            }
+            else
+            {
+                Debug.LogWarning($"유닛을(를) 찾을 수 없습니다.");
+            }
+        }
+
+    }
+}

@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class UnitDetails : MonoBehaviour
 {
@@ -9,6 +10,9 @@ public class UnitDetails : MonoBehaviour
     public TextMeshProUGUI levelText;
     public TextMeshProUGUI healthText;
     public TextMeshProUGUI descriptionText;
+
+    public Button upgradeBtn;
+    public Button useBtn;
 
     public Transform unitDisplayContainer; // 유닛 애니메이션을 표시할 부모 Transform
     private GameObject currentUnitInstance; // 현재 표시 중인 유닛 인스턴스
@@ -83,9 +87,22 @@ public class UnitDetails : MonoBehaviour
         animator.updateMode = AnimatorUpdateMode.Normal;
         animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
+
+        if (userUnit.unlock == 0)
+        {
+            upgradeBtn.interactable = false;
+            useBtn.interactable = false;
+            useBtn.transform.GetChild(0).GetComponent<Text>().text = "미보유";
+        } else
+        {
+            upgradeBtn.interactable = true;
+            useBtn.interactable = true;
+            useBtn.transform.GetChild(0).GetComponent<Text>().text = "사용";
+        }
+
         // 패널 활성화
         detailsPanel.SetActive(true);
-        ChangeUnitPanel.GetComponent<ChangeUnitPanel>().OnShowPanel(unit, userUnit);
+        ChangeUnitPanel.GetComponent<ChangeUnitPanel>().OnShowPanel(unit, userUnit); // 덱 변경 창 미리 적용
     }
 
     public void HideDetails()

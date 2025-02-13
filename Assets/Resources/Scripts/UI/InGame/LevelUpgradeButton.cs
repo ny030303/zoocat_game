@@ -46,6 +46,8 @@ public class LevelUpgradeButton : MonoBehaviour
             gameManager.UpgradeUnit(unitData.upgradeCost); // 게임 재화 사용
             // 업그레이드 로직 추가
             unitData.LevelUp(); // 해당 유닛 데이터 업그레이드
+
+            unitsSpawnLocationObj = GameObject.Find("UnitsSpawnLocation"); // 정확한 이름 입력
             Unit[] allUnits = unitsSpawnLocationObj.GetComponentsInChildren<Unit>();
             foreach (Unit unit in allUnits)
             {

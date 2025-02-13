@@ -56,8 +56,8 @@ public class ChangeUnitButton : SelectedUnitsUpdater
     private void OnUnitButtonClick(UnitData unit)
     {
         changeUnitPanel.ChangeUnit(unit);
-       
 
+        changeUnitPanel.GetComponent<RectTransform>().SetAsFirstSibling();
         // 변경된 데이터 반영하여 UI 갱신
         UpdateUnitImages(lobbyUserManager.unitDatabase.unitDeck);
     }
