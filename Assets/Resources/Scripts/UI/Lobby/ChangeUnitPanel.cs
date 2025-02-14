@@ -1,7 +1,10 @@
+using LitJson;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class ChangeUnitPanel : MonoBehaviour
 {
@@ -53,9 +56,55 @@ public class ChangeUnitPanel : MonoBehaviour
         }
 
         lobbyUserManager.OnUnitDeckChanged?.Invoke(unitDeck); // UI 갱신 이벤트 호출
+
         // 변경된 유닛 데이터를 반영
         changedUnitData = unit;
+
+        if (UserManager.Instance == null)
+        {
+            Debug.LogWarning("UserManager.Instance is null!");
+            return;
+        }
+
+        UserData userdata = UserManager.Instance.currentUser;
+        userdata.selectedUnits = unitDeck.ConvertAll(u => u.id.Replace("CHA_", "")).ToArray(); // UserData의 selectedUnits에 ID에서 "CHA_" 제거 후 저장
+
+        if (UserManager.Instance.isGuest == 0)
+        {
+            FileManager.SaveUserData(userdata); // 변경 사항 저장
+            UserManager.Instance.currentUser = FileManager.LoadUserData(); // 변경된 데이터 다시 로드
+            Debug.Log("덱 변경 사항 저장 UserManager 업데이트 완료.");
+        } else
+        {
+            SendUpdateDeckEventMessageToServer(userdata, userdata.selectedUnits);
+        }
+        
     }
 
 
+    private void SendUpdateDeckEventMessageToServer(UserData currentUser, string[] newDeck)
+    {
+        var messageToSend = new
+        {
+            @event = "updateDeck",  // @ 기호를 사용하여 예약어 사용
+            data = new
+            {
+                userId = currentUser.id,
+                newDeck = newDeck,
+            }
+        };
+        // JSON 문자열로 변환
+        string jsonMessage = JsonMapper.ToJson(messageToSend);
+        try
+        {
+            // 서버에 메시지 전송
+            SocketBinder.Instance.GetWs().Send(jsonMessage);
+            Console.WriteLine("서버로 메시지 전송: " + jsonMessage);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Log and handle the error
+            Debug.LogError("WebSocket is not open: " + ex.Message);
+        }
+    }
 }

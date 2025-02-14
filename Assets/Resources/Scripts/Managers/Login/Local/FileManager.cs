@@ -79,13 +79,28 @@ public static class FileManager
             Debug.LogError($"Failed to save unit data. Exception: {ex.Message}");
         }
     }
+    private static void SaveDataToFile(GameData data)
+    {
+        try
+        {
+            string jsonData = JsonMapper.ToJson(data);
+            File.WriteAllText(filePath, jsonData);
+            Debug.Log($"Data saved successfully to {filePath}");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to save data. Exception: {ex.Message}");
+        }
+    }
 
     public static GameData LoadData()
     {
         if (!File.Exists(filePath))
         {
             Debug.LogWarning($"File not found: {filePath}. Creating default data...");
-            //SaveDefaultData();  // 기본 데이터 저장
+            GameData defaultData = new GameData();
+            SaveDataToFile(defaultData);
+            return defaultData;
         }
 
         try
@@ -96,9 +111,10 @@ public static class FileManager
         catch (Exception ex)
         {
             Debug.LogError($"Failed to load data. Exception: {ex.Message}");
-            return null;
+            return new GameData();
         }
     }
+
 
     public static UserData LoadUserData()
     {
