@@ -1,0 +1,4 @@
+groupID,cost_material,cost_material_count,recipe1ID,recipe1ratio,recipe2ID,recipe2ratio,recipe3ID,recipe3ratio,recipe4ID,recipe4ratio,recipe5ID,recipe5ratio
+101,100004,40,10001,20,10002,20,10003,20,10004,20,10005,20
+102,100001,2000,10001,20,10002,20,10003,20,10004,20,10005,20
+103,100002,2000,10001,20,10002,20,10003,20,10004,20,10005,20

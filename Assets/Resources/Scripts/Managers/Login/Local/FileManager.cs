@@ -79,6 +79,55 @@ public static class FileManager
             Debug.LogError($"Failed to save unit data. Exception: {ex.Message}");
         }
     }
+    //유닛 데이터 하나만 변경하는 SaveUnit() 함수 추가
+    public static void SaveUnit(UserUnit unit)
+    {
+        if (unit == null)
+        {
+            Debug.LogWarning("Unit is null. Skipping save operation.");
+            return;
+        }
+
+        GameData data = LoadData() ?? new GameData();
+
+        if (data.units == null)
+        {
+            data.units = new UserUnit[] { unit }; // 첫 유닛 저장
+        }
+        else
+        {
+            bool unitFound = false;
+            for (int i = 0; i < data.units.Length; i++)
+            {
+                if (data.units[i].id == unit.id) // 같은 ID의 유닛 찾기
+                {
+                    data.units[i] = unit; // 기존 유닛 데이터 업데이트
+                    unitFound = true;
+                    break;
+                }
+            }
+
+            if (!unitFound)
+            {
+                // 기존 배열 크기를 늘려 새로운 유닛 추가
+                List<UserUnit> unitList = new List<UserUnit>(data.units);
+                unitList.Add(unit);
+                data.units = unitList.ToArray();
+            }
+        }
+
+        try
+        {
+            string jsonData = JsonMapper.ToJson(data);
+            File.WriteAllText(filePath, jsonData);
+            Debug.Log($"Unit {unit.id} saved successfully.");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to save unit data. Exception: {ex.Message}");
+        }
+    }
+
     private static void SaveDataToFile(GameData data)
     {
         try
@@ -105,6 +154,7 @@ public static class FileManager
 
         try
         {
+            Debug.Log(filePath);
             string jsonData = File.ReadAllText(filePath);
             return JsonMapper.ToObject<GameData>(jsonData);
         }

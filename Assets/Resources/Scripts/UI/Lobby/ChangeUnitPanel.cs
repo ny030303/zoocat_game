@@ -2,6 +2,7 @@ using LitJson;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 using UnityEngine.SocialPlatforms.Impl;
@@ -24,7 +25,15 @@ public class ChangeUnitPanel : MonoBehaviour
         changedUserUnit = userUnit;
         // 유닛 UI 생성
         UnitTempleteCreater.CreateUnitTemplete(unit, unitTemplate, unitContainer, defaultSprite);
+        GameObject unitObject = UnitTempleteCreater.CreateUnitTemplete(unit, unitTemplate, unitContainer, defaultSprite);
 
+        // 레벨 표시
+        Transform levelchild = unitObject.transform.Find("Level");
+        if (levelchild != null)
+        {
+            TMP_Text levelText = levelchild.GetComponent<TMP_Text>();
+            levelText.text = $"Lv. {userUnit.lv}";
+        }
     }
 
     public void ChangeUnit(UnitData unit)

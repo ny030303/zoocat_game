@@ -1,4 +1,5 @@
 using LitJson;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -38,8 +39,10 @@ public class UserManager : MonoBehaviour
 
     public int isGuest = 0; // 0 = guest, 1 = 구글 게임즈 계정연결 유저
     public UserData currentUser;
-    public UserUnit[] units;  // 유저의 유닛 데이터 배열
+    public UserUnit[] units;  // 유저의 유닛 데이터 배열 -> 강화재료, 보유상황 등
 
+
+    public Action<UserUnit[]> OnUserUnitListChanged;
     void Awake()
     {
         if (Instance == null)

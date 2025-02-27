@@ -1,0 +1,8 @@
+id,value
+cat_change_lv1,50%
+cat_change_lv2,50%
+cat_change_lv3,50%
+cat_change_lv4,50%
+cat_change_lv5,50%
+normal_mon_kill_reward,10
+boss_mon_kill_reward,50

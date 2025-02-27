@@ -51,6 +51,7 @@ public class UnitData : ScriptableObject
     public int level = 1;         // 유닛의 레벨 (기본값 1)
     public int upgradeCost = 100;       // 업그레이드 비용
     public int maxUpgradeLevel = 5;     // 최대치
+    private int move;
 
     // Method to Level Up the Unit
     public void LevelUp()

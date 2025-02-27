@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,12 +19,21 @@ public class SelectedUnitsUpdater : MonoBehaviour
         List<UnitData> allUnits = lobbyUserManager.unitDatabase.unitDeck;
         // 유닛 덱 변경 이벤트 구독
         lobbyUserManager.OnUnitDeckChanged += UpdateUnitImages;
+        UserManager.Instance.OnUserUnitListChanged += updateCharacterList;
         UpdateUnitImages(allUnits);
     }
     private void OnDestroy()
     {
         // 이벤트 구독 해제 (메모리 누수 방지)
         lobbyUserManager.OnUnitDeckChanged -= UpdateUnitImages;
+        UserManager.Instance.OnUserUnitListChanged -= updateCharacterList;
+    }
+
+    private void updateCharacterList(UserUnit[] obj)
+    {
+        // UnitData 목록 가져오기
+        List<UnitData> allUnits = lobbyUserManager.unitDatabase.unitDeck;
+        UpdateUnitImages(allUnits);
     }
 
     // 정보를 업데이트하는 함수
@@ -41,9 +53,20 @@ public class SelectedUnitsUpdater : MonoBehaviour
             if (unit != null)
             {
                 Debug.Log($"유닛 찾음: {unit.unitName}");
+                string unitIdWithoutPrefix = unit.id.Replace("CHA_", ""); // "CHA_" 제거
 
+                UserUnit[] userUnitList = UserManager.Instance.units;
+                UserUnit matchedUserUnit = userUnitList.FirstOrDefault(u => u.id == unitIdWithoutPrefix); // 유저의 유닛 레벨, 경험치 등
                 // 유닛 UI 생성
-                UnitTempleteCreater.CreateUnitTemplete(unit, unitTemplate, unitContainer, defaultSprite);
+                GameObject unitObject = UnitTempleteCreater.CreateUnitTemplete(unit, unitTemplate, unitContainer, defaultSprite);
+
+                // 레벨 표시
+                Transform levelchild = unitObject.transform.Find("Level");
+                if (levelchild != null)
+                {
+                    TMP_Text levelText = levelchild.GetComponent<TMP_Text>();
+                    levelText.text = $"Lv. {matchedUserUnit.lv}";
+                }
             }
             else
             {

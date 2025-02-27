@@ -1,0 +1,5 @@
+id,boss_is,monster1_id,monster1_count,monster2_id,monster2_count,monster3_id,monster3_count
+100001,0,20001,10,,,,
+100002,0,20002,10,,,,
+100003,0,20001,5,20002,5,,
+100004,1,20001,5,20002,5,20003,1
