@@ -148,4 +148,89 @@ public static class CSVLoader
 
         return unitDataDictionary;
     }
+
+
+    // 웨이브 로더
+    public static Dictionary<int, WaveData> LoadWaveData(string fileName)
+    {
+        Dictionary<int, WaveData> waveDictionary = new Dictionary<int, WaveData>();
+
+        try
+        {
+            TextAsset csvFile = Resources.Load<TextAsset>(fileName.Replace(".csv", ""));
+            if (csvFile == null)
+            {
+                Debug.LogError($"CSV 파일을 찾을 수 없습니다: {fileName}");
+                return waveDictionary;
+            }
+
+            string[] lines = csvFile.text.Split('\n');
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string[] values = lines[i].Trim().Split(',');
+                if (values.Length < 6) continue;
+
+                int id = int.Parse(values[0]);
+                float timeLimit = float.Parse(values[1]);
+                int hpAdditional = int.Parse(values[2]);
+                int spdAdditional = int.Parse(values[3]);
+                int rewardId = int.Parse(values[4]);
+                int waveGroupId = int.Parse(values[5]);
+
+                WaveData waveData = new WaveData(id, timeLimit, hpAdditional, spdAdditional, rewardId, waveGroupId);
+                waveDictionary[id] = waveData;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to load Wave CSV: {ex.Message}");
+        }
+
+        return waveDictionary;
+    }
+
+    public static Dictionary<int, WaveGroupData> LoadWaveGroupData(string fileName)
+    {
+        Dictionary<int, WaveGroupData> waveGroupDictionary = new Dictionary<int, WaveGroupData>();
+
+        try
+        {
+            TextAsset csvFile = Resources.Load<TextAsset>(fileName.Replace(".csv", ""));
+            if (csvFile == null)
+            {
+                Debug.LogError($"CSV 파일을 찾을 수 없습니다: {fileName}");
+                return waveGroupDictionary;
+            }
+
+            string[] lines = csvFile.text.Split('\n');
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string[] values = lines[i].Trim().Split(',');
+                if (values.Length < 4) continue;
+
+                int id = int.Parse(values[0]);
+                bool isBoss = values[1] == "1";
+                List<string> monsterIds = new List<string>();
+                List<int> monsterCounts = new List<int>();
+
+                for (int j = 2; j < values.Length; j += 2)
+                {
+                    if (!string.IsNullOrEmpty(values[j]) && !string.IsNullOrEmpty(values[j + 1]))
+                    {
+                        monsterIds.Add(values[j]);
+                        monsterCounts.Add(int.Parse(values[j + 1]));
+                    }
+                }
+
+                WaveGroupData waveGroupData = new WaveGroupData(id, isBoss, monsterIds, monsterCounts);
+                waveGroupDictionary[id] = waveGroupData;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to load WaveGroup CSV: {ex.Message}");
+        }
+
+        return waveGroupDictionary;
+    }
 }

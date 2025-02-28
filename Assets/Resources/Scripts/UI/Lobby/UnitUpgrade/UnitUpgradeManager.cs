@@ -9,8 +9,8 @@ public class UnitUpgradeManager : MonoBehaviour
     public Dictionary<(int, int), UnitUpgradeData> upgradeData; // 업그레이드 데이터 저장
     public UserData userData;  // 유저 데이터
     public Dictionary<string, UnitData> baseUnitData;  // 기본값 유닛 데이터
-    public string costCsvFilePath = "Scripts/Data/Sheet/CharacterCost.csv"; // CSV 파일 경로
-    public string sheetCsvFilePath = "Scripts/Data/Sheet/CharacterSheet.csv"; // CSV 파일 경로
+    public string costCsvFilePath = "Scripts/Data/Sheet/CharacterCost"; // CSV 파일 경로
+    public string sheetCsvFilePath = "Scripts/Data/Sheet/CharacterSheet"; // CSV 파일 경로
 
     public List<UnitData> unitList; // 게임의 모든 유닛 데이터
     private UserUnit[] userUnitList; // 유저가 보유한 유닛 목록
@@ -101,16 +101,6 @@ public class UnitUpgradeManager : MonoBehaviour
         unitData.atk = (int) Mathf.Round(baseAtk * Mathf.Pow(1.1f, userUnit.lv - 1)); // 레벨이 올라갈 때마다 10% 증가
 
         Debug.Log($"Unit {unitId} upgraded to Level {userUnit.lv}. New ATK: {unitData.atk}");
-        //unitData.atk = unitData.atk * (1 + (userUnit.lv * nextUpgrade.atkStatGrowth / 1000));
-        ///*
-        // 곱하는 방식 (배율 적용)
-        //atk = base_atk * (1 + (level * growth / 1000))
-        //예:
-        //base_atk = 10, level = 1, growth = 1000
-        //atk = 10 * (1 + (1 * 1000 / 1000)) = 10 * 2 = 20
-        // */
-
-        Debug.Log($"Unit {unitId} upgraded to Level {userUnit.lv}");
 
         // 파일 저장
         FileManager.SaveUserData(userData); // 유저의 정보를 저장

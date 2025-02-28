@@ -25,8 +25,9 @@ public class UnitUpgradeProfileUpdater : MonoBehaviour
 
 
         // 선택된 유닛 정보 업데이트
-        foreach (UnitData unit in selectedUnits)
+        for(int i = 0; i < selectedUnits.Count; i++)
         {
+            UnitData unit = selectedUnits[i];
             // "CHA_XXXX" 형식의 ID를 가진 유닛 찾기
             //string formattedId = $"CHA_{unitId:D4}";
             //UnitData unit = allUnits.Find(u => u.id == formattedId);
@@ -36,7 +37,9 @@ public class UnitUpgradeProfileUpdater : MonoBehaviour
                 Debug.Log($"유닛 찾음: {unit.unitName}");
 
                 // 유닛 UI 생성
-                UnitTempleteCreater.CreateUnitTempleteInGame(unit, unitTemplate, unitContainer, defaultSprite);
+                GameObject btnui = UnitTempleteCreater.CreateUnitTempleteInGame(unit, unitTemplate, unitContainer, defaultSprite);
+                LevelUpgradeButton lvupgrade = btnui.GetComponent<LevelUpgradeButton>();
+                lvupgrade.unitNumber = i;
             }
             else
             {

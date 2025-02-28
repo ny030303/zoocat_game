@@ -101,10 +101,14 @@ public class UnitDetails : MonoBehaviour
             Transform valChild = slider.transform.Find("ValueText");
             TMP_Text valText = valChild.GetComponent<TMP_Text>();
             valText.text = $"MAX";
+            upgradeCostBtnText.text = $"MAX";
         }
         else if (unitUpgradeData != null) {
             slider.maxValue = unitUpgradeData.cost;
             slider.value = userUnit.piece;
+            Color setColor;
+            ColorUtility.TryParseHtmlString("#6F63F3", out setColor);
+            handleImage.color = setColor;
             Transform valChild = slider.transform.Find("ValueText");
             TMP_Text valText = valChild.GetComponent<TMP_Text>();
             valText.text = $"{userUnit.piece} / {unitUpgradeData.cost}";
@@ -113,6 +117,9 @@ public class UnitDetails : MonoBehaviour
         else {
             slider.maxValue = 0;
             slider.value = 1;
+            Color setColor;
+            ColorUtility.TryParseHtmlString("#6F63F3", out setColor);
+            handleImage.color = setColor;
             Transform valChild = slider.transform.Find("ValueText");
             TMP_Text valText = valChild.GetComponent<TMP_Text>();
             upgradeCostBtnText.text = "-";

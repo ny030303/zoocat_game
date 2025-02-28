@@ -17,7 +17,7 @@ public class UnitListLoader : MonoBehaviour
             Instance = this;
             Instance.LoadCharacterData();
             Debug.Log($"Loaded {unitList.Count} characters.");
-            //DontDestroyOnLoad(gameObject); // 다른 씬에서도 유지하려면 추가
+            DontDestroyOnLoad(gameObject); // 다른 씬에서도 유지하려면 추가
         }
         else
         {

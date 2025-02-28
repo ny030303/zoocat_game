@@ -13,7 +13,19 @@ public class UnitDatabase : ScriptableObject
     public void Initialize()
     {
         foreach (var unit in unitDeck)  { unitList.Add(unit.DeepCopy()); }
-        foreach (var aiunit in aiUnitDeck) { aiUnitList.Add(aiunit.DeepCopy()); }
+        foreach (var aiunit in aiUnitDeck) {
+            UnitData tmp = aiunit.DeepCopy();
+            //Dictionary<string, UnitData> baseUnitData;  // 기본값 유닛 데이터
+            //string sheetCsvFilePath = "Scripts/Data/Sheet/CharacterSheet"; // CSV 파일 경로
+            //baseUnitData = CSVLoader.LoadUnitData(sheetCsvFilePath);
+            //Debug.Log(tmp.id);
+            //baseUnitData.TryGetValue(tmp.id.Replace("CHA_", ""), out UnitData foundUnit);
+
+            //// 기존 baseAtk 값을 유지하고 10% 증가 방식으로 atk 재계산
+            //int baseAtk = foundUnit.atk; // 처음 설정된 기본 공격력
+            //tmp.atk = baseAtk;
+            aiUnitList.Add(tmp); 
+        }
     }
 
     public bool IsNull(string owner)  { 

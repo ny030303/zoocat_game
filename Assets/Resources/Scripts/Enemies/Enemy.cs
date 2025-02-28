@@ -23,9 +23,9 @@ public class Enemy : MonoBehaviour
 
         gameManager = FindAnyObjectByType<GameManager>();
         unitData = data.DeepCopy();
-        unitData.hp = (int)(unitData.hp * statMultiplier);
-        unitData.def = (int)(unitData.def * statMultiplier);
-        unitData.moveSpeed = unitData.moveSpeed * statMultiplier;
+        unitData.hp = (int)(unitData.hp + statMultiplier);
+        //unitData.def = (int)(unitData.def * statMultiplier);
+        //unitData.moveSpeed = unitData.moveSpeed * statMultiplier;
 
         currentHp = unitData.hp;
         this.waypoints = waypoints;

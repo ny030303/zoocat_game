@@ -1,6 +1,7 @@
-using LitJson;
+ï»¿using LitJson;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -8,26 +9,26 @@ using WebSocketSharp;
 
 public class SceneLoader : MonoBehaviour
 {
-    public GameObject loadingScreen;  // ·Îµù È­¸é ¿ÀºêÁ§Æ®
-    public Slider progressBar;        // ·Îµù ÁøÇà ¹Ù (Slider UI ¿ä¼Ò)
-    private bool isUserDataLoaded = false; // À¯Àú µ¥ÀÌÅÍ°¡ ·ÎµåµÇ¾ú´ÂÁö È®ÀÎÇÏ´Â º¯¼ö
-    private JsonData units;          // ¼­¹ö¿¡¼­ ¹ŞÀº À¯Àú µ¥ÀÌÅÍ
+    public GameObject loadingScreen;  // ë¡œë”© í™”ë©´ ì˜¤ë¸Œì íŠ¸
+    public Slider progressBar;        // ë¡œë”© ì§„í–‰ ë°” (Slider UI ìš”ì†Œ)
+    private bool isUserDataLoaded = false; // ìœ ì € ë°ì´í„°ê°€ ë¡œë“œë˜ì—ˆëŠ”ì§€ í™•ì¸í•˜ëŠ” ë³€ìˆ˜
+    private JsonData units;          // ì„œë²„ì—ì„œ ë°›ì€ ìœ ì € ë°ì´í„°
     private IEnumerator WaitForSocketBinderAndSubscribe()
     {
-        // SocketBinder.Instance°¡ nullÀÏ °æ¿ì ÀÏÁ¤ ½Ã°£ ´ë±â
+        // SocketBinder.Instanceê°€ nullì¼ ê²½ìš° ì¼ì • ì‹œê°„ ëŒ€ê¸°
         while (SocketBinder.Instance == null)
         {
             Debug.Log("Waiting for SocketBinder to initialize...");
-            yield return new WaitForSeconds(0.1f);  // 0.1ÃÊ ´ë±â ÈÄ ´Ù½Ã È®ÀÎ
+            yield return new WaitForSeconds(0.1f);  // 0.1ì´ˆ ëŒ€ê¸° í›„ ë‹¤ì‹œ í™•ì¸
         }
 
-        // SocketBinder°¡ ÃÊ±âÈ­µÇ¸é WebSocket ÀÌº¥Æ® ±¸µ¶
+        // SocketBinderê°€ ì´ˆê¸°í™”ë˜ë©´ WebSocket ì´ë²¤íŠ¸ êµ¬ë…
         SocketBinder.Instance.OnWebSocketMessageReceived += OnWebSocketMessageReceived;
     }
 
     void OnEnable()
     {
-        // CoroutineÀ» ÅëÇØ SocketBinder°¡ ÃÊ±âÈ­µÉ ¶§±îÁö ´ë±â
+        // Coroutineì„ í†µí•´ SocketBinderê°€ ì´ˆê¸°í™”ë  ë•Œê¹Œì§€ ëŒ€ê¸°
         StartCoroutine(WaitForSocketBinderAndSubscribe());
     }
 
@@ -52,19 +53,19 @@ public class SceneLoader : MonoBehaviour
         }
     }
 
-    // ¾ÀÀ» ºñµ¿±âÀûÀ¸·Î ·ÎµåÇÏ´Â ÄÚ·çÆ¾
+    // ì”¬ì„ ë¹„ë™ê¸°ì ìœ¼ë¡œ ë¡œë“œí•˜ëŠ” ì½”ë£¨í‹´
     public void LoadScene(string sceneName)
     {
         StartCoroutine(LoadUserDataAndScene(sceneName));
     }
 
-    // À¯Àú µ¥ÀÌÅÍ¸¦ ¼ÒÄÏÀ» ÅëÇØ ·ÎµåÇÏ°í, ¾ÀÀ» ºñµ¿±âÀûÀ¸·Î ·ÎµåÇÏ´Â ÄÚ·çÆ¾
+    // ìœ ì € ë°ì´í„°ë¥¼ ì†Œì¼“ì„ í†µí•´ ë¡œë“œí•˜ê³ , ì”¬ì„ ë¹„ë™ê¸°ì ìœ¼ë¡œ ë¡œë“œí•˜ëŠ” ì½”ë£¨í‹´
     private IEnumerator LoadUserDataAndScene(string sceneName)
     {
         if (UserManager.Instance.isGuest != 0)
         {
-            // ¼­¹ö¸¦ ÅëÇØ µ¥ÀÌÅÍ¸¦ °¡Á®¿À´Â °æ¿ì.(google play games)
-            // 1. ¼ÒÄÏÀ» ÅëÇØ ¼­¹ö¿¡¼­ À¯Àú µ¥ÀÌÅÍ¸¦ ¿äÃ»
+            // ì„œë²„ë¥¼ í†µí•´ ë°ì´í„°ë¥¼ ê°€ì ¸ì˜¤ëŠ” ê²½ìš°.(google play games)
+            // 1. ì†Œì¼“ì„ í†µí•´ ì„œë²„ì—ì„œ ìœ ì € ë°ì´í„°ë¥¼ ìš”ì²­
             yield return StartCoroutine(LoadUserDataFromServer());
             Debug.Log("Logged-in user detected. Fetching user data from server...");
         }
@@ -72,32 +73,75 @@ public class SceneLoader : MonoBehaviour
         {
             Debug.Log("Guest login detected. Skipping server data load.");
         }
+        // 2. ìœ ì €ê°€ ê°€ì§„ ìœ ë‹› ë°ì´í„°ë¥¼ ë ˆë²¨ì— ë§ê²Œ ìˆ˜ì¹˜ë¥¼ ê³„ì‚°í•œ í›„
+        yield return StartCoroutine(LoadUnitLevel());
 
-        // 2. À¯Àú µ¥ÀÌÅÍ¸¦ ·ÎµåÇÑ ÈÄ ¾ÀÀ» ·Îµå
+        // 3. ìœ ì € ë°ì´í„°ë¥¼ ë¡œë“œí•œ í›„ ì”¬ì„ ë¡œë“œ
         yield return StartCoroutine(LoadSceneAsync(sceneName));
     }
 
-    // ¼ÒÄÏÀ» ÅëÇØ À¯Àú µ¥ÀÌÅÍ¸¦ ºñµ¿±âÀûÀ¸·Î ·ÎµåÇÏ´Â ¸Ş¼­µå
+
+    private IEnumerator LoadUnitLevel()
+    {
+        UserUnit[] userUnits = UserManager.Instance.units;
+        List<UnitData> unitList = UnitListLoader.Instance.unitList; // ê²Œì„ ë‚´ ìœ ë‹› ë°ì´í„°
+        Dictionary<string, UnitData> baseUnitData;  // ê¸°ë³¸ê°’ ìœ ë‹› ë°ì´í„°
+        string sheetCsvFilePath = "Scripts/Data/Sheet/CharacterSheet"; // CSV íŒŒì¼ (í™•ì¥ì ì œê±°)
+
+        // CSV ë°ì´í„° ë¡œë“œ
+        baseUnitData = CSVLoader.LoadUnitData(sheetCsvFilePath);
+
+        // ëª¨ë“  ìœ ë‹›ì˜ ìŠ¤íƒ¯ ì—…ë°ì´íŠ¸ ì§„í–‰
+        for (int i = 0; i < unitList.Count; i++)
+        {
+            if (unitList[i] != null)
+            {
+                // ID ë³€í™˜ ë° ê¸°ë³¸ ê³µê²©ë ¥ ê°€ì ¸ì˜¤ê¸°
+                if (baseUnitData.TryGetValue(unitList[i].id.Replace("CHA_", ""), out UnitData foundUnit))
+                {
+                    float baseAtk = foundUnit.atk; // ì²˜ìŒ ì„¤ì •ëœ ê¸°ë³¸ ê³µê²©ë ¥
+                    unitList[i].atk = (int)Mathf.Round(baseAtk * Mathf.Pow(1.1f, userUnits[i].lv - 1)); // ë ˆë²¨ì´ ì˜¬ë¼ê°ˆ ë•Œë§ˆë‹¤ 10% ì¦ê°€
+                }
+                else
+                {
+                    Debug.LogWarning($"Unit ID {unitList[i].id} not found in baseUnitData.");
+                }
+            }
+        }
+
+        // ëª¨ë“  ê³„ì‚°ì´ ëë‚œ í›„ ëŒ€ê¸° (ì™„ë£Œ í”Œë˜ê·¸ ì¶”ê°€)
+        bool isCompleted = false;
+
+        while (!isCompleted)
+        {
+            yield return null; // í•œ í”„ë ˆì„ ëŒ€ê¸° (CPU ë¶€í•˜ ë°©ì§€)
+            isCompleted = true;
+        }
+
+        Debug.Log("âœ… LoadUnitLevel() ì™„ë£Œ: ëª¨ë“  ìœ ë‹› ë ˆë²¨ ìŠ¤íƒ¯ ê³„ì‚° ì™„ë£Œ.");
+    }
+
+    // ì†Œì¼“ì„ í†µí•´ ìœ ì € ë°ì´í„°ë¥¼ ë¹„ë™ê¸°ì ìœ¼ë¡œ ë¡œë“œí•˜ëŠ” ë©”ì„œë“œ
     private IEnumerator LoadUserDataFromServer()
     {
-        // ·Îµù È­¸éÀ» È°¼ºÈ­
+        // ë¡œë”© í™”ë©´ì„ í™œì„±í™”
         loadingScreen.SetActive(true);
 
-        // À¯Àú µ¥ÀÌÅÍ¸¦ ¼­¹ö¿¡ ¿äÃ»
+        // ìœ ì € ë°ì´í„°ë¥¼ ì„œë²„ì— ìš”ì²­
         var messageToSend = new
         {
-            @event = "joinLobby",  // ¼­¹ö¿¡ º¸³¾ ÀÌº¥Æ® ÀÌ¸§
+            @event = "joinLobby",  // ì„œë²„ì— ë³´ë‚¼ ì´ë²¤íŠ¸ ì´ë¦„
             data = new
             {
-                userId = UserManager.Instance.currentUser.id  // ÇÊ¿ä¿¡ µû¶ó À¯Àú ID µîÀ» Æ÷ÇÔ
+                userId = UserManager.Instance.currentUser.id  // í•„ìš”ì— ë”°ë¼ ìœ ì € ID ë“±ì„ í¬í•¨
             }
         };
 
-        // JSON ¹®ÀÚ¿­·Î º¯È¯ÇÏ¿© ¼­¹ö·Î Àü¼Û
+        // JSON ë¬¸ìì—´ë¡œ ë³€í™˜í•˜ì—¬ ì„œë²„ë¡œ ì „ì†¡
         string jsonMessage = LitJson.JsonMapper.ToJson(messageToSend);
         try
         {
-            SocketBinder.Instance.GetWs().Send(jsonMessage);  // ¼­¹ö¿¡ ¸Ş½ÃÁö Àü¼Û
+            SocketBinder.Instance.GetWs().Send(jsonMessage);  // ì„œë²„ì— ë©”ì‹œì§€ ì „ì†¡
         }
         catch (InvalidOperationException ex)
         {
@@ -105,34 +149,34 @@ public class SceneLoader : MonoBehaviour
             yield break;
         }
 
-        // ¼­¹ö·ÎºÎÅÍ ÀÀ´äÀ» ±â´Ù¸² (À¯Àú µ¥ÀÌÅÍ°¡ ·ÎµåµÉ ¶§±îÁö ´ë±â)
+        // ì„œë²„ë¡œë¶€í„° ì‘ë‹µì„ ê¸°ë‹¤ë¦¼ (ìœ ì € ë°ì´í„°ê°€ ë¡œë“œë  ë•Œê¹Œì§€ ëŒ€ê¸°)
         while (!isUserDataLoaded)
         {
             yield return null;
         }
-        // TODO: userData¸¦ ÆÄ½ÌÇÏ°í °ÔÀÓ ³»¿¡¼­ »ç¿ëÇÒ ¼ö ÀÖµµ·Ï Ã³¸®
-        // ¿¹½Ã: var user = JsonUtility.FromJson<UserData>(userData);
+        // TODO: userDataë¥¼ íŒŒì‹±í•˜ê³  ê²Œì„ ë‚´ì—ì„œ ì‚¬ìš©í•  ìˆ˜ ìˆë„ë¡ ì²˜ë¦¬
+        // ì˜ˆì‹œ: var user = JsonUtility.FromJson<UserData>(userData);
     }
 
-    // ºñµ¿±â ¾À ·Îµå ¹× ·Îµù È­¸é Ç¥½Ã
+    // ë¹„ë™ê¸° ì”¬ ë¡œë“œ ë° ë¡œë”© í™”ë©´ í‘œì‹œ
     private IEnumerator LoadSceneAsync(string sceneName)
     {
 
-        // ºñµ¿±â ¾À ·Îµå ½ÃÀÛ
+        // ë¹„ë™ê¸° ì”¬ ë¡œë“œ ì‹œì‘
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
-        asyncLoad.allowSceneActivation = false; // ·Îµù ¿Ï·á ÈÄ ¾À ÀüÈ¯ ´ë±â
+        asyncLoad.allowSceneActivation = false; // ë¡œë”© ì™„ë£Œ í›„ ì”¬ ì „í™˜ ëŒ€ê¸°
 
-        // ¾ÀÀÌ ¿ÏÀüÈ÷ ·ÎµåµÉ ¶§±îÁö ´ë±â
+        // ì”¬ì´ ì™„ì „íˆ ë¡œë“œë  ë•Œê¹Œì§€ ëŒ€ê¸°
         while (!asyncLoad.isDone)
         {
-            // ·Îµù ÁøÇà »óÅÂ¿¡ µû¶ó ·Îµù ¹Ù ¾÷µ¥ÀÌÆ®
+            // ë¡œë”© ì§„í–‰ ìƒíƒœì— ë”°ë¼ ë¡œë”© ë°” ì—…ë°ì´íŠ¸
             float progress = Mathf.Clamp01(asyncLoad.progress / 0.9f);
             progressBar.value = progress;
 
-            // ·ÎµùÀÌ ¿Ï·áµÇ¸é ¾À ÀüÈ¯
+            // ë¡œë”©ì´ ì™„ë£Œë˜ë©´ ì”¬ ì „í™˜
             if (asyncLoad.progress >= 0.9f)
             {
-                // ÇÊ¿ä ½Ã ·Îµù ¿Ï·á ÈÄ Àá½Ã ´ë±â
+                // í•„ìš” ì‹œ ë¡œë”© ì™„ë£Œ í›„ ì ì‹œ ëŒ€ê¸°
                 yield return new WaitForSeconds(1f);
                 asyncLoad.allowSceneActivation = true;
             }
