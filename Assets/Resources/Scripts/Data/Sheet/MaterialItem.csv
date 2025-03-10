@@ -1,0 +1,5 @@
+id,_name,item_sub_type,grade
+100001,무료 재화,MoneyMaterial,1
+100002,유료 재화,MoneyMaterial,1
+100003,유료 재화(무료),MoneyMaterial,1
+100004,플레이 포인트,NormalMaterial,1

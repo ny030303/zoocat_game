@@ -1,3 +1,4 @@
+using LitJson;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -102,9 +103,21 @@ public class UnitUpgradeManager : MonoBehaviour
 
         Debug.Log($"Unit {unitId} upgraded to Level {userUnit.lv}. New ATK: {unitData.atk}");
 
-        // 파일 저장
-        FileManager.SaveUserData(userData); // 유저의 정보를 저장
-        FileManager.SaveUnit(userUnit); // 유저의 유닛 상태를 저장(Lv, piece 등)
+        if (UserManager.Instance.isGuest == 0)
+        {
+
+            // 파일 저장
+            FileManager.SaveUserData(userData); // 유저의 정보를 저장
+            FileManager.SaveUnit(userUnit); // 유저의 유닛 상태를 저장(Lv, piece 등)
+            UserManager.Instance.currentUser = FileManager.LoadUserData(); // 변경된 데이터 다시 로드
+            Debug.Log("유닛업그레이드 업데이트 완료.");
+        }
+        else
+        {
+            SendUpgradeUnitEventMessageToServer(userData, userUnit);
+        }
+
+
         for (int i = 0; i < userUnitList.Length; i++)
         {
             if (userUnitList[i].id.Equals(userUnit.id)) // 같은 ID의 유닛 찾기
@@ -117,6 +130,34 @@ public class UnitUpgradeManager : MonoBehaviour
         else OnUnitUpgraded?.Invoke(unitData, userUnit, upgradeData[(currentGrade, userUnit.lv)]); // 디테일 창 값 전달호출 }
         }
 
+
+
+
+    private void SendUpgradeUnitEventMessageToServer(UserData currentUser, UserUnit userUnit)
+    {
+        var messageToSend = new
+        {
+            @event = "upgradeUnit",  // @ 기호를 사용하여 예약어 사용
+            data = new
+            {
+                userId = currentUser.id,
+                userUnit = userUnit,
+            }
+        };
+        // JSON 문자열로 변환
+        string jsonMessage = JsonMapper.ToJson(messageToSend);
+        try
+        {
+            // 서버에 메시지 전송
+            SocketBinder.Instance.GetWs().Send(jsonMessage);
+            Console.WriteLine("서버로 메시지 전송: " + jsonMessage);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Log and handle the error
+            Debug.LogError("WebSocket is not open: " + ex.Message);
+        }
+    }
 
     private UserUnit GetUserUnit(string unitId)
     {

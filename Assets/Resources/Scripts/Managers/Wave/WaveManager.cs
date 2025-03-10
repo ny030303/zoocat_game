@@ -8,6 +8,7 @@ public class WaveManager : MonoBehaviour
 {
     private Dictionary<int, WaveData> waves;
     private Dictionary<int, WaveGroupData> waveGroups;
+    private Dictionary<int, RewardData> rewardData;
     public WaypointManager waypointManager;
     private List<Transform> waypoints;
     private int currentWaveIndex = 1;
@@ -22,6 +23,7 @@ public class WaveManager : MonoBehaviour
     {
         waves = CSVLoader.LoadWaveData("Scripts/Data/Sheet/Wave");
         waveGroups = CSVLoader.LoadWaveGroupData("Scripts/Data/Sheet/WaveGroup");
+        rewardData = RewardLoader.LoadRewardData("Scripts/Data/Sheet/Reward");
 
         waypoints = waypointManager.waypoints;
 
@@ -29,6 +31,54 @@ public class WaveManager : MonoBehaviour
         waveProgressSlider.value = 0;
 
         StartCoroutine(ManageWaves());
+    }
+
+
+
+    public RewardData GetWaveReward(int waveId)
+    {
+        if (waves.ContainsKey(waveId))
+        {
+            int rewardId = waves[waveId].rewardId;
+            if (rewardData.ContainsKey(rewardId))
+            {
+                return rewardData[rewardId];
+            }
+        }
+        return null;
+    }
+
+    public void GrantWaveReward(int waveId)
+    {
+        RewardData reward = GetWaveReward(waveId);
+        if (reward != null)
+        {
+            Debug.Log($"[웨이브 {waveId} 클리어] 보상 지급: {reward.type} x {reward.amount}");
+            ApplyReward(reward);
+        }
+        else
+        {
+            Debug.LogWarning($"[웨이브 {waveId}] 보상 없음.");
+        }
+    }
+
+    private static void ApplyReward(RewardData reward)
+    {
+        switch (reward.type)
+        {
+            case "Gold":
+                Debug.Log($"골드 {reward.amount} 지급");
+                break;
+            case "Gem":
+                Debug.Log($"젬 {reward.amount} 지급");
+                break;
+            case "Item":
+                Debug.Log($"아이템 지급 (ID: {reward.id})");
+                break;
+            default:
+                Debug.LogWarning($"알 수 없는 보상 타입: {reward.type}");
+                break;
+        }
     }
 
     IEnumerator ManageWaves()
@@ -113,6 +163,7 @@ public class WaveManager : MonoBehaviour
 
         // 💡 웨이브 시간이 끝나면 진행 완료 처리
         Debug.Log($"웨이브 {currentWaveIndex} 완료 (지속 시간: {currentWave.timeLimit}초)");
+        GrantWaveReward(currentWaveIndex);
         yield return new WaitForSeconds(3f); // 잠시 대기 후 다음 웨이브 시작
     }
 }

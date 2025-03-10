@@ -2,18 +2,37 @@ using System.IO;
 using UnityEngine;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using Newtonsoft.Json.Serialization;
 
 public class LogManager : MonoBehaviour
 {
     private int logFileIndex = 0;
     private int logEventCount = 0;
-    private const int MaxEventsPerFile = 1000; // 이벤트 수에 따라 파일을 분할
+    private const int MaxEventsPerFile = 1000;
     private string sessionID;
-    private string folderPath = Application.dataPath + "/Resources/Logs"; // Assets/Resources 폴더 내 Logs 폴더를 생성
-    private void Start()
+    private string folderPath;
+
+    private void Awake()
     {
-        // Generate a unique session ID based on the current date and time
         sessionID = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+        // 플랫폼에 따라 저장 경로 설정
+        if (Application.isEditor)
+        {
+            folderPath = Application.dataPath + "/Resources/Logs"; // 에디터에서 저장
+        }
+        else
+        {
+            folderPath = Application.persistentDataPath + "/Logs"; // 안드로이드에서는 persistentDataPath 사용
+        }
+
+        // 폴더가 없으면 생성
+        if (!Directory.Exists(folderPath))
+        {
+            Directory.CreateDirectory(folderPath);
+        }
+
+        Debug.Log("Log Folder Path: " + folderPath);
     }
 
     public void RecordAction(PlayerAction action)
@@ -30,31 +49,32 @@ public class LogManager : MonoBehaviour
 
     private void SaveActionToFile(PlayerAction action, int index)
     {
-        if (!Directory.Exists(folderPath))
-        {
-            Directory.CreateDirectory(folderPath); // 폴더가 없으면 생성
-        }
-
         string filePath = folderPath + $"/log_{sessionID}_{index}.json";
 
-        //운영체제에 따라 설정된 특정 경로
-        //string filePath = Application.persistentDataPath + $"/log_{sessionID}_{index}.json";
-
-        // 자기 참조 루프 무시 설정 추가
+        // IL2CPP-friendly JsonSerializerSettings
         var settings = new JsonSerializerSettings
         {
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+            ContractResolver = new DefaultContractResolver() // AOT 친화적 설정
         };
 
         string json = JsonConvert.SerializeObject(action, settings);
         File.AppendAllText(filePath, json + "\n");
+
+        Debug.Log($"Saved log to: {filePath}");
     }
 
     public List<PlayerAction> LoadActionsFromFile(string ymdhms, int index)
     {
-        // Use the session ID when loading the file
         string filePath = folderPath + $"/log_{ymdhms}_{index}.json";
         List<PlayerAction> events = new List<PlayerAction>();
+
+        if (!File.Exists(filePath))
+        {
+            Debug.LogError($"File not found: {filePath}");
+            return events; // 빈 리스트 반환
+        }
 
         try
         {
@@ -63,7 +83,14 @@ public class LogManager : MonoBehaviour
             {
                 reader.SupportMultipleContent = true;
 
-                JsonSerializer serializer = new JsonSerializer();
+                var settings = new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+                    ContractResolver = new DefaultContractResolver()
+                };
+
+                JsonSerializer serializer = JsonSerializer.Create(settings);
 
                 while (reader.Read())
                 {

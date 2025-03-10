@@ -14,14 +14,26 @@ public class LogReplayManager : MonoBehaviour
     private int currentIndex = 0;
     private float replayStartTime;
     private Button[] levelUpgradeButtons;
+
     void Start()
     {
         gameManager = FindObjectOfType<GameManager>();
         unitDatabase = gameManager.unitDatabase;
+
         // 로그를 로드합니다.
         LogManager logManager = gameObject.AddComponent<LogManager>();
+
         string ymdhms = "20241128_160812";
-        events = logManager.LoadActionsFromFile(ymdhms, 0);
+
+        // 플랫폼별로 파일 경로 설정
+        if (Application.isEditor)
+        {
+            events = logManager.LoadActionsFromFile(ymdhms, 0);  // PC(에디터)에서 로드
+        }
+        else
+        {
+            events = logManager.LoadActionsFromFile(ymdhms, 0);  // 안드로이드에서도 같은 코드 사용 (이미 LogManager에서 처리됨)
+        }
 
         GameObject manager = GameObject.Find("AIUnitSpawnManager");
         unitSpawnManager = manager.GetComponent<UnitSpawnManager>();
@@ -36,6 +48,7 @@ public class LogReplayManager : MonoBehaviour
         // 재생을 시작합니다.
         StartReplay();
     }
+
     private void StartReplay()
     {
         StartCoroutine(Replay());
@@ -60,20 +73,28 @@ public class LogReplayManager : MonoBehaviour
             currentIndex++;
         }
     }
+
     Vector2 cpyLocalPos(GameObject obj, Transform parentTransform)
     {
         Vector2 pos = new Vector2(obj.transform.position.x, obj.transform.position.y);
         pos = parentTransform.InverseTransformPoint(pos);
         return pos;
     }
+
     private void ApplyEvent(PlayerAction gameEvent)
     {
         if (gameEvent.actionType == "UnitSpawn" && unitSpawnManager.IsSpawnNext())
         {
-            // JObject를 UnitSpawnEvent로 변환
             UnitSpawnEvent ev = (gameEvent.actionData as JObject)?.ToObject<UnitSpawnEvent>();
-            if (ev != null) { Debug.Log("spawn pos:" + ev.position); unitSpawnManager.SpawnNextAlly(ev.position, ev.unitID); }
-            else { Debug.LogError("actionData를 UnitSpawnEvent로 변환할 수 없습니다."); }
+            if (ev != null)
+            {
+                Debug.Log("spawn pos:" + ev.position);
+                unitSpawnManager.SpawnNextAlly(ev.position, ev.unitID);
+            }
+            else
+            {
+                Debug.LogError("actionData를 UnitSpawnEvent로 변환할 수 없습니다.");
+            }
         }
         else if (gameEvent.actionType == "UnitMerge")
         {
@@ -82,42 +103,55 @@ public class LogReplayManager : MonoBehaviour
             {
                 Transform parentTransform = unitSpawnManager.GetParentTransform();
                 int childCount = parentTransform.childCount;
-                // 자식 오브젝트들을 GameObject 배열로 가져오기
+
                 GameObject[] childObjects = new GameObject[childCount];
-                for (int i = 0; i < childCount; i++) { childObjects[i] = parentTransform.GetChild(i).gameObject; }
+                for (int i = 0; i < childCount; i++)
+                {
+                    childObjects[i] = parentTransform.GetChild(i).gameObject;
+                }
 
                 foreach (GameObject obj in childObjects)
                 {
                     Unit unitset = obj.GetComponent<Unit>();
                     if (unitset.unitData.id == ev.unitID1)
                     {
-                        if (cpyLocalPos(obj, parentTransform).ToString() == ((Vector2)ev.startPosition).ToString()) { unitset.Kill(); }
+                        if (cpyLocalPos(obj, parentTransform).ToString() == ((Vector2)ev.startPosition).ToString())
+                        {
+                            unitset.Kill();
+                        }
                         else if (cpyLocalPos(obj, parentTransform).ToString() == ((Vector2)ev.endPosition).ToString())
                         {
                             GameObject unit = unitSpawnManager.SpawnNextAlly(ev.endPosition, ev.resultUnitID);
-                            // 새 유닛 업그레이드
                             Unit newunitset = unit.GetComponent<Unit>();
                             newunitset.UpgradeUnitMerged(unitset.unitData);
-                            // 기존 유닛 지우기
                             unitSpawnManager.KillUnit(obj);
                         }
                     }
                 }
             }
-            else { Debug.LogError("actionData를 UnitMergeEvent로 변환할 수 없습니다."); }
+            else
+            {
+                Debug.LogError("actionData를 UnitMergeEvent로 변환할 수 없습니다.");
+            }
         }
-        else if (gameEvent.actionType == "UnitLevelUpgrade") {
+        else if (gameEvent.actionType == "UnitLevelUpgrade")
+        {
             UnitLevelUpgradeEvent ev = (gameEvent.actionData as JObject)?.ToObject<UnitLevelUpgradeEvent>();
 
             UnitData unitData = unitDatabase.GetUnitDataToIdx("ai", ev.unitNumber);
             GameObject unitsSpawnLocationObj = unitSpawnManager.GetParentTransform().gameObject;
             if (unitData != null && unitData.level < unitData.maxUpgradeLevel)
             {
-                unitData.LevelUp(); // 해당 유닛 데이터 업그레이드
+                unitData.LevelUp();
                 Unit[] allUnits = unitsSpawnLocationObj.GetComponentsInChildren<Unit>();
-                foreach (Unit unit in allUnits) { if (unit.unitData.id == unitData.id) { unit.unitData.LevelUp(); } }// 개인 복사된 유닛 데이터에도 적용 
+                foreach (Unit unit in allUnits)
+                {
+                    if (unit.unitData.id == unitData.id)
+                    {
+                        unit.unitData.LevelUp();
+                    }
+                }
 
-                // UI 텍스트 업데이트
                 GameObject btnObj = levelUpgradeButtons[ev.unitNumber].gameObject;
                 TextMeshProUGUI[] TextMeshes = btnObj.GetComponentsInChildren<TextMeshProUGUI>();
                 string currencyText = unitData.level == unitData.maxUpgradeLevel ? "---" : unitData.upgradeCost.ToString();
@@ -135,7 +169,10 @@ public class LogReplayManager : MonoBehaviour
                             break;
                     }
                 }
-                if (unitData.level == unitData.maxUpgradeLevel) levelUpgradeButtons[ev.unitNumber].interactable = false;
+                if (unitData.level == unitData.maxUpgradeLevel)
+                {
+                    levelUpgradeButtons[ev.unitNumber].interactable = false;
+                }
             }
             else
             {
