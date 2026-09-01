@@ -70,3 +70,16 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# --- Secrets / signing / CI ---
+user.keystore
+*.keystore
+*.jks
+key.properties
+/keystore/
+/secrets/
+*.alf
+*.ulf
+google-play-service-account*.json
+fastlane/report.xml
+fastlane/*.log
