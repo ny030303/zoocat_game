@@ -83,3 +83,6 @@ key.properties
 google-play-service-account*.json
 fastlane/report.xml
 fastlane/*.log
+
+# cloude
+/docs/

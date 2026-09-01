@@ -10,7 +10,8 @@ public class SocketBinder : MonoBehaviour
     private WebSocket ws;
     public event Action<string> OnWebSocketMessageReceived;
 
-    [SerializeField] private string serverAddress = "ws://192.168.1.151:3000";
+    [Tooltip("비워두면 AppConfig.Current.socketUrl 사용. 값을 넣으면 수동 오버라이드")]
+    [SerializeField] private string serverAddress = "";
     private bool isQuitting = false; // 🔄 종료 시 재연결 방지 변수 추가
     private bool isReconnecting = false; // 🔄 중복 재연결 방지 변수 추가
 
@@ -34,6 +35,10 @@ public class SocketBinder : MonoBehaviour
     }
     public WebSocket GetWs() { return ws; }
 
+    // 인스펙터에 값이 있으면 그대로 사용(수동 오버라이드), 비어 있으면 환경 설정에서 가져온다.
+    private string ResolveServerAddress()
+        => string.IsNullOrWhiteSpace(serverAddress) ? AppConfig.Current.socketUrl : serverAddress;
+
     private void InitializeWebSocket()
     {
         if (ws != null) // 🔄 기존 WebSocket 인스턴스가 존재하면 정리 후 재생성
@@ -42,7 +47,9 @@ public class SocketBinder : MonoBehaviour
             ws = null;
         }
 
-        ws = new WebSocket(serverAddress);
+        string address = ResolveServerAddress();
+        Debug.Log("[SocketBinder] connecting to " + address);
+        ws = new WebSocket(address);
         ws.OnMessage += ws_OnMessage;
         ws.OnOpen += ws_OnOpen;
         ws.OnClose += ws_OnClose;

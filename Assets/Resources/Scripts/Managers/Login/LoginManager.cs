@@ -8,7 +8,7 @@ using UnityEngine.SocialPlatforms.Impl;
 
 public class LoginManager : MonoBehaviour
 {
-    public SceneLoader sceneLoader; // SceneLoader ½ºÅ©¸³Æ®¸¦ ÂüÁ¶
+    public SceneLoader sceneLoader; // SceneLoader ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     private GameObject LoginPanel;
     private GameObject GuestformPanel;
@@ -21,32 +21,41 @@ public class LoginManager : MonoBehaviour
         if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.ExternalStorageWrite)) {
             UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.ExternalStorageWrite);
         }
-        // Å¬·¡½º ¼öÁØÀÇ Guestform º¯¼ö¸¦ ÃÊ±âÈ­
+        // Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Guestform ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
         LoginPanel = GameObject.Find("Login Panel");
         GuestformPanel = GameObject.Find("Guest Form Panel");
         LobbyEntryPanel = GameObject.Find("Lobby Entry Panel");
 
-        // Á¤»óÀûÀ¸·Î Ã£¾ÆÁ³´ÂÁö È®ÀÎÇÏ´Â °ÍÀÌ ÁÁ½À´Ï´Ù.
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
         if (GuestformPanel != null && LobbyEntryPanel != null && LobbyEntryPanel != null) { GuestformPanel.SetActive(false); }
-        else { Debug.LogError("PanelÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù. ÀÌ¸§À» È®ÀÎÇÏ¼¼¿ä."); }
+        else { Debug.LogError("Panelï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½. ï¿½Ì¸ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½."); }
 
+        if (AppConfig.Current.gpgsEnabled)
+        {
         GPGSBinder.Inst.Init((isLoggedIn, localUser) => {
             if (isLoggedIn)
             {
                 Debug.Log("User is logged in." + localUser);
                 SendGoogleLoginEventMessageToServer(localUser);
                 UserManager.Instance.isGuest = 1;
-                // °ÔÀÓÀÇ ·Î±×ÀÎ ÈÄ ·ÎÁ÷ Ã³¸®
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Î±ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
                 LoginPanel.SetActive(false);
                 LobbyEntryPanel.SetActive(true);
             }
             else {
                 Debug.Log("Googlegames User failed to log in.");
-                // ·Î±×ÀÎ ½ÇÆĞ ½Ã Ã³¸®ÇÒ ·ÎÁ÷
+                // ï¿½Î±ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 LoginPanel.SetActive(true);
                 LobbyEntryPanel.SetActive(false);
             }
         });
+        }
+        else
+        {
+            // dev ë¹Œë“œ: GPGS ì´ˆê¸°í™” ìŠ¤í‚µ. ê²ŒìŠ¤íŠ¸/UUID ë¡œê·¸ì¸ ê²½ë¡œ ì‚¬ìš©
+            LoginPanel.SetActive(true);
+            LobbyEntryPanel.SetActive(false);
+        }
         GuestUUIDInit();
     }
     public void Logout()
@@ -69,7 +78,7 @@ public class LoginManager : MonoBehaviour
     {
         var messageToSend = new
         {
-            @event = "login",  // @ ±âÈ£¸¦ »ç¿ëÇÏ¿© ¿¹¾à¾î »ç¿ë
+            @event = "login",  // @ ï¿½ï¿½È£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             data = new
             {
                 id = localUser.id,
@@ -77,19 +86,19 @@ public class LoginManager : MonoBehaviour
                 underage = localUser.underage,
             }
         };
-        // JSON ¹®ÀÚ¿­·Î º¯È¯
+        // JSON ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
         string jsonMessage = JsonMapper.ToJson(messageToSend);
         try {
-            // ¼­¹ö¿¡ ¸Ş½ÃÁö Àü¼Û
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ş½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             SocketBinder.Instance.GetWs().Send(jsonMessage);
-            Console.WriteLine("¼­¹ö·Î ¸Ş½ÃÁö Àü¼Û: " + jsonMessage);
+            Console.WriteLine("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ş½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: " + jsonMessage);
         }
         catch (InvalidOperationException ex) {
             // Log and handle the error
             Debug.LogError("WebSocket is not open: " + ex.Message);
         }
     }
-    //°Ô½ºÆ® ·Î±×ÀÎ
+    //ï¿½Ô½ï¿½Æ® ï¿½Î±ï¿½ï¿½ï¿½
     public void GuestLogin()
     {
 
@@ -97,10 +106,10 @@ public class LoginManager : MonoBehaviour
         UserManager.Instance.currentUser = FileManager.LoadUserData();
         UserManager.Instance.units = FileManager.LoadUnits();
     }
-    //°Ô½ºÆ® È¸¿ø°¡ÀÔ
+    //ï¿½Ô½ï¿½Æ® È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public void GuestSignup()
     {
-        // »õ UUID »ı¼º ¹× ÀúÀå
+        // ï¿½ï¿½ UUID ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         string newUUID = Guid.NewGuid().ToString();
 
         try {
@@ -109,7 +118,7 @@ public class LoginManager : MonoBehaviour
         }
         catch (Exception e) {
             Debug.LogError("Failed to save UUID: " + e.Message);
-            return; // ÀúÀå¿¡ ½ÇÆĞÇÏ¸é ¸Ş¼­µå¸¦ Á¾·áÇÕ´Ï´Ù.
+            return; // ï¿½ï¿½ï¿½å¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½Ş¼ï¿½ï¿½å¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         }
 
         TMP_InputField input = GuestformPanel.GetComponentInChildren<TMP_InputField>();
@@ -120,13 +129,13 @@ public class LoginManager : MonoBehaviour
             if (string.IsNullOrEmpty(playerName))
             {
                 Debug.LogError("Player name is empty, please enter a name.");
-                return; // ÀÌ¸§ÀÌ ºñ¾î ÀÖÀ» °æ¿ì ¸Ş¼­µå¸¦ Á¾·áÇÕ´Ï´Ù.
+                return; // ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ş¼ï¿½ï¿½å¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
             }
 
             try
             {
                 //FileManager.SaveData("units", )
-                FileManager.SaveData("GuestPlayerName", playerName); // ³×ÀÓ ÀúÀå
+                FileManager.SaveData("GuestPlayerName", playerName); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 UserUnit[] units =  {
                     new UserUnit { id = "1001", unlock = 1, lv = 1, exp = 0, piece = 30 },
                     new UserUnit { id = "1002", unlock = 1, lv = 1, exp = 0, piece = 20 },
@@ -154,7 +163,7 @@ public class LoginManager : MonoBehaviour
                     gems = 0
                 };
 
-                // ÀúÀå ½ÇÇà
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 FileManager.SaveUnits(units);
                 FileManager.SaveUserData(user);
                 this.GuestLogin();
@@ -163,20 +172,20 @@ public class LoginManager : MonoBehaviour
             catch (Exception e)
             {
                 Debug.LogError("Failed to save player name: " + e.Message);
-                return; // ÀúÀå¿¡ ½ÇÆĞÇÏ¸é ¸Ş¼­µå¸¦ Á¾·áÇÕ´Ï´Ù.
+                return; // ï¿½ï¿½ï¿½å¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½Ş¼ï¿½ï¿½å¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
             }
         }
         else
         {
             Debug.LogError("TMP_InputField not found in GuestformPanel.");
-            return; // ÀÔ·Â ÇÊµå¸¦ Ã£Áö ¸øÇÑ °æ¿ì ¸Ş¼­µå¸¦ Á¾·áÇÕ´Ï´Ù.
+            return; // ï¿½Ô·ï¿½ ï¿½Êµå¸¦ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ş¼ï¿½ï¿½å¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         }
 
         ShowGuestLoginPanel();
         LoginPanel.SetActive(!LoginPanel.activeSelf);
         LobbyEntryPanel.SetActive(!LobbyEntryPanel.activeSelf);
 
-        input.text = ""; // ÀÔ·Â ÇÊµå ÃÊ±âÈ­
+        input.text = ""; // ï¿½Ô·ï¿½ ï¿½Êµï¿½ ï¿½Ê±ï¿½È­
     }
 
 
@@ -185,17 +194,17 @@ public class LoginManager : MonoBehaviour
     {
         if (GuestformPanel != null)
         {  GuestformPanel.SetActive(!GuestformPanel.activeSelf); }
-        else {  Debug.LogError("GuestformÀÌ nullÀÔ´Ï´Ù. ÃÊ±âÈ­¿¡ ¹®Á¦°¡ ÀÖÀ» ¼ö ÀÖ½À´Ï´Ù."); }
+        else {  Debug.LogError("Guestformï¿½ï¿½ nullï¿½Ô´Ï´ï¿½. ï¿½Ê±ï¿½È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½."); }
     }
 
     public void GuestUUIDInit()
     {
-        // GameData¸¦ ·Îµå
+        // GameDataï¿½ï¿½ ï¿½Îµï¿½
         GameData gamedata = FileManager.LoadData();
 
         if (gamedata != null && gamedata.dataDictionary.ContainsKey(UUID_KEY))
         {
-            // UUID°¡ Á¸ÀçÇÏ¸é ·ÎµåµÈ UUID¸¦ Ãâ·Â
+            // UUIDï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½Îµï¿½ï¿½ UUIDï¿½ï¿½ ï¿½ï¿½ï¿½
             string existingUUID = gamedata.dataDictionary[UUID_KEY];
             Debug.Log("Existing Guest UUID: " + existingUUID);
             LoginPanel.SetActive(false);
@@ -206,7 +215,7 @@ public class LoginManager : MonoBehaviour
 
     public void OnLobbyEnterButtonClicked()
     {
-        // ·Îºñ ¾ÀÀ¸·Î ÀüÈ¯
+        // ï¿½Îºï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
         sceneLoader.LoadScene("LobbyTestScene");
     }
 }
