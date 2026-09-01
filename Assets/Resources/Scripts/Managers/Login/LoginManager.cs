@@ -30,6 +30,10 @@ public class LoginManager : MonoBehaviour
         if (GuestformPanel != null && LobbyEntryPanel != null && LobbyEntryPanel != null) { GuestformPanel.SetActive(false); }
         else { Debug.LogError("Panel�� ã�� �� �����ϴ�. �̸��� Ȯ���ϼ���."); }
 
+        // 서버 로그인 응답 구독
+        SocketDispatcher.Instance.On(SocketEvents.LoginSuccess, OnLoginSuccess);
+        SocketDispatcher.Instance.On(SocketEvents.LoginError, OnLoginError);
+
         if (AppConfig.Current.gpgsEnabled)
         {
         GPGSBinder.Inst.Init((isLoggedIn, localUser) => {
@@ -76,27 +80,35 @@ public class LoginManager : MonoBehaviour
 
     public void SendGoogleLoginEventMessageToServer(ILocalUser localUser)
     {
-        var messageToSend = new
+        string id = localUser.id;
+        string userName = localUser.userName;
+        string underage = localUser.underage.ToString();
+
+        // 재연결 시 자동 재로그인용으로 캐시
+        SocketBinder.Instance.CacheLoginPayload(id, userName, underage);
+        SocketSender.Send(SocketEvents.Login, new { id, userName, underage });
+    }
+
+    // 서버 login 응답 → 유저 프로필 로드
+    private void OnLoginSuccess(JsonData data)
+    {
+        if (data != null && data.Has("userProfile") && data["userProfile"] != null)
         {
-            @event = "login",  // @ ��ȣ�� ����Ͽ� ����� ���
-            data = new
-            {
-                id = localUser.id,
-                userName = localUser.userName,
-                underage = localUser.underage,
-            }
-        };
-        // JSON ���ڿ��� ��ȯ
-        string jsonMessage = JsonMapper.ToJson(messageToSend);
-        try {
-            // ������ �޽��� ����
-            SocketBinder.Instance.GetWs().Send(jsonMessage);
-            Console.WriteLine("������ �޽��� ����: " + jsonMessage);
+            UserManager.Instance.LoadUserFromJson(data["userProfile"]);
         }
-        catch (InvalidOperationException ex) {
-            // Log and handle the error
-            Debug.LogError("WebSocket is not open: " + ex.Message);
-        }
+
+        bool isNewUser = data != null && data.Has("isNewUser") && (bool)data["isNewUser"];
+        Debug.Log($"[Login] success (isNewUser={isNewUser})");
+        // TODO: isNewUser 면 튜토리얼 분기
+    }
+
+    private void OnLoginError(JsonData data)
+    {
+        string msg = data != null ? data.ToString() : "로그인에 실패했습니다.";
+        Debug.LogError("[Login] error: " + msg);
+        if (LoginPanel != null) LoginPanel.SetActive(true);
+        if (LobbyEntryPanel != null) LobbyEntryPanel.SetActive(false);
+        // TODO: 로그인 패널에 에러 텍스트 노출
     }
     //�Խ�Ʈ �α���
     public void GuestLogin()

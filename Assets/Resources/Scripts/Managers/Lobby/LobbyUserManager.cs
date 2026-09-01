@@ -7,7 +7,7 @@ using UnityEngine;
 public class LobbyUserManager : MonoBehaviour
 {
     public UnitDatabase unitDatabase;
-    // µ¦ º¯°æ ÀÌº¥Æ® Ãß°¡
+    // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ® ï¿½ß°ï¿½
     public Action<List<UnitData>> OnUnitDeckChanged;
 
     void Awake()
@@ -18,11 +18,11 @@ public class LobbyUserManager : MonoBehaviour
             return;
         }
 
-        // À¯Àú µ¥ÀÌÅÍ ·Îµå
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½
         UserData userdata = UserManager.Instance.currentUser;
         if (userdata != null)
         {
-            // selectedUnits µ¥ÀÌÅÍ¸¦ ±â¹ÝÀ¸·Î µ¦ ÃÊ±âÈ­
+            // selectedUnits ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê±ï¿½È­
             InitializeUnitDeck(userdata.selectedUnits);
         }
         else
@@ -36,7 +36,7 @@ public class LobbyUserManager : MonoBehaviour
         if (!unitDatabase.unitDeck.Contains(unit))
         {
             unitDatabase.unitDeck.Add(unit);
-            OnUnitDeckChanged?.Invoke(unitDatabase.unitDeck); // ÀÌº¥Æ® È£Ãâ
+            OnUnitDeckChanged?.Invoke(unitDatabase.unitDeck); // ï¿½Ìºï¿½Æ® È£ï¿½ï¿½
         }
     }
 
@@ -45,55 +45,55 @@ public class LobbyUserManager : MonoBehaviour
         if (unitDatabase.unitDeck.Contains(unit))
         {
             unitDatabase.unitDeck.Remove(unit);
-            OnUnitDeckChanged?.Invoke(unitDatabase.unitDeck); // ÀÌº¥Æ® È£Ãâ
+            OnUnitDeckChanged?.Invoke(unitDatabase.unitDeck); // ï¿½Ìºï¿½Æ® È£ï¿½ï¿½
         }
     }
 
-    // À¯´Ö µ¦ ÃÊ±âÈ­
-    private void InitializeUnitDeck(string[] selectedUnitIds)
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê±ï¿½È­
+    public void InitializeUnitDeck(string[] selectedUnitIds)
     {
-        // µ¦ ÃÊ±âÈ­
+        // ï¿½ï¿½ ï¿½Ê±ï¿½È­
         unitDatabase.unitDeck.Clear();
 
         foreach (string unitId in selectedUnitIds)
         {
-            // ScriptableObject °æ·Î ¼³Á¤
+            // ScriptableObject ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             string unitPath = $"Scripts/Data/UnitData/Unit_UnitData/CHA_{unitId:D4}";
             UnitData unit = Resources.Load<UnitData>(unitPath);
 
             if (unit != null)
             {
                 unitDatabase.unitDeck.Add(unit);
-                Debug.Log($"{unit.unitName}ÀÌ(°¡) µ¦¿¡ Ãß°¡µÇ¾ú½À´Ï´Ù.");
+                Debug.Log($"{unit.unitName}ï¿½ï¿½(ï¿½ï¿½) ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
             }
             else
             {
-                Debug.LogWarning($"À¯´Ö {unitId}À»(¸¦) ·ÎµåÇÒ ¼ö ¾ø½À´Ï´Ù. °æ·Î: {unitPath}");
+                Debug.LogWarning($"ï¿½ï¿½ï¿½ï¿½ {unitId}ï¿½ï¿½(ï¿½ï¿½) ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½. ï¿½ï¿½ï¿½: {unitPath}");
             }
         }
 
-        Debug.Log("À¯´Ö µ¦ ÃÊ±âÈ­ ¿Ï·á");
-        PrintUnitDeck(); // ÃÊ±âÈ­ ÈÄ °á°ú Ãâ·Â
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê±ï¿½È­ ï¿½Ï·ï¿½");
+        PrintUnitDeck(); // ï¿½Ê±ï¿½È­ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
     }
 
-    // µ¦ ÃÊ±âÈ­
+    // ï¿½ï¿½ ï¿½Ê±ï¿½È­
     public void ClearUnitDeck()
     {
         unitDatabase.unitDeck.Clear();
-        Debug.Log("µ¦ÀÌ ÃÊ±âÈ­µÇ¾ú½À´Ï´Ù.");
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
     }
 
-    // µ¦ ±³Ã¼
+    // ï¿½ï¿½ ï¿½ï¿½Ã¼
     public void ReplaceUnitDeck(List<UnitData> newDeck)
     {
         unitDatabase.unitDeck = newDeck;
-        Debug.Log("»õ·Î¿î µ¦À¸·Î ±³Ã¼µÇ¾ú½À´Ï´Ù.");
+        Debug.Log("ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
     }
 
-    // µ¦ Ãâ·Â (µð¹ö±ë¿ë)
+    // ï¿½ï¿½ ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
     public void PrintUnitDeck()
     {
-        Debug.Log("ÇöÀç À¯´Ö µ¦:");
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½:");
         foreach (var unit in unitDatabase.unitDeck)
         {
             Debug.Log($"- {unit.unitName}");

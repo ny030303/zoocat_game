@@ -13,21 +13,66 @@ public class ChangeUnitPanel : MonoBehaviour
 
     private UnitData changedUnitData;
     private UserUnit changedUserUnit;
-    public GameObject unitContainer; // À¯´Ö Á¤º¸¸¦ ¾÷µ¥ÀÌÆ®ÇÒ UI ÄÁÅ×ÀÌ³Ê
-    public GameObject unitTemplate;  // À¯´Ö UI ÅÛÇÃ¸´ (Prefab)
-    public Sprite defaultSprite;    // ±âº» ÀÌ¹ÌÁö (nullÀÏ ¶§ ´ëÃ¼)
-    
+    public GameObject unitContainer; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ UI ï¿½ï¿½ï¿½ï¿½ï¿½Ì³ï¿½
+    public GameObject unitTemplate;  // ï¿½ï¿½ï¿½ï¿½ UI ï¿½ï¿½ï¿½Ã¸ï¿½ (Prefab)
+    public Sprite defaultSprite;    // ï¿½âº» ï¿½Ì¹ï¿½ï¿½ï¿½ (nullï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ã¼)
+
+    // ì„œë²„ê°€ ì¸ì •í•œ ë§ˆì§€ë§‰ ë± (updateDeck ë¬´ë³€ê²½ ê°€ë“œ + deckUpdateError ë¡¤ë°±ìš©)
+    private static string[] lastServerDeck;
+
+    private void OnEnable()
+    {
+        SocketDispatcher.Instance.On(SocketEvents.DeckUpdated, OnDeckUpdated);
+        SocketDispatcher.Instance.On(SocketEvents.DeckUpdateError, OnDeckUpdateError);
+        if (lastServerDeck == null && UserManager.Instance != null && UserManager.Instance.currentUser != null)
+            lastServerDeck = UserManager.Instance.currentUser.selectedUnits;
+    }
+
+    private void OnDisable()
+    {
+        if (SocketDispatcher.HasInstance)
+        {
+            SocketDispatcher.Instance.Off(SocketEvents.DeckUpdated, OnDeckUpdated);
+            SocketDispatcher.Instance.Off(SocketEvents.DeckUpdateError, OnDeckUpdateError);
+        }
+    }
+
+    private void OnDeckUpdated(JsonData data)
+    {
+        if (data != null && data.Has("newDeck") && data["newDeck"] != null && data["newDeck"].IsArray)
+        {
+            var arr = data["newDeck"];
+            var deck = new string[arr.Count];
+            for (int i = 0; i < arr.Count; i++) deck[i] = arr[i].ToString();
+            lastServerDeck = deck;
+        }
+        Debug.Log("[Deck] server confirmed");
+    }
+
+    private void OnDeckUpdateError(JsonData data)
+    {
+        Debug.LogWarning("[Deck] update rejected - rolling back to last server deck");
+        if (lastServerDeck != null && lobbyUserManager != null)
+        {
+            if (UserManager.Instance != null && UserManager.Instance.currentUser != null)
+                UserManager.Instance.currentUser.selectedUnits = lastServerDeck;
+            lobbyUserManager.InitializeUnitDeck(lastServerDeck);
+            lobbyUserManager.OnUnitDeckChanged?.Invoke(lobbyUserManager.unitDatabase.unitDeck);
+        }
+        // í† ìŠ¤íŠ¸ëŠ” GlobalErrorHandler ê°€ í‘œì‹œ
+    }
+
     public void OnShowPanel(UnitData unit, UserUnit userUnit)
     {
-        // À¯´Ö ÄÁÅ×ÀÌ³Ê ÃÊ±âÈ­ (±âÁ¸ UI Å¬¸®¾î)
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì³ï¿½ ï¿½Ê±ï¿½È­ (ï¿½ï¿½ï¿½ï¿½ UI Å¬ï¿½ï¿½ï¿½ï¿½)
         foreach (Transform child in unitContainer.transform) { Destroy(child.gameObject); }
         changedUnitData = unit;
         changedUserUnit = userUnit;
-        // À¯´Ö UI »ı¼º
+        // ï¿½ï¿½ï¿½ï¿½ UI ï¿½ï¿½ï¿½ï¿½
         UnitTempleteCreater.CreateUnitTemplete(unit, unitTemplate, unitContainer, defaultSprite);
         GameObject unitObject = UnitTempleteCreater.CreateUnitTemplete(unit, unitTemplate, unitContainer, defaultSprite);
 
-        // ·¹º§ Ç¥½Ã
+        // ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½
         Transform levelchild = unitObject.transform.Find("Level");
         if (levelchild != null)
         {
@@ -40,33 +85,33 @@ public class ChangeUnitPanel : MonoBehaviour
     {
         if (lobbyUserManager == null || lobbyUserManager.unitDatabase == null)
         {
-            Debug.LogError("LobbyUserManager ¶Ç´Â UnitDatabase°¡ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogError("LobbyUserManager ï¿½Ç´ï¿½ UnitDatabaseï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾Ò½ï¿½ï¿½Ï´ï¿½.");
             return;
         }
 
         List<UnitData> unitDeck = lobbyUserManager.unitDatabase.unitDeck;
 
-        if (unitDeck.Contains(changedUnitData)) // ±âÁ¸ À¯´ÖÀÌ µ¦¿¡ ÀÖÀ» °æ¿ì
+        if (unitDeck.Contains(changedUnitData)) // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         {
             int index = unitDeck.IndexOf(changedUnitData);
-            if (unitDeck.Contains(unit)) // Å¬¸¯ÇÑ À¯´ÖÀÌ µ¦¿¡ ÀÖ´Â °æ¿ì
+            if (unitDeck.Contains(unit)) // Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½
             {
                 int unitIndex = unitDeck.IndexOf(unit);
-                unitDeck[unitIndex] = changedUnitData; // ±âÁ¸ À¯´ÖÀ» Å¬¸¯ÇÑ À¯´ÖÀÌ ÀÖ´ø À§Ä¡·Î ÀÌµ¿
+                unitDeck[unitIndex] = changedUnitData; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ìµï¿½
             }
-            unitDeck[index] = unit; // Å¬¸¯ÇÑ À¯´ÖÀ¸·Î º¯°æ
-            Debug.Log($"{changedUnitData.unitName}ÀÌ(°¡) {unit.unitName}À¸·Î ±³Ã¼µÊ.");
+            unitDeck[index] = unit; // Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            Debug.Log($"{changedUnitData.unitName}ï¿½ï¿½(ï¿½ï¿½) {unit.unitName}ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½.");
         }
-        else if (unitDeck.Contains(unit)) // Å¬¸¯ÇÑ À¯´ÖÀÌ µ¦¿¡ ÀÖÀ» °æ¿ì
+        else if (unitDeck.Contains(unit)) // Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         {
             int index = unitDeck.IndexOf(unit);
-            unitDeck[index] = changedUnitData; // Å¬¸¯ÇÑ À¯´Ö À§Ä¡¿¡ ±âÁ¸ changedUnitData¸¦ »ğÀÔ
-            Debug.Log($"{unit.unitName}ÀÌ(°¡) {changedUnitData.unitName}À¸·Î ±³Ã¼µÊ.");
+            unitDeck[index] = changedUnitData; // Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ changedUnitDataï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            Debug.Log($"{unit.unitName}ï¿½ï¿½(ï¿½ï¿½) {changedUnitData.unitName}ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½.");
         }
 
-        lobbyUserManager.OnUnitDeckChanged?.Invoke(unitDeck); // UI °»½Å ÀÌº¥Æ® È£Ãâ
+        lobbyUserManager.OnUnitDeckChanged?.Invoke(unitDeck); // UI ï¿½ï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ® È£ï¿½ï¿½
 
-        // º¯°æµÈ À¯´Ö µ¥ÀÌÅÍ¸¦ ¹İ¿µ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½İ¿ï¿½
         changedUnitData = unit;
 
         if (UserManager.Instance == null)
@@ -76,13 +121,13 @@ public class ChangeUnitPanel : MonoBehaviour
         }
 
         UserData userdata = UserManager.Instance.currentUser;
-        userdata.selectedUnits = unitDeck.ConvertAll(u => u.id.Replace("CHA_", "")).ToArray(); // UserDataÀÇ selectedUnits¿¡ ID¿¡¼­ "CHA_" Á¦°Å ÈÄ ÀúÀå
+        userdata.selectedUnits = unitDeck.ConvertAll(u => u.id.Replace("CHA_", "")).ToArray(); // UserDataï¿½ï¿½ selectedUnitsï¿½ï¿½ IDï¿½ï¿½ï¿½ï¿½ "CHA_" ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
         if (UserManager.Instance.isGuest == 0)
         {
-            FileManager.SaveUserData(userdata); // º¯°æ »çÇ× ÀúÀå
-            UserManager.Instance.currentUser = FileManager.LoadUserData(); // º¯°æµÈ µ¥ÀÌÅÍ ´Ù½Ã ·Îµå
-            Debug.Log("µ¦ º¯°æ »çÇ× ÀúÀå UserManager ¾÷µ¥ÀÌÆ® ¿Ï·á.");
+            FileManager.SaveUserData(userdata); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            UserManager.Instance.currentUser = FileManager.LoadUserData(); // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½Îµï¿½
+            Debug.Log("ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ UserManager ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ï·ï¿½.");
         } else
         {
             SendUpdateDeckEventMessageToServer(userdata, userdata.selectedUnits);
@@ -93,27 +138,15 @@ public class ChangeUnitPanel : MonoBehaviour
 
     private void SendUpdateDeckEventMessageToServer(UserData currentUser, string[] newDeck)
     {
-        var messageToSend = new
+        // ì„œë²„ê°€ ì¸ì •í•œ ë§ˆì§€ë§‰ ë±ê³¼ ê°™ìœ¼ë©´ ì „ì†¡ ì•ˆ í•¨ (ì„œë²„ "Failed to update deck" íšŒí”¼)
+        if (lastServerDeck != null && newDeck != null && newDeck.Length == lastServerDeck.Length)
         {
-            @event = "updateDeck",  // @ ±âÈ£¸¦ »ç¿ëÇÏ¿© ¿¹¾à¾î »ç¿ë
-            data = new
-            {
-                userId = currentUser.id,
-                newDeck = newDeck,
-            }
-        };
-        // JSON ¹®ÀÚ¿­·Î º¯È¯
-        string jsonMessage = JsonMapper.ToJson(messageToSend);
-        try
-        {
-            // ¼­¹ö¿¡ ¸Ş½ÃÁö Àü¼Û
-            SocketBinder.Instance.GetWs().Send(jsonMessage);
-            Console.WriteLine("¼­¹ö·Î ¸Ş½ÃÁö Àü¼Û: " + jsonMessage);
+            bool same = true;
+            for (int i = 0; i < newDeck.Length; i++)
+                if (newDeck[i] != lastServerDeck[i]) { same = false; break; }
+            if (same) { Debug.Log("[Deck] no change - skip updateDeck"); return; }
         }
-        catch (InvalidOperationException ex)
-        {
-            // Log and handle the error
-            Debug.LogError("WebSocket is not open: " + ex.Message);
-        }
+
+        SocketBinder.Instance.SendWhenAuthed(SocketEvents.UpdateDeck, new { newDeck });
     }
 }

@@ -1,11 +1,13 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-09-01T05:52:24.106Z",
+  "lastUpdated": "2026-09-01T08:04:39.506Z",
   "activeFeatures": [
     "dev-prod-env-separation",
     "Config",
     "Login",
-    "Editor"
+    "Editor",
+    "Network",
+    "Lobby"
   ],
   "primaryFeature": "dev-prod-env-separation",
   "features": {
@@ -66,7 +68,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-09-01T02:37:14.636Z",
-        "lastUpdated": "2026-09-01T02:38:10.205Z"
+        "lastUpdated": "2026-09-01T08:03:29.797Z"
       },
       "lastFile": "c:\\project_workspace\\zoocat_game\\Assets\\Resources\\Scripts\\Managers\\Login\\LoginManager.cs"
     },
@@ -82,6 +84,32 @@
         "lastUpdated": "2026-09-01T05:52:24.106Z"
       },
       "lastFile": "c:\\project_workspace\\zoocat_game\\Assets\\Editor\\BuildScript.cs"
+    },
+    "Network": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-09-01T07:57:51.407Z",
+        "lastUpdated": "2026-09-01T08:04:39.506Z"
+      },
+      "lastFile": "c:\\project_workspace\\zoocat_game\\Assets\\Resources\\Scripts\\Managers\\Network\\JsonEx.cs"
+    },
+    "Lobby": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-09-01T08:01:16.057Z",
+        "lastUpdated": "2026-09-01T08:01:32.598Z"
+      },
+      "lastFile": "c:\\project_workspace\\zoocat_game\\Assets\\Resources\\Scripts\\Managers\\Lobby\\LobbyUserManager.cs"
     }
   },
   "pipeline": {
@@ -92,7 +120,7 @@
   "session": {
     "startedAt": "2026-09-01T00:24:28.171Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-09-01T05:52:24.106Z"
+    "lastActivity": "2026-09-01T08:04:39.506Z"
   },
   "history": [
     {
@@ -170,6 +198,102 @@
     {
       "timestamp": "2026-09-01T05:52:24.106Z",
       "feature": "Editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T07:57:51.407Z",
+      "feature": "Network",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T07:57:58.902Z",
+      "feature": "Network",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T07:58:13.682Z",
+      "feature": "Network",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T07:58:20.831Z",
+      "feature": "Network",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T07:58:32.359Z",
+      "feature": "Network",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T07:59:00.115Z",
+      "feature": "Login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T07:59:44.671Z",
+      "feature": "Login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T07:59:52.880Z",
+      "feature": "Login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T08:00:08.793Z",
+      "feature": "Login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T08:00:21.339Z",
+      "feature": "Login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T08:01:16.058Z",
+      "feature": "Lobby",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T08:01:26.738Z",
+      "feature": "Lobby",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T08:01:32.598Z",
+      "feature": "Lobby",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T08:03:05.675Z",
+      "feature": "Network",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T08:03:29.797Z",
+      "feature": "Login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-09-01T08:04:39.506Z",
+      "feature": "Network",
       "phase": "do",
       "action": "updated"
     }
