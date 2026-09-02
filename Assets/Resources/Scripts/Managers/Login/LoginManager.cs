@@ -42,6 +42,7 @@ public class LoginManager : MonoBehaviour
                 Debug.Log("User is logged in." + localUser);
                 SendGoogleLoginEventMessageToServer(localUser);
                 UserManager.Instance.isGuest = 1;
+                UserManager.Instance.isAnonymous = false; // 구글 연동됨
                 // ������ �α��� �� ���� ó��
                 LoginPanel.SetActive(false);
                 LobbyEntryPanel.SetActive(true);
@@ -56,11 +57,11 @@ public class LoginManager : MonoBehaviour
         }
         else
         {
-            // dev 빌드: GPGS 초기화 스킵. 게스트/UUID 로그인 경로 사용
+            // dev 빌드: GPGS 초기화 스킵. 선택 화면 표시
             LoginPanel.SetActive(true);
             LobbyEntryPanel.SetActive(false);
         }
-        GuestUUIDInit();
+        // 자동 게스트 로그인 안 함 — 유저가 LoginPanel 에서 "게스트로 계속" / "구글 로그인" 을 명시적으로 선택
     }
     public void Logout()
     {
@@ -70,11 +71,28 @@ public class LoginManager : MonoBehaviour
         LobbyEntryPanel.SetActive(false);
     }
     public void GooglePlayLogin() {
+        if (!AppConfig.Current.gpgsEnabled)
+        {
+            // dev 빌드(.dev 패키지)는 GPGS 미설정 → 구글 로그인 불가
+            Debug.LogWarning("[Login] GPGS disabled in this build - use guest login");
+            ToastMessage.Show("이 빌드에서는 게스트 로그인만 가능합니다.");
+            return;
+        }
         GPGSBinder.Inst.Login((success, localUser) => {
-            if (success) { SendGoogleLoginEventMessageToServer(localUser); }
-
-            LoginPanel.SetActive(false);
-            LobbyEntryPanel.SetActive(true);
+            if (success)
+            {
+                UserManager.Instance.isGuest = 1;          // 서버(구글) 로그인 사용자
+                UserManager.Instance.isAnonymous = false;  // 구글 연동됨
+                SendGoogleLoginEventMessageToServer(localUser);
+                LoginPanel.SetActive(false);
+                LobbyEntryPanel.SetActive(true);
+            }
+            else
+            {
+                Debug.LogWarning("[Login] Google Play sign-in failed");
+                LoginPanel.SetActive(true);
+                LobbyEntryPanel.SetActive(false);
+            }
         });
     }
 
@@ -113,91 +131,83 @@ public class LoginManager : MonoBehaviour
     //�Խ�Ʈ �α���
     public void GuestLogin()
     {
-
-        UserManager.Instance.isGuest = 0;
+        // 로컬 캐시 먼저 (즉시 UI 표시용 — 서버 loginSuccess 오면 덮어씀)
         UserManager.Instance.currentUser = FileManager.LoadUserData();
         UserManager.Instance.units = FileManager.LoadUnits();
+        UserManager.Instance.isGuest = 1;        // 서버 세션 사용
+        UserManager.Instance.isAnonymous = true; // UUID 게스트 (아직 계정 미연동)
+
+        // 서버에 게스트 UUID 로 로그인 (서버 auth 는 id 문자열뿐, 없으면 자동 가입)
+        UserData local = UserManager.Instance.currentUser;
+        string uuid = local != null ? local.id : null;
+        string name = local != null && !string.IsNullOrEmpty(local.username) ? local.username : "Guest";
+
+        if (string.IsNullOrEmpty(uuid))
+        {
+            Debug.LogError("[Login] guest UUID missing - cannot server-login");
+            return;
+        }
+
+        SocketBinder.Instance.CacheLoginPayload(uuid, name, "true");
+        SocketSender.Send(SocketEvents.Login, new { id = uuid, userName = name, underage = "true" });
     }
     //�Խ�Ʈ ȸ������
+    // 닉네임 지정해서 새 게스트 계정 생성 (닉네임 폼용). 폼 없이 자동 생성도 가능.
+    private void CreateGuestAccount(string playerName)
+    {
+        string newUUID = Guid.NewGuid().ToString();
+        FileManager.SaveData(UUID_KEY, newUUID);
+        FileManager.SaveData("GuestPlayerName", playerName);
+
+        UserUnit[] units =
+        {
+            new UserUnit { id = "1001", unlock = 1, lv = 1, exp = 0, piece = 30 },
+            new UserUnit { id = "1002", unlock = 1, lv = 1, exp = 0, piece = 20 },
+            new UserUnit { id = "1003", unlock = 1, lv = 1, exp = 0, piece = 0 },
+            new UserUnit { id = "1004", unlock = 1, lv = 1, exp = 0, piece = 0 },
+            new UserUnit { id = "1005", unlock = 1, lv = 1, exp = 0, piece = 0 },
+            new UserUnit { id = "1006", unlock = 0, lv = 0, exp = 0, piece = 0 },
+            new UserUnit { id = "1007", unlock = 1, lv = 1, exp = 0, piece = 0 },
+            new UserUnit { id = "1008", unlock = 0, lv = 0, exp = 0, piece = 0 },
+            new UserUnit { id = "1009", unlock = 0, lv = 0, exp = 0, piece = 0 }
+        };
+        UserData user = new UserData
+        {
+            id = newUUID,
+            underage = true,
+            username = playerName,
+            level = 1,
+            experience = 0,
+            friends = new string[] { },
+            country = "",
+            language = "ko",
+            selectedUnits = new string[] { "1001", "1002", "1003", "1004", "1005" },
+            gold = 1000,
+            gems = 0
+        };
+        FileManager.SaveUnits(units);
+        FileManager.SaveUserData(user);
+        Debug.Log("[Login] guest account created: " + playerName);
+    }
+
+    // 닉네임 입력 폼의 확인 버튼
     public void GuestSignup()
     {
-        // �� UUID ���� �� ����
-        string newUUID = Guid.NewGuid().ToString();
-
-        try {
-            FileManager.SaveData(UUID_KEY, newUUID);
-            Debug.Log("New Guest UUID created and saved: " + newUUID);
-        }
-        catch (Exception e) {
-            Debug.LogError("Failed to save UUID: " + e.Message);
-            return; // ���忡 �����ϸ� �޼��带 �����մϴ�.
-        }
-
-        TMP_InputField input = GuestformPanel.GetComponentInChildren<TMP_InputField>();
-
-        if (input != null)
+        TMP_InputField input = GuestformPanel != null ? GuestformPanel.GetComponentInChildren<TMP_InputField>() : null;
+        string playerName = input != null ? input.text : "";
+        if (string.IsNullOrWhiteSpace(playerName))
         {
-            string playerName = input.text;
-            if (string.IsNullOrEmpty(playerName))
-            {
-                Debug.LogError("Player name is empty, please enter a name.");
-                return; // �̸��� ��� ���� ��� �޼��带 �����մϴ�.
-            }
-
-            try
-            {
-                //FileManager.SaveData("units", )
-                FileManager.SaveData("GuestPlayerName", playerName); // ���� ����
-                UserUnit[] units =  {
-                    new UserUnit { id = "1001", unlock = 1, lv = 1, exp = 0, piece = 30 },
-                    new UserUnit { id = "1002", unlock = 1, lv = 1, exp = 0, piece = 20 },
-                    new UserUnit { id = "1003", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                    new UserUnit { id = "1004", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                    new UserUnit { id = "1005", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                    new UserUnit { id = "1006", unlock = 0, lv = 0, exp = 0, piece = 0 },
-                    new UserUnit { id = "1007", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                    new UserUnit { id = "1008", unlock = 0, lv = 0, exp = 0, piece = 0 },
-                    new UserUnit { id = "1009", unlock = 0, lv = 0, exp = 0, piece = 0 }
-                };
-
-                UserData user = new UserData
-                {
-                    id = newUUID,
-                    underage = true,
-                    username = playerName,
-                    level = 1,
-                    experience = 0,
-                    friends = new string[] { },
-                    country = "",
-                    language = "ko",
-                    selectedUnits = new string[] { "1001", "1002", "1003", "1004", "1005" },
-                    gold = 1000,
-                    gems = 0
-                };
-
-                // ���� ����
-                FileManager.SaveUnits(units);
-                FileManager.SaveUserData(user);
-                this.GuestLogin();
-                Debug.Log($"Guest Player Name saved: {playerName}");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("Failed to save player name: " + e.Message);
-                return; // ���忡 �����ϸ� �޼��带 �����մϴ�.
-            }
-        }
-        else
-        {
-            Debug.LogError("TMP_InputField not found in GuestformPanel.");
-            return; // �Է� �ʵ带 ã�� ���� ��� �޼��带 �����մϴ�.
+            Debug.LogWarning("[Login] guest name empty");
+            return;
         }
 
-        ShowGuestLoginPanel();
-        LoginPanel.SetActive(!LoginPanel.activeSelf);
-        LobbyEntryPanel.SetActive(!LobbyEntryPanel.activeSelf);
+        CreateGuestAccount(playerName.Trim());
+        GuestLogin();
 
-        input.text = ""; // �Է� �ʵ� �ʱ�ȭ
+        if (input != null) input.text = "";
+        if (GuestformPanel != null) GuestformPanel.SetActive(false);
+        LoginPanel.SetActive(false);
+        LobbyEntryPanel.SetActive(true);
     }
 
 
@@ -209,20 +219,25 @@ public class LoginManager : MonoBehaviour
         else {  Debug.LogError("Guestform�� null�Դϴ�. �ʱ�ȭ�� ������ ���� �� �ֽ��ϴ�."); }
     }
 
-    public void GuestUUIDInit()
+    // 저장된 게스트 데이터(UUID)가 있는지
+    private bool HasSavedGuest()
     {
-        // GameData�� �ε�
         GameData gamedata = FileManager.LoadData();
+        return gamedata != null && gamedata.dataDictionary.ContainsKey(UUID_KEY);
+    }
 
-        if (gamedata != null && gamedata.dataDictionary.ContainsKey(UUID_KEY))
-        {
-            // UUID�� �����ϸ� �ε�� UUID�� ���
-            string existingUUID = gamedata.dataDictionary[UUID_KEY];
-            Debug.Log("Existing Guest UUID: " + existingUUID);
-            LoginPanel.SetActive(false);
-            LobbyEntryPanel.SetActive(true);
-            this.GuestLogin();
-        }
+    /// "게스트로 계속" 버튼.
+    /// 저장된 게스트가 있으면 그대로 이어서, 없으면 닉네임 입력 없이 자동 생성 후 로그인.
+    /// (닉네임을 직접 정하고 싶으면 GuestformPanel + GuestSignup 경로를 별도로 두면 됨)
+    public void ContinueAsGuest()
+    {
+        if (!HasSavedGuest())
+            CreateGuestAccount("게스트" + UnityEngine.Random.Range(1000, 10000));
+
+        GuestLogin(); // 로컬 로드 + 서버 login(UUID)
+        LoginPanel.SetActive(false);
+        if (GuestformPanel != null) GuestformPanel.SetActive(false);
+        LobbyEntryPanel.SetActive(true);
     }
 
     public void OnLobbyEnterButtonClicked()

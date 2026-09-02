@@ -86,3 +86,4 @@ fastlane/*.log
 
 # cloude
 /docs/
+/.bkit/

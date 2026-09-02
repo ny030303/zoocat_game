@@ -1251,7 +1251,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 525251956}
         m_TargetAssemblyTypeName: LoginManager, Assembly-CSharp
-        m_MethodName: ShowGuestLoginPanel
+        m_MethodName: ContinueAsGuest
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

@@ -27,15 +27,19 @@ public class SceneLoader : MonoBehaviour
     // userJoined: data = { units: { userId, units: Unit[] } | null }
     private void OnUserJoined(JsonData data)
     {
-        if (data != null && data.Has("units") && data["units"] != null
-            && data["units"].Has("units") && data["units"]["units"] != null)
+        JsonData serverUnits = null;
+        if (data != null && data.Has("units") && data["units"] != null && data["units"].Has("units"))
+            serverUnits = data["units"]["units"];
+
+        if (serverUnits != null && serverUnits.IsArray && serverUnits.Count > 0)
         {
-            units = data["units"]["units"];
+            units = serverUnits;
             UserManager.Instance.LoadUserUnitsFromJson(units);
         }
         else
         {
-            Debug.LogWarning("[SceneLoader] userJoined without units");
+            // 서버 로스터 없음(신규 게스트 등) → 로컬 로스터 유지
+            Debug.LogWarning("[SceneLoader] userJoined without units - keeping local roster");
         }
         isUserDataLoaded = true;
     }
@@ -81,18 +85,18 @@ public class SceneLoader : MonoBehaviour
         // 모든 유닛의 스탯 업데이트 진행
         for (int i = 0; i < unitList.Count; i++)
         {
-            if (unitList[i] != null)
+            if (unitList[i] == null) continue;
+            if (userUnits == null || i >= userUnits.Length) continue; // 유저 유닛 데이터 없으면 기본 스탯 유지
+
+            // ID 변환 및 기본 공격력 가져오기
+            if (baseUnitData.TryGetValue(unitList[i].id.Replace("CHA_", ""), out UnitData foundUnit))
             {
-                // ID 변환 및 기본 공격력 가져오기
-                if (baseUnitData.TryGetValue(unitList[i].id.Replace("CHA_", ""), out UnitData foundUnit))
-                {
-                    float baseAtk = foundUnit.atk; // 처음 설정된 기본 공격력
-                    unitList[i].atk = (int)Mathf.Round(baseAtk * Mathf.Pow(1.1f, userUnits[i].lv - 1)); // 레벨이 올라갈 때마다 10% 증가
-                }
-                else
-                {
-                    Debug.LogWarning($"Unit ID {unitList[i].id} not found in baseUnitData.");
-                }
+                float baseAtk = foundUnit.atk; // 처음 설정된 기본 공격력
+                unitList[i].atk = (int)Mathf.Round(baseAtk * Mathf.Pow(1.1f, userUnits[i].lv - 1)); // 레벨이 올라갈 때마다 10% 증가
+            }
+            else
+            {
+                Debug.LogWarning($"Unit ID {unitList[i].id} not found in baseUnitData.");
             }
         }
 
@@ -118,13 +122,16 @@ public class SceneLoader : MonoBehaviour
         // 아직 인증 전이면 SocketBinder 가 보류했다가 loginSuccess 후 자동 전송.
         SocketBinder.Instance.SendWhenAuthed(SocketEvents.JoinLobby);
 
-        // 서버로부터 응답을 기다림 (유저 데이터가 로드될 때까지 대기)
-        while (!isUserDataLoaded)
+        // 서버 응답(userJoined) 대기 — 소켓이 안 붙어도 타임아웃 후 로컬 캐시로 진행
+        const float timeout = 10f;
+        float elapsed = 0f;
+        while (!isUserDataLoaded && elapsed < timeout)
         {
+            elapsed += Time.deltaTime;
             yield return null;
         }
-        // TODO: userData를 파싱하고 게임 내에서 사용할 수 있도록 처리
-        // 예시: var user = JsonUtility.FromJson<UserData>(userData);
+        if (!isUserDataLoaded)
+            Debug.LogWarning("[SceneLoader] server data timeout - continuing with local cache");
     }
 
     // 비동기 씬 로드 및 로딩 화면 표시

@@ -23,12 +23,12 @@ public class UserData
 public class UserUnit
 {
     public string id;
-    public int unlock; // 1 = Àá±Ý ÇØÁ¦, 0 = Àá±Ý
-    public int lv;     // À¯´Ö ·¹º§
-    public int exp;    // À¯´Ö °æÇèÄ¡
-    public int piece;  // À¯´Ö Á¶°¢ ¼ö
+    public int unlock; // 1 = ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, 0 = ï¿½ï¿½ï¿½
+    public int lv;     // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    public int exp;    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ä¡
+    public int piece;  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
 
-    // ±âº» »ý¼ºÀÚ Ãß°¡
+    // ï¿½âº» ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
     public UserUnit() { }
 }
 
@@ -37,9 +37,10 @@ public class UserManager : MonoBehaviour
 {
     public static UserManager Instance;
 
-    public int isGuest = 0; // 0 = guest, 1 = ±¸±Û °ÔÀÓÁî °èÁ¤¿¬°á À¯Àú
+    public int isGuest = 0;          // 0 = ì„œë²„ ì„¸ì…˜ ì—†ìŒ, 1 = ì„œë²„ ì„¸ì…˜ ìžˆìŒ (ê²ŒìŠ¤íŠ¸ í¬í•¨)
+    public bool isAnonymous = true;  // true = UUID ê²ŒìŠ¤íŠ¸(ê³„ì • ë¯¸ì—°ë™), false = êµ¬ê¸€ ì—°ë™
     public UserData currentUser;
-    public UserUnit[] units;  // À¯ÀúÀÇ À¯´Ö µ¥ÀÌÅÍ ¹è¿­ -> °­È­Àç·á, º¸À¯»óÈ² µî
+    public UserUnit[] units;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½è¿­ -> ï¿½ï¿½È­ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È² ï¿½ï¿½
 
 
     public Action<UserUnit[]> OnUserUnitListChanged;
@@ -56,18 +57,18 @@ public class UserManager : MonoBehaviour
         }
     }
 
-    // À¯Àú µ¥ÀÌÅÍ¸¦ JSONÀ¸·ÎºÎÅÍ ·ÎµåÇÏ´Â ¸Þ¼­µå
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ JSONï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½Ï´ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½
     public void LoadUserFromJson(JsonData jsonData)
     {
-        // LitJsonÀ» »ç¿ëÇØ JSON µ¥ÀÌÅÍ¸¦ UserData °´Ã¼·Î º¯È¯
+        // LitJsonï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ JSON ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ UserData ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½È¯
         currentUser = JsonMapper.ToObject<UserData>(jsonData.ToJson());
         Debug.Log("User data loaded using LitJson.");
     }
 
-    // À¯ÀúÀÇ À¯´Ö µ¥ÀÌÅÍ¸¦ JSONÀ¸·ÎºÎÅÍ ·ÎµåÇÏ´Â ¸Þ¼­µå
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ JSONï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½Ï´ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½
     public void LoadUserUnitsFromJson(JsonData jsonData)
     {
-        // LitJsonÀ» »ç¿ëÇØ JSON µ¥ÀÌÅÍ¸¦ UserUnit[] ¹è¿­·Î º¯È¯
+        // LitJsonï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ JSON ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ UserUnit[] ï¿½è¿­ï¿½ï¿½ ï¿½ï¿½È¯
         units = JsonMapper.ToObject<UserUnit[]>(jsonData.ToJson());
         Debug.Log("User units loaded using LitJson.");
     }
@@ -77,7 +78,7 @@ public class UserManager : MonoBehaviour
         currentUser.experience += newScore;
     }
 
-    // À¯´Ö µ¥ÀÌÅÍ¸¦ ¾÷µ¥ÀÌÆ®ÇÏ´Â ¸Þ¼­µå
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½Ï´ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½
     public void UpdateUnitData(string unitId, int newLevel, int newExp)
     {
         foreach (var unit in units)
