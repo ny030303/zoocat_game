@@ -58,6 +58,27 @@ public class MatchmakingController : MonoBehaviour
         Refresh();
     }
 
+    private void Start()
+    {
+        // 직전 대전 보상을 로비 진입 시 1회 표시 (재화 자체는 PvpBattleController 가 이미 적용)
+        if (MatchSession.PendingReward != null)
+            StartCoroutine(ShowPendingReward());
+    }
+
+    private IEnumerator ShowPendingReward()
+    {
+        var rw = MatchSession.PendingReward;
+        MatchSession.PendingReward = null; // 즉시 소비 (씬 재로드 시 중복 방지)
+        if (rw == null) yield break;
+
+        float t = 0f;
+        while (ToastMessage.Instance == null && t < 3f) { t += Time.deltaTime; yield return null; }
+
+        string res = rw.result == PvpResult.Win ? "승리" : rw.result == PvpResult.Lose ? "패배" : "무승부";
+        string msg = $"대전 {res}!  +{rw.gold} 골드" + (rw.gems > 0 ? $"  +{rw.gems} 젬" : "");
+        ToastMessage.Show(msg, 2.5f);
+    }
+
     private void OnDisable()
     {
         if (SocketDispatcher.HasInstance)
