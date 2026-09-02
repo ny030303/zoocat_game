@@ -8,7 +8,7 @@ using UnityEngine.SocialPlatforms.Impl;
 
 public class LoginManager : MonoBehaviour
 {
-    public SceneLoader sceneLoader; // SceneLoader ½ºÅ©¸³Æ®¸¦ ÂüÁ¶
+    public SceneLoader sceneLoader; // SceneLoader ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     private GameObject LoginPanel;
     private GameObject GuestformPanel;
@@ -21,33 +21,47 @@ public class LoginManager : MonoBehaviour
         if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.ExternalStorageWrite)) {
             UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.ExternalStorageWrite);
         }
-        // Å¬·¡½º ¼öÁØÀÇ Guestform º¯¼ö¸¦ ÃÊ±âÈ­
+        // Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Guestform ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
         LoginPanel = GameObject.Find("Login Panel");
         GuestformPanel = GameObject.Find("Guest Form Panel");
         LobbyEntryPanel = GameObject.Find("Lobby Entry Panel");
 
-        // Á¤»óÀûÀ¸·Î Ã£¾ÆÁ³´ÂÁö È®ÀÎÇÏ´Â °ÍÀÌ ÁÁ½À´Ï´Ù.
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
         if (GuestformPanel != null && LobbyEntryPanel != null && LobbyEntryPanel != null) { GuestformPanel.SetActive(false); }
-        else { Debug.LogError("PanelÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù. ÀÌ¸§À» È®ÀÎÇÏ¼¼¿ä."); }
+        else { Debug.LogError("Panelï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½. ï¿½Ì¸ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½."); }
 
+        // ì„œë²„ ë¡œê·¸ì¸ ì‘ë‹µ êµ¬ë…
+        SocketDispatcher.Instance.On(SocketEvents.LoginSuccess, OnLoginSuccess);
+        SocketDispatcher.Instance.On(SocketEvents.LoginError, OnLoginError);
+
+        if (AppConfig.Current.gpgsEnabled)
+        {
         GPGSBinder.Inst.Init((isLoggedIn, localUser) => {
             if (isLoggedIn)
             {
                 Debug.Log("User is logged in." + localUser);
                 SendGoogleLoginEventMessageToServer(localUser);
                 UserManager.Instance.isGuest = 1;
-                // °ÔÀÓÀÇ ·Î±×ÀÎ ÈÄ ·ÎÁ÷ Ã³¸®
+                UserManager.Instance.isAnonymous = false; // êµ¬ê¸€ ì—°ë™ë¨
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Î±ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
                 LoginPanel.SetActive(false);
                 LobbyEntryPanel.SetActive(true);
             }
             else {
                 Debug.Log("Googlegames User failed to log in.");
-                // ·Î±×ÀÎ ½ÇÆĞ ½Ã Ã³¸®ÇÒ ·ÎÁ÷
+                // ï¿½Î±ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 LoginPanel.SetActive(true);
                 LobbyEntryPanel.SetActive(false);
             }
         });
-        GuestUUIDInit();
+        }
+        else
+        {
+            // dev ë¹Œë“œ: GPGS ì´ˆê¸°í™” ìŠ¤í‚µ. ì„ íƒ í™”ë©´ í‘œì‹œ
+            LoginPanel.SetActive(true);
+            LobbyEntryPanel.SetActive(false);
+        }
+        // ìë™ ê²ŒìŠ¤íŠ¸ ë¡œê·¸ì¸ ì•ˆ í•¨ â€” ìœ ì €ê°€ LoginPanel ì—ì„œ "ê²ŒìŠ¤íŠ¸ë¡œ ê³„ì†" / "êµ¬ê¸€ ë¡œê·¸ì¸" ì„ ëª…ì‹œì ìœ¼ë¡œ ì„ íƒ
     }
     public void Logout()
     {
@@ -57,126 +71,143 @@ public class LoginManager : MonoBehaviour
         LobbyEntryPanel.SetActive(false);
     }
     public void GooglePlayLogin() {
+        if (!AppConfig.Current.gpgsEnabled)
+        {
+            // dev ë¹Œë“œ(.dev íŒ¨í‚¤ì§€)ëŠ” GPGS ë¯¸ì„¤ì • â†’ êµ¬ê¸€ ë¡œê·¸ì¸ ë¶ˆê°€
+            Debug.LogWarning("[Login] GPGS disabled in this build - use guest login");
+            ToastMessage.Show("ì´ ë¹Œë“œì—ì„œëŠ” ê²ŒìŠ¤íŠ¸ ë¡œê·¸ì¸ë§Œ ê°€ëŠ¥í•©ë‹ˆë‹¤.");
+            return;
+        }
         GPGSBinder.Inst.Login((success, localUser) => {
-            if (success) { SendGoogleLoginEventMessageToServer(localUser); }
-
-            LoginPanel.SetActive(false);
-            LobbyEntryPanel.SetActive(true);
+            if (success)
+            {
+                UserManager.Instance.isGuest = 1;          // ì„œë²„(êµ¬ê¸€) ë¡œê·¸ì¸ ì‚¬ìš©ì
+                UserManager.Instance.isAnonymous = false;  // êµ¬ê¸€ ì—°ë™ë¨
+                SendGoogleLoginEventMessageToServer(localUser);
+                LoginPanel.SetActive(false);
+                LobbyEntryPanel.SetActive(true);
+            }
+            else
+            {
+                Debug.LogWarning("[Login] Google Play sign-in failed");
+                LoginPanel.SetActive(true);
+                LobbyEntryPanel.SetActive(false);
+            }
         });
     }
 
     public void SendGoogleLoginEventMessageToServer(ILocalUser localUser)
     {
-        var messageToSend = new
-        {
-            @event = "login",  // @ ±âÈ£¸¦ »ç¿ëÇÏ¿© ¿¹¾à¾î »ç¿ë
-            data = new
-            {
-                id = localUser.id,
-                userName = localUser.userName,
-                underage = localUser.underage,
-            }
-        };
-        // JSON ¹®ÀÚ¿­·Î º¯È¯
-        string jsonMessage = JsonMapper.ToJson(messageToSend);
-        try {
-            // ¼­¹ö¿¡ ¸Ş½ÃÁö Àü¼Û
-            SocketBinder.Instance.GetWs().Send(jsonMessage);
-            Console.WriteLine("¼­¹ö·Î ¸Ş½ÃÁö Àü¼Û: " + jsonMessage);
-        }
-        catch (InvalidOperationException ex) {
-            // Log and handle the error
-            Debug.LogError("WebSocket is not open: " + ex.Message);
-        }
+        string id = localUser.id;
+        string userName = localUser.userName;
+        string underage = localUser.underage.ToString();
+
+        // ì¬ì—°ê²° ì‹œ ìë™ ì¬ë¡œê·¸ì¸ìš©ìœ¼ë¡œ ìºì‹œ
+        SocketBinder.Instance.CacheLoginPayload(id, userName, underage);
+        SocketSender.Send(SocketEvents.Login, new { id, userName, underage });
     }
-    //°Ô½ºÆ® ·Î±×ÀÎ
+
+    // ì„œë²„ login ì‘ë‹µ â†’ ìœ ì € í”„ë¡œí•„ ë¡œë“œ
+    private void OnLoginSuccess(JsonData data)
+    {
+        if (data != null && data.Has("userProfile") && data["userProfile"] != null)
+        {
+            UserManager.Instance.LoadUserFromJson(data["userProfile"]);
+        }
+
+        bool isNewUser = data != null && data.Has("isNewUser") && (bool)data["isNewUser"];
+        Debug.Log($"[Login] success (isNewUser={isNewUser})");
+        // TODO: isNewUser ë©´ íŠœí† ë¦¬ì–¼ ë¶„ê¸°
+    }
+
+    private void OnLoginError(JsonData data)
+    {
+        string msg = data != null ? data.ToString() : "ë¡œê·¸ì¸ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.";
+        Debug.LogError("[Login] error: " + msg);
+        if (LoginPanel != null) LoginPanel.SetActive(true);
+        if (LobbyEntryPanel != null) LobbyEntryPanel.SetActive(false);
+        // TODO: ë¡œê·¸ì¸ íŒ¨ë„ì— ì—ëŸ¬ í…ìŠ¤íŠ¸ ë…¸ì¶œ
+    }
+    //ï¿½Ô½ï¿½Æ® ï¿½Î±ï¿½ï¿½ï¿½
     public void GuestLogin()
     {
-
-        UserManager.Instance.isGuest = 0;
+        // ë¡œì»¬ ìºì‹œ ë¨¼ì € (ì¦‰ì‹œ UI í‘œì‹œìš© â€” ì„œë²„ loginSuccess ì˜¤ë©´ ë®ì–´ì”€)
         UserManager.Instance.currentUser = FileManager.LoadUserData();
         UserManager.Instance.units = FileManager.LoadUnits();
+        UserManager.Instance.isGuest = 1;        // ì„œë²„ ì„¸ì…˜ ì‚¬ìš©
+        UserManager.Instance.isAnonymous = true; // UUID ê²ŒìŠ¤íŠ¸ (ì•„ì§ ê³„ì • ë¯¸ì—°ë™)
+
+        // ì„œë²„ì— ê²ŒìŠ¤íŠ¸ UUID ë¡œ ë¡œê·¸ì¸ (ì„œë²„ auth ëŠ” id ë¬¸ìì—´ë¿, ì—†ìœ¼ë©´ ìë™ ê°€ì…)
+        UserData local = UserManager.Instance.currentUser;
+        string uuid = local != null ? local.id : null;
+        string name = local != null && !string.IsNullOrEmpty(local.username) ? local.username : "Guest";
+
+        if (string.IsNullOrEmpty(uuid))
+        {
+            Debug.LogError("[Login] guest UUID missing - cannot server-login");
+            return;
+        }
+
+        SocketBinder.Instance.CacheLoginPayload(uuid, name, "true");
+        SocketSender.Send(SocketEvents.Login, new { id = uuid, userName = name, underage = "true" });
     }
-    //°Ô½ºÆ® È¸¿ø°¡ÀÔ
+    //ï¿½Ô½ï¿½Æ® È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ë‹‰ë„¤ì„ ì§€ì •í•´ì„œ ìƒˆ ê²ŒìŠ¤íŠ¸ ê³„ì • ìƒì„± (ë‹‰ë„¤ì„ í¼ìš©). í¼ ì—†ì´ ìë™ ìƒì„±ë„ ê°€ëŠ¥.
+    private void CreateGuestAccount(string playerName)
+    {
+        string newUUID = Guid.NewGuid().ToString();
+        FileManager.SaveData(UUID_KEY, newUUID);
+        FileManager.SaveData("GuestPlayerName", playerName);
+
+        UserUnit[] units =
+        {
+            new UserUnit { id = "1001", unlock = 1, lv = 1, exp = 0, piece = 30 },
+            new UserUnit { id = "1002", unlock = 1, lv = 1, exp = 0, piece = 20 },
+            new UserUnit { id = "1003", unlock = 1, lv = 1, exp = 0, piece = 0 },
+            new UserUnit { id = "1004", unlock = 1, lv = 1, exp = 0, piece = 0 },
+            new UserUnit { id = "1005", unlock = 1, lv = 1, exp = 0, piece = 0 },
+            new UserUnit { id = "1006", unlock = 0, lv = 0, exp = 0, piece = 0 },
+            new UserUnit { id = "1007", unlock = 1, lv = 1, exp = 0, piece = 0 },
+            new UserUnit { id = "1008", unlock = 0, lv = 0, exp = 0, piece = 0 },
+            new UserUnit { id = "1009", unlock = 0, lv = 0, exp = 0, piece = 0 }
+        };
+        UserData user = new UserData
+        {
+            id = newUUID,
+            underage = true,
+            username = playerName,
+            level = 1,
+            experience = 0,
+            friends = new string[] { },
+            country = "",
+            language = "ko",
+            selectedUnits = new string[] { "1001", "1002", "1003", "1004", "1005" },
+            gold = 1000,
+            gems = 0
+        };
+        FileManager.SaveUnits(units);
+        FileManager.SaveUserData(user);
+        Debug.Log("[Login] guest account created: " + playerName);
+    }
+
+    // ë‹‰ë„¤ì„ ì…ë ¥ í¼ì˜ í™•ì¸ ë²„íŠ¼
     public void GuestSignup()
     {
-        // »õ UUID »ı¼º ¹× ÀúÀå
-        string newUUID = Guid.NewGuid().ToString();
-
-        try {
-            FileManager.SaveData(UUID_KEY, newUUID);
-            Debug.Log("New Guest UUID created and saved: " + newUUID);
-        }
-        catch (Exception e) {
-            Debug.LogError("Failed to save UUID: " + e.Message);
-            return; // ÀúÀå¿¡ ½ÇÆĞÇÏ¸é ¸Ş¼­µå¸¦ Á¾·áÇÕ´Ï´Ù.
-        }
-
-        TMP_InputField input = GuestformPanel.GetComponentInChildren<TMP_InputField>();
-
-        if (input != null)
+        TMP_InputField input = GuestformPanel != null ? GuestformPanel.GetComponentInChildren<TMP_InputField>() : null;
+        string playerName = input != null ? input.text : "";
+        if (string.IsNullOrWhiteSpace(playerName))
         {
-            string playerName = input.text;
-            if (string.IsNullOrEmpty(playerName))
-            {
-                Debug.LogError("Player name is empty, please enter a name.");
-                return; // ÀÌ¸§ÀÌ ºñ¾î ÀÖÀ» °æ¿ì ¸Ş¼­µå¸¦ Á¾·áÇÕ´Ï´Ù.
-            }
-
-            try
-            {
-                //FileManager.SaveData("units", )
-                FileManager.SaveData("GuestPlayerName", playerName); // ³×ÀÓ ÀúÀå
-                UserUnit[] units =  {
-                    new UserUnit { id = "1001", unlock = 1, lv = 1, exp = 0, piece = 30 },
-                    new UserUnit { id = "1002", unlock = 1, lv = 1, exp = 0, piece = 20 },
-                    new UserUnit { id = "1003", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                    new UserUnit { id = "1004", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                    new UserUnit { id = "1005", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                    new UserUnit { id = "1006", unlock = 0, lv = 0, exp = 0, piece = 0 },
-                    new UserUnit { id = "1007", unlock = 1, lv = 1, exp = 0, piece = 0 },
-                    new UserUnit { id = "1008", unlock = 0, lv = 0, exp = 0, piece = 0 },
-                    new UserUnit { id = "1009", unlock = 0, lv = 0, exp = 0, piece = 0 }
-                };
-
-                UserData user = new UserData
-                {
-                    id = newUUID,
-                    underage = true,
-                    username = playerName,
-                    level = 1,
-                    experience = 0,
-                    friends = new string[] { },
-                    country = "",
-                    language = "ko",
-                    selectedUnits = new string[] { "1001", "1002", "1003", "1004", "1005" },
-                    gold = 1000,
-                    gems = 0
-                };
-
-                // ÀúÀå ½ÇÇà
-                FileManager.SaveUnits(units);
-                FileManager.SaveUserData(user);
-                this.GuestLogin();
-                Debug.Log($"Guest Player Name saved: {playerName}");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("Failed to save player name: " + e.Message);
-                return; // ÀúÀå¿¡ ½ÇÆĞÇÏ¸é ¸Ş¼­µå¸¦ Á¾·áÇÕ´Ï´Ù.
-            }
-        }
-        else
-        {
-            Debug.LogError("TMP_InputField not found in GuestformPanel.");
-            return; // ÀÔ·Â ÇÊµå¸¦ Ã£Áö ¸øÇÑ °æ¿ì ¸Ş¼­µå¸¦ Á¾·áÇÕ´Ï´Ù.
+            Debug.LogWarning("[Login] guest name empty");
+            return;
         }
 
-        ShowGuestLoginPanel();
-        LoginPanel.SetActive(!LoginPanel.activeSelf);
-        LobbyEntryPanel.SetActive(!LobbyEntryPanel.activeSelf);
+        CreateGuestAccount(playerName.Trim());
+        GuestLogin();
 
-        input.text = ""; // ÀÔ·Â ÇÊµå ÃÊ±âÈ­
+        if (input != null) input.text = "";
+        if (GuestformPanel != null) GuestformPanel.SetActive(false);
+        LoginPanel.SetActive(false);
+        LobbyEntryPanel.SetActive(true);
     }
 
 
@@ -185,28 +216,33 @@ public class LoginManager : MonoBehaviour
     {
         if (GuestformPanel != null)
         {  GuestformPanel.SetActive(!GuestformPanel.activeSelf); }
-        else {  Debug.LogError("GuestformÀÌ nullÀÔ´Ï´Ù. ÃÊ±âÈ­¿¡ ¹®Á¦°¡ ÀÖÀ» ¼ö ÀÖ½À´Ï´Ù."); }
+        else {  Debug.LogError("Guestformï¿½ï¿½ nullï¿½Ô´Ï´ï¿½. ï¿½Ê±ï¿½È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½."); }
     }
 
-    public void GuestUUIDInit()
+    // ì €ì¥ëœ ê²ŒìŠ¤íŠ¸ ë°ì´í„°(UUID)ê°€ ìˆëŠ”ì§€
+    private bool HasSavedGuest()
     {
-        // GameData¸¦ ·Îµå
         GameData gamedata = FileManager.LoadData();
+        return gamedata != null && gamedata.dataDictionary.ContainsKey(UUID_KEY);
+    }
 
-        if (gamedata != null && gamedata.dataDictionary.ContainsKey(UUID_KEY))
-        {
-            // UUID°¡ Á¸ÀçÇÏ¸é ·ÎµåµÈ UUID¸¦ Ãâ·Â
-            string existingUUID = gamedata.dataDictionary[UUID_KEY];
-            Debug.Log("Existing Guest UUID: " + existingUUID);
-            LoginPanel.SetActive(false);
-            LobbyEntryPanel.SetActive(true);
-            this.GuestLogin();
-        }
+    /// "ê²ŒìŠ¤íŠ¸ë¡œ ê³„ì†" ë²„íŠ¼.
+    /// ì €ì¥ëœ ê²ŒìŠ¤íŠ¸ê°€ ìˆìœ¼ë©´ ê·¸ëŒ€ë¡œ ì´ì–´ì„œ, ì—†ìœ¼ë©´ ë‹‰ë„¤ì„ ì…ë ¥ ì—†ì´ ìë™ ìƒì„± í›„ ë¡œê·¸ì¸.
+    /// (ë‹‰ë„¤ì„ì„ ì§ì ‘ ì •í•˜ê³  ì‹¶ìœ¼ë©´ GuestformPanel + GuestSignup ê²½ë¡œë¥¼ ë³„ë„ë¡œ ë‘ë©´ ë¨)
+    public void ContinueAsGuest()
+    {
+        if (!HasSavedGuest())
+            CreateGuestAccount("ê²ŒìŠ¤íŠ¸" + UnityEngine.Random.Range(1000, 10000));
+
+        GuestLogin(); // ë¡œì»¬ ë¡œë“œ + ì„œë²„ login(UUID)
+        LoginPanel.SetActive(false);
+        if (GuestformPanel != null) GuestformPanel.SetActive(false);
+        LobbyEntryPanel.SetActive(true);
     }
 
     public void OnLobbyEnterButtonClicked()
     {
-        // ·Îºñ ¾ÀÀ¸·Î ÀüÈ¯
+        // ï¿½Îºï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
         sceneLoader.LoadScene("LobbyTestScene");
     }
 }

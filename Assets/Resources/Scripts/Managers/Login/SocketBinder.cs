@@ -1,137 +1,188 @@
-﻿using LitJson;
 using System;
-using System.Collections;
+using System.Collections.Generic;
+using LitJson;
 using UnityEngine;
 using WebSocketSharp;
 
+/// <summary>
+/// WebSocket 연결/재연결/raw I/O + 인증 상태(<see cref="ConnState"/>) 관리.
+/// 수신 메시지는 파싱하지 않고 <see cref="SocketDispatcher"/> 로 넘긴다.
+/// 재연결 성공 시 캐시된 자격증명으로 <c>login</c> 을 자동 재전송한다.
+/// WebSocket 콜백은 BG 스레드에서 오므로 플래그만 세우고 <see cref="Update"/> 에서 처리한다.
+/// </summary>
 public class SocketBinder : MonoBehaviour
 {
-    public static SocketBinder Instance;
+    public static SocketBinder Instance { get; private set; }
+
+    public enum ConnState { Disconnected, Connecting, Connected, Authenticating, Authenticated, Kicked }
+    public ConnState State { get; private set; } = ConnState.Disconnected;
+
+    /// 서버가 강제 종료(close 4000, 중복 로그인 등)했을 때. 안내 메시지 전달.
+    public event Action<string> OnKicked;
+
+    private const int KickCloseCode = 4000;
+    private const float ReconnectDelaySec = 5f;
+
+    [Tooltip("비워두면 AppConfig.Current.socketUrl 사용. 값을 넣으면 수동 오버라이드")]
+    [SerializeField] private string serverAddress = "";
+
     private WebSocket ws;
-    public event Action<string> OnWebSocketMessageReceived;
+    private bool isQuitting;
 
-    [SerializeField] private string serverAddress = "ws://192.168.1.151:3000";
-    private bool isQuitting = false; // 🔄 종료 시 재연결 방지 변수 추가
-    private bool isReconnecting = false; // 🔄 중복 재연결 방지 변수 추가
+    // --- BG 스레드 → 메인 스레드 신호 ---
+    private volatile bool _openedSignal;
+    private volatile bool _closedSignal;
+    private volatile int _closeCode;
+    private float _reconnectAtRealtime = -1f;
 
-    void Awake()
+    // --- login 자격증명 캐시 (메모리) ---
+    private string _cid, _cname, _cunderage;
+    private bool HasCachedLogin => !string.IsNullOrEmpty(_cid);
+
+    // --- Authenticated 이전 보류 송신 ---
+    private readonly List<KeyValuePair<string, object>> _pending = new List<KeyValuePair<string, object>>();
+
+    private void Awake()
     {
-        if (Instance == null)
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
+    private void Start()
+    {
+        // 상태 관리용 자체 구독 (UI 는 LoginManager 가 별도 구독)
+        SocketDispatcher.Instance.On(SocketEvents.LoginSuccess, OnLoginSuccessState);
+        SocketDispatcher.Instance.On(SocketEvents.LoginError, OnLoginErrorState);
+        Connect();
+    }
+
+    public WebSocket GetWs() => ws;
+
+    private string ResolveServerAddress()
+        => string.IsNullOrWhiteSpace(serverAddress) ? AppConfig.Current.socketUrl : serverAddress;
+
+    private void Connect()
+    {
+        if (ws != null) { try { ws.CloseAsync(); } catch { } ws = null; }
+
+        State = ConnState.Connecting;
+        string addr = ResolveServerAddress();
+        Debug.Log("[SocketBinder] connecting to " + addr);
+
+        ws = new WebSocket(addr);
+        ws.OnMessage += Ws_OnMessage;
+        ws.OnOpen += Ws_OnOpen;
+        ws.OnClose += Ws_OnClose;
+        ws.OnError += Ws_OnError;
+        ws.ConnectAsync();
+    }
+
+    // ================= 송신 =================
+
+    /// LoginManager 가 login 을 보낼 때 호출 — 재연결 시 자동 재로그인용.
+    public void CacheLoginPayload(string id, string userName, string underage)
+    {
+        _cid = id; _cname = userName; _cunderage = underage;
+    }
+
+    /// 인증이 필요한 이벤트. Authenticated 면 즉시, 아니면 보류 후 인증되면 flush.
+    public void SendWhenAuthed(string ev, object data = null)
+    {
+        if (State == ConnState.Authenticated) { SocketSender.Send(ev, data); return; }
+        _pending.Add(new KeyValuePair<string, object>(ev, data));
+        Debug.Log($"[SocketBinder] queued until auth: {ev}");
+    }
+
+    /// "로그인이 필요합니다" 수신 시(GlobalErrorHandler) 또는 재연결 후 자동 호출.
+    public void RequestReLogin()
+    {
+        if (!HasCachedLogin)
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
+            Debug.LogWarning("[SocketBinder] re-login requested but no cached credentials");
             return;
         }
+        State = ConnState.Authenticating;
+        SocketSender.Send(SocketEvents.Login, new { id = _cid, userName = _cname, underage = _cunderage });
     }
 
-    void Start()
+    private void FlushPending()
     {
-        InitializeWebSocket();
+        if (_pending.Count == 0) return;
+        foreach (var kv in _pending) SocketSender.Send(kv.Key, kv.Value);
+        _pending.Clear();
     }
-    public WebSocket GetWs() { return ws; }
 
-    private void InitializeWebSocket()
+    // ================= WebSocket 콜백 (BG 스레드 — 플래그만) =================
+
+    private void Ws_OnMessage(object s, MessageEventArgs e) => SocketDispatcher.Instance.Enqueue(e.Data);
+
+    private void Ws_OnOpen(object s, EventArgs e) => _openedSignal = true;
+
+    private void Ws_OnClose(object s, CloseEventArgs e)
     {
-        if (ws != null) // 🔄 기존 WebSocket 인스턴스가 존재하면 정리 후 재생성
+        _closeCode = e.Code;
+        _closedSignal = true;
+    }
+
+    private void Ws_OnError(object s, ErrorEventArgs e)
+    {
+        Debug.LogError("[SocketBinder] ws error: " + e.Message);
+        // 재연결은 OnClose 가 처리 (중복 방지)
+    }
+
+    // ================= 메인 스레드 처리 =================
+
+    private void Update()
+    {
+        if (_openedSignal)
         {
-            ws.Close();
-            ws = null;
+            _openedSignal = false;
+            State = ConnState.Connected;
+            Debug.Log("[SocketBinder] opened");
+            if (HasCachedLogin) RequestReLogin();
         }
 
-        ws = new WebSocket(serverAddress);
-        ws.OnMessage += ws_OnMessage;
-        ws.OnOpen += ws_OnOpen;
-        ws.OnClose += ws_OnClose;
-        ws.OnError += ws_OnError; // 🔄 WebSocket 에러 핸들러 추가
-        ws.Connect();
-    }
-
-    public void SendMessage(string message)
-    {
-        if (ws != null && ws.ReadyState == WebSocketState.Open)
+        if (_closedSignal)
         {
-            ws.Send(message);
-            Debug.Log("Message sent: " + message);
-        }
-        else
-        {
-            Debug.LogError("WebSocket is not open. Message not sent.");
-        }
-    }
+            _closedSignal = false;
+            Debug.Log($"[SocketBinder] closed (code {_closeCode})");
 
-    void ws_OnMessage(object sender, MessageEventArgs e)
-    {
-        try
-        {
-            Debug.Log("Message received: " + e.Data);
-            JsonData jsonData = JsonMapper.ToObject(e.Data);
-
-            if (jsonData["event"].ToString().Equals("loginSuccess"))
+            if (_closeCode == KickCloseCode)
             {
-                JsonData userProfile = jsonData["data"]["userProfile"];
-                UserManager.Instance.LoadUserFromJson(userProfile);
+                State = ConnState.Kicked;
+                _pending.Clear();
+                OnKicked?.Invoke("다른 기기에서 로그인되었습니다.");
             }
+            else if (!isQuitting)
+            {
+                State = ConnState.Disconnected;
+                _reconnectAtRealtime = Time.realtimeSinceStartup + ReconnectDelaySec;
+            }
+        }
 
-            OnWebSocketMessageReceived?.Invoke(e.Data);
-        }
-        catch (JsonException jsonEx)
+        if (_reconnectAtRealtime > 0f && Time.realtimeSinceStartup >= _reconnectAtRealtime && !isQuitting)
         {
-            Debug.LogError("JSON Parsing Error: " + jsonEx.Message);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError("Error in ws_OnMessage: " + ex.Message);
+            _reconnectAtRealtime = -1f;
+            Debug.Log("[SocketBinder] reconnecting...");
+            Connect();
         }
     }
 
-    void ws_OnOpen(object sender, EventArgs e)
+    private void OnLoginSuccessState(JsonData _)
     {
-        Debug.Log("WebSocket connection opened.");
-        isReconnecting = false; // 🔄 재연결 플래그 리셋
+        State = ConnState.Authenticated;
+        FlushPending();
     }
 
-    void ws_OnClose(object sender, CloseEventArgs e)
+    private void OnLoginErrorState(JsonData _)
     {
-        if (!isQuitting) // 🔄 앱 종료 시 재연결 방지
-        {
-            Debug.Log($"WebSocket closed. Reason: {e.Reason}");
-            StartCoroutine(TryReconnect()); // 🔄 비동기 재연결 시도
-        }
-    }
-
-    void ws_OnError(object sender, ErrorEventArgs e) // 🔄 추가: WebSocket 에러 발생 시 처리
-    {
-        Debug.LogError("WebSocket Error: " + e.Message);
-        StartCoroutine(TryReconnect()); // 🔄 에러 발생 시에도 재연결 시도
-    }
-
-    private IEnumerator TryReconnect()
-    {
-        if (isReconnecting) // 🔄 중복 재연결 방지
-            yield break;
-
-        isReconnecting = true;
-
-        Debug.Log("Attempting to reconnect...");
-        yield return new WaitForSeconds(5f); // 🔄 5초 대기 후 재연결 시도
-
-        if (!isQuitting) // 🔄 앱 종료가 아닐 때만 재연결
-        {
-            InitializeWebSocket();
-        }
+        if (State == ConnState.Authenticating) State = ConnState.Connected;
     }
 
     private void OnApplicationQuit()
     {
-        isQuitting = true; // 🔄 앱 종료 시 플래그 설정
-        if (ws != null && ws.ReadyState == WebSocketState.Open)
-        {
-            ws.Close();
-        }
-        ws = null;
+        isQuitting = true;
+        if (ws != null) { try { ws.CloseAsync(); } catch { } ws = null; }
     }
 }

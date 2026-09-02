@@ -13,44 +13,35 @@ public class SceneLoader : MonoBehaviour
     public Slider progressBar;        // 로딩 진행 바 (Slider UI 요소)
     private bool isUserDataLoaded = false; // 유저 데이터가 로드되었는지 확인하는 변수
     private JsonData units;          // 서버에서 받은 유저 데이터
-    private IEnumerator WaitForSocketBinderAndSubscribe()
-    {
-        // SocketBinder.Instance가 null일 경우 일정 시간 대기
-        while (SocketBinder.Instance == null)
-        {
-            Debug.Log("Waiting for SocketBinder to initialize...");
-            yield return new WaitForSeconds(0.1f);  // 0.1초 대기 후 다시 확인
-        }
-
-        // SocketBinder가 초기화되면 WebSocket 이벤트 구독
-        SocketBinder.Instance.OnWebSocketMessageReceived += OnWebSocketMessageReceived;
-    }
-
     void OnEnable()
     {
-        // Coroutine을 통해 SocketBinder가 초기화될 때까지 대기
-        StartCoroutine(WaitForSocketBinderAndSubscribe());
+        SocketDispatcher.Instance.On(SocketEvents.UserJoined, OnUserJoined);
     }
-
 
     void OnDisable()
     {
-        SocketBinder.Instance.OnWebSocketMessageReceived -= OnWebSocketMessageReceived;
+        if (SocketDispatcher.HasInstance)
+            SocketDispatcher.Instance.Off(SocketEvents.UserJoined, OnUserJoined);
     }
-    // Handle WebSocket message
-    private void OnWebSocketMessageReceived(string data)
+
+    // userJoined: data = { units: { userId, units: Unit[] } | null }
+    private void OnUserJoined(JsonData data)
     {
-        Debug.Log("OnWebSocketMessageReceived: " + data);
-        // Parse the message and check if it's the user data
-        JsonData jsonData = JsonMapper.ToObject(data);
-        if (jsonData["event"].ToString() == "userJoined")
+        JsonData serverUnits = null;
+        if (data != null && data.Has("units") && data["units"] != null && data["units"].Has("units"))
+            serverUnits = data["units"]["units"];
+
+        if (serverUnits != null && serverUnits.IsArray && serverUnits.Count > 0)
         {
-            // Extract the user data
-            units = jsonData["data"]["units"]["units"];
+            units = serverUnits;
             UserManager.Instance.LoadUserUnitsFromJson(units);
-            //Debug.Log("scene_units unlock:" + UserManager.Instance.units[0].unlock);
-            isUserDataLoaded = true;
         }
+        else
+        {
+            // 서버 로스터 없음(신규 게스트 등) → 로컬 로스터 유지
+            Debug.LogWarning("[SceneLoader] userJoined without units - keeping local roster");
+        }
+        isUserDataLoaded = true;
     }
 
     // 씬을 비동기적으로 로드하는 코루틴
@@ -94,18 +85,18 @@ public class SceneLoader : MonoBehaviour
         // 모든 유닛의 스탯 업데이트 진행
         for (int i = 0; i < unitList.Count; i++)
         {
-            if (unitList[i] != null)
+            if (unitList[i] == null) continue;
+            if (userUnits == null || i >= userUnits.Length) continue; // 유저 유닛 데이터 없으면 기본 스탯 유지
+
+            // ID 변환 및 기본 공격력 가져오기
+            if (baseUnitData.TryGetValue(unitList[i].id.Replace("CHA_", ""), out UnitData foundUnit))
             {
-                // ID 변환 및 기본 공격력 가져오기
-                if (baseUnitData.TryGetValue(unitList[i].id.Replace("CHA_", ""), out UnitData foundUnit))
-                {
-                    float baseAtk = foundUnit.atk; // 처음 설정된 기본 공격력
-                    unitList[i].atk = (int)Mathf.Round(baseAtk * Mathf.Pow(1.1f, userUnits[i].lv - 1)); // 레벨이 올라갈 때마다 10% 증가
-                }
-                else
-                {
-                    Debug.LogWarning($"Unit ID {unitList[i].id} not found in baseUnitData.");
-                }
+                float baseAtk = foundUnit.atk; // 처음 설정된 기본 공격력
+                unitList[i].atk = (int)Mathf.Round(baseAtk * Mathf.Pow(1.1f, userUnits[i].lv - 1)); // 레벨이 올라갈 때마다 10% 증가
+            }
+            else
+            {
+                Debug.LogWarning($"Unit ID {unitList[i].id} not found in baseUnitData.");
             }
         }
 
@@ -127,35 +118,20 @@ public class SceneLoader : MonoBehaviour
         // 로딩 화면을 활성화
         loadingScreen.SetActive(true);
 
-        // 유저 데이터를 서버에 요청
-        var messageToSend = new
-        {
-            @event = "joinLobby",  // 서버에 보낼 이벤트 이름
-            data = new
-            {
-                userId = UserManager.Instance.currentUser.id  // 필요에 따라 유저 ID 등을 포함
-            }
-        };
+        // 서버에 로비 참가 요청 (연결의 userId 사용 - payload 불필요).
+        // 아직 인증 전이면 SocketBinder 가 보류했다가 loginSuccess 후 자동 전송.
+        SocketBinder.Instance.SendWhenAuthed(SocketEvents.JoinLobby);
 
-        // JSON 문자열로 변환하여 서버로 전송
-        string jsonMessage = LitJson.JsonMapper.ToJson(messageToSend);
-        try
+        // 서버 응답(userJoined) 대기 — 소켓이 안 붙어도 타임아웃 후 로컬 캐시로 진행
+        const float timeout = 10f;
+        float elapsed = 0f;
+        while (!isUserDataLoaded && elapsed < timeout)
         {
-            SocketBinder.Instance.GetWs().Send(jsonMessage);  // 서버에 메시지 전송
-        }
-        catch (InvalidOperationException ex)
-        {
-            Debug.LogError("WebSocket is not open: " + ex.Message);
-            yield break;
-        }
-
-        // 서버로부터 응답을 기다림 (유저 데이터가 로드될 때까지 대기)
-        while (!isUserDataLoaded)
-        {
+            elapsed += Time.deltaTime;
             yield return null;
         }
-        // TODO: userData를 파싱하고 게임 내에서 사용할 수 있도록 처리
-        // 예시: var user = JsonUtility.FromJson<UserData>(userData);
+        if (!isUserDataLoaded)
+            Debug.LogWarning("[SceneLoader] server data timeout - continuing with local cache");
     }
 
     // 비동기 씬 로드 및 로딩 화면 표시
