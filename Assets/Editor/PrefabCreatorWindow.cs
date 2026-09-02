@@ -3,7 +3,7 @@ using UnityEngine;
 
 
 /// <summary>
-/// À¯´Ö¸¸ »ý¼º°¡´É Enemy ±¸Çö ¾ÈÇÔ
+/// ï¿½ï¿½ï¿½Ö¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Enemy ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 /// </summary>
 public partial class PrefabCreatorWindow : EditorWindow
 {
@@ -65,7 +65,7 @@ public partial class PrefabCreatorWindow : EditorWindow
         Rigidbody2D rb = newPrefab.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Dynamic;
         rb.mass = 1;
-        rb.angularDrag = 0.05f;
+        rb.angularDamping = 0.05f;
         rb.gravityScale = 0;
         rb.freezeRotation = true;
         rb.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
@@ -128,7 +128,7 @@ public partial class PrefabCreatorWindow : EditorWindow
         Rigidbody2D rb = newPrefab.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Dynamic;
         rb.mass = 1;
-        rb.angularDrag = 0.05f;
+        rb.angularDamping = 0.05f;
         rb.gravityScale = 0;
         rb.freezeRotation = true;
         rb.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
