@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,12 +8,15 @@ public class GameEventManager : MonoBehaviour
     private List<PlayerAction> actionLog = new List<PlayerAction>();
     private LogManager logManager;
 
+    /// Phase C: ê¸°ë¡ëœ ì•¡ì…˜ì„ ì‹¤ì‹œê°„ êµ¬ë…(ëŒ€ì „ ë¦´ë ˆì´). íŒŒì¼ ë¡œê¹…ê³¼ ë³„ê°œ.
+    public event Action<PlayerAction> OnActionRecorded;
+
     void Start()
     {
         logManager = gameObject.AddComponent<LogManager>();
     }
 
-    // À¯´Ö ÇÕÄ¡±â ÀÌº¥Æ®
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ìºï¿½Æ®
     public void OnUnitMerged(string unitID1, Vector3 startPosition, string unitID2, Vector3 endPosition, string resultUnitID, Vector3 resultPosition)
     {
         UnitMergeEvent mergeEvent = new UnitMergeEvent
@@ -29,7 +33,7 @@ public class GameEventManager : MonoBehaviour
         RecordMergeEvent(mergeEvent);
     }
 
-    // À¯´Ö ½ºÆù ÀÌº¥Æ®
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ®
     public void OnUnitSpawned(string unitID, Vector3 position)
     {
         UnitSpawnEvent spawnEvent = new UnitSpawnEvent
@@ -40,7 +44,7 @@ public class GameEventManager : MonoBehaviour
         };
         RecordSpawnEvent(spawnEvent);
     }
-    // À¯´Ö ·¹º§ ¾÷±×·¹ÀÌµå ÀÌº¥Æ®
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½×·ï¿½ï¿½Ìµï¿½ ï¿½Ìºï¿½Æ®
     public void OnUnitLevelUpgraded(string unitID, int unitNumber)
     {
         UnitLevelUpgradeEvent unitLevelUpgradeEvent = new UnitLevelUpgradeEvent
@@ -52,43 +56,44 @@ public class GameEventManager : MonoBehaviour
         RecordLevelUpgradedEvent(unitLevelUpgradeEvent);
     }
 
-    // ==== ÀÌº¥Æ®º° ÇÃ·¹ÀÌ ±â·Ï ¿µ¿ª ====
+    // êµ¬ë…ì(ëŒ€ì „ ë¦´ë ˆì´) ë¨¼ì € í†µì§€ â†’ ê·¸ ë‹¤ìŒ íŒŒì¼ ë¡œê¹…(IL2CPP ì—ì„œ Newtonsoft AOT ë¡œ ì‹¤íŒ¨í•´ë„
+    // ë¦´ë ˆì´ëŠ” ì˜í–¥ ì—†ë„ë¡ try/catch).
+    private void Commit(PlayerAction action)
+    {
+        actionLog.Add(action);
+        OnActionRecorded?.Invoke(action);
+        try { logManager.RecordAction(action); }
+        catch (Exception ex) { Debug.LogWarning("[GameEventManager] log write failed: " + ex.Message); }
+    }
+
+    // ==== ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ====
     private void RecordMergeEvent(UnitMergeEvent mergeEvent)
     {
-        PlayerAction action = new PlayerAction
+        Commit(new PlayerAction
         {
             timestamp = mergeEvent.timestamp,
             actionType = "UnitMerge",
             actionData = mergeEvent
-        };
-
-        actionLog.Add(action);
-        logManager.RecordAction(action); // LogManager¿¡ ·Î±× ±â·Ï
+        });
     }
 
     private void RecordSpawnEvent(UnitSpawnEvent spawnEvent)
     {
-        PlayerAction action = new PlayerAction
+        Commit(new PlayerAction
         {
             timestamp = spawnEvent.timestamp,
             actionType = "UnitSpawn",
             actionData = spawnEvent
-        };
-
-        actionLog.Add(action);
-        logManager.RecordAction(action); // LogManager¿¡ ·Î±× ±â·Ï
+        });
     }
     private void RecordLevelUpgradedEvent(UnitLevelUpgradeEvent unitLevelUpgradeEvent)
     {
-        PlayerAction action = new PlayerAction
+        Commit(new PlayerAction
         {
             timestamp = unitLevelUpgradeEvent.timestamp,
             actionType = "UnitLevelUpgrade",
             actionData = unitLevelUpgradeEvent
-        };
-
-        actionLog.Add(action);
-        logManager.RecordAction(action); // LogManager¿¡ ·Î±× ±â·Ï
+        });
     }
 
     public List<PlayerAction> GetActionLog()
@@ -102,7 +107,7 @@ public class GameEventManager : MonoBehaviour
         {
             Debug.Log($"Action Type: {action.actionType}, Timestamp: {action.timestamp}");
 
-            // actionData¿¡ Ãß°¡ Á¤º¸°¡ ÀÖÀ» °æ¿ì, Ãâ·Â
+            // actionDataï¿½ï¿½ ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½
             if (action.actionData != null)
             {
                 Debug.Log($"Action Data: {action.actionData.ToString()}");
@@ -116,11 +121,11 @@ public class GameEventManager : MonoBehaviour
 public class PlayerAction
 {
     public float timestamp;
-    public string actionType; // ¿¹: "Move", "Attack" µî
-    public object actionData; // ÇÊ¿äÇÑ Ãß°¡ Á¤º¸
+    public string actionType; // ï¿½ï¿½: "Move", "Attack" ï¿½ï¿½
+    public object actionData; // ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½
 }
 
-// À¯´Ö ÇÕÄ¡±â ÀÌº¥Æ® ¿¹½Ã
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 public class UnitMergeEvent
 {
     public string unitID1;
@@ -132,7 +137,7 @@ public class UnitMergeEvent
     public float timestamp;
 }
 
-// À¯´Ö ½ºÆù ÀÌº¥Æ® ¿¹½Ã
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 public class UnitSpawnEvent
 {
     public string unitID;
@@ -140,7 +145,7 @@ public class UnitSpawnEvent
     public float timestamp;
 }
 
-// À¯´Ö ½ºÆù ÀÌº¥Æ® ¿¹½Ã
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 public class UnitLevelUpgradeEvent
 {
     public string unitID;

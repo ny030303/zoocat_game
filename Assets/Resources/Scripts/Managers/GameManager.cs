@@ -17,9 +17,20 @@ public class GameManager : MonoBehaviour
     public TextMeshPro currencyTextObj;
     public UnitDatabase unitDatabase;
 
-    // currency ¹Ù²î¾úÀ»¶§ ÇÚµé·¯
+    // currency ï¿½Ù²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµé·¯
     public delegate void SummonStateHandler();
     public event SummonStateHandler OnCurrencyChanged;
+
+    // ---- Phase C ëŒ€ì „ í›… ----
+    /// true ë©´ ë¡œì»¬ AI ë ˆì¸ ëˆ„ìˆ˜ëŠ” ë¬´ì‹œí•˜ê³ , aiLifePoints ëŠ” SetOpponentLife ë¡œë§Œ ê°±ì‹ ëœë‹¤.
+    public bool pvpMode = false;
+    public event Action<int> OnPlayerLifeChanged;   // ë‚´ ë¼ì´í”„ê°€ ë°”ë€” ë•Œ (ë‚¨ì€ ê°’)
+    public event Action<int> OnOpponentLifeChanged; // ìƒëŒ€ ë¼ì´í”„ê°€ ë°”ë€” ë•Œ (ë‚¨ì€ ê°’)
+    public event Action OnLocalGameOver;            // ë‚´ ë¼ì´í”„ 0
+    public event Action OnLocalWin;                 // ìƒëŒ€ ë¼ì´í”„ 0 (ë¡œì»¬ íŒì •) ë˜ëŠ” ForceEnd(true)
+
+    public int PlayerLife => playerLifePoints;
+    public int OpponentLife => aiLifePoints;
     void Awake()
     {
         unitDatabase.Initialize();
@@ -34,7 +45,7 @@ public class GameManager : MonoBehaviour
     {
         if (currency >= summonCost)
         {
-            // À¯´Ö ¼ÒÈ¯ ·ÎÁ÷
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ ï¿½ï¿½ï¿½ï¿½
             currency -= summonCost;
             ChangeCurrency();
             summonCost = Mathf.Min(summonCost + 10, maxSummonCost);
@@ -42,7 +53,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // ÀçÈ­ ºÎÁ· ¾Ë¸²
+            // ï¿½ï¿½È­ ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½
             return false;
         }
     }
@@ -56,7 +67,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // ¾÷±×·¹ÀÌµå ºÒ°¡´É ¾Ë¸²
+            // ï¿½ï¿½ï¿½×·ï¿½ï¿½Ìµï¿½ ï¿½Ò°ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½
         }
     }
     public void AddGold(int rewardGold)
@@ -79,11 +90,14 @@ public class GameManager : MonoBehaviour
             {
                 playerLifePoints--;
                 UpdateLifeUI(playerLifeManager, playerLifePoints);
+                OnPlayerLifeChanged?.Invoke(playerLifePoints);
             }
 
             if (playerLifePoints <= 0) GameOver();
         } else if(owner == "ai")
         {
+            if (pvpMode) return; // ëŒ€ì „ ì¤‘ì—” ë¡œì»¬ AI ë ˆì¸ ëˆ„ìˆ˜ ë¬´ì‹œ (ìƒëŒ€ ë¼ì´í”„ëŠ” ë„¤íŠ¸ì›Œí¬ë¡œ)
+
             if (aiLifePoints > 0)
             {
                 aiLifePoints--;
@@ -92,22 +106,45 @@ public class GameManager : MonoBehaviour
 
             if (aiLifePoints <= 0) Win();
         }
-        
+
+    }
+
+    // ---- Phase C: ìƒëŒ€ ë¼ì´í”„ë¥¼ ë„¤íŠ¸ì›Œí¬ ê°’ìœ¼ë¡œ ê°±ì‹  ----
+    public void SetOpponentLife(int value)
+    {
+        aiLifePoints = Mathf.Max(0, value);
+        UpdateLifeUI(aiLifeManager, aiLifePoints);
+        OnOpponentLifeChanged?.Invoke(aiLifePoints);
+        if (pvpMode && aiLifePoints <= 0) Win();
+    }
+
+    /// ë„¤íŠ¸ì›Œí¬ íŒì •(ìƒëŒ€ ì´íƒˆ ë“±)ìœ¼ë¡œ ê°•ì œ ì¢…ë£Œ.
+    public void ForceEnd(bool won)
+    {
+        if (won) Win();
+        else GameOver();
     }
     void UpdateLifeUI(LifeManager lifeManager, int lifePoints)
     {
         if (lifeManager != null) lifeManager.UpdateLifeUI(lifePoints);
     }
+    private bool _ended;
     void GameOver()
     {
+        if (_ended) return;
+        _ended = true;
         Time.timeScale = 0;
         if (playerLifeManager != null) playerLifeManager.GameOver();
-        // Ãß°¡ÀûÀÎ °ÔÀÓ ¿À¹ö Ã³¸® (¿¹: °ÔÀÓ ÁßÁö, Á¡¼ö ÀúÀå µî)
+        OnLocalGameOver?.Invoke();
+        // ï¿½ß°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ (ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½)
     }
     void Win()
     {
+        if (_ended) return;
+        _ended = true;
         Time.timeScale = 0;
         if (aiLifeManager != null) aiLifeManager.GameOver();
-        // Ãß°¡ÀûÀÎ °ÔÀÓ ½Â¸® Ã³¸® (¿¹: °ÔÀÓ ÁßÁö, Á¡¼ö ÀúÀå µî)
+        OnLocalWin?.Invoke();
+        // ï¿½ß°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Â¸ï¿½ Ã³ï¿½ï¿½ (ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½)
     }
 }
