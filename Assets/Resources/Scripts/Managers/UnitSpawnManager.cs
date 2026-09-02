@@ -3,17 +3,17 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
-/// À¯´Ö»ı¼º±â
+/// ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½
 /// </summary>
 public class UnitSpawnManager : MonoBehaviour
 {
     public string owner;
     public UnitDatabase unitDatabase;
-    public Transform parentTransform; // ¾Æ±ºÀ» ¹èÄ¡ÇÒ ºÎ¸ğ ¿ÀºêÁ§Æ®
-    public Vector2 startSpawnPosition = new Vector2((float)0, (float)0); // ½ÃÀÛ À§Ä¡
-    public Vector2 spawnOffset = new Vector2((float)1.2, (float)1.2); // ½ºÆù °£°İ
-    public int rows = 3; // Çà ¼ö
-    public int columns = 5; // ¿­ ¼ö
+    public Transform parentTransform; // ï¿½Æ±ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
+    public Vector2 startSpawnPosition = new Vector2((float)0, (float)0); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
+    public Vector2 spawnOffset = new Vector2((float)1.2, (float)1.2); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    public int rows = 3; // ï¿½ï¿½ ï¿½ï¿½
+    public int columns = 5; // ï¿½ï¿½ ï¿½ï¿½
     private GameEventManager eventManager;
     private List<Vector2> availablePositions;
     private int[] availableState;
@@ -32,7 +32,7 @@ public class UnitSpawnManager : MonoBehaviour
         if(availableState == null)
         {
             availableState = new int[rows * columns];
-            // °¡´ÉÇÑ ¸ğµç À§Ä¡¸¦ °è»êÇÏ¿© ¸®½ºÆ®¿¡ ÀúÀå
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             availablePositions = new List<Vector2>();
             for (int row = 0; row < rows; row++)
             {
@@ -47,24 +47,24 @@ public class UnitSpawnManager : MonoBehaviour
         }
     }
 
-    // ¹è¿­ÀÇ ¸ğµç °ªÀ» ´õÇÑ ÇÕÀ» ¹İÈ¯ÇÏ´Â ¸Ş¼­µå
+    // ï¿½è¿­ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ï¿½Ï´ï¿½ ï¿½Ş¼ï¿½ï¿½ï¿½
     private int GetSumOfAvailableState()
     {
-        int sum = 0; // ÇÕÀ» ÀúÀåÇÒ º¯¼ö
-        // ¹è¿­À» ¼øÈ¸ÇÏ¸é¼­ ¸ğµç ¿ä¼ÒÀÇ °ªÀ» ´õÇÕ´Ï´Ù.
+        int sum = 0; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        // ï¿½è¿­ï¿½ï¿½ ï¿½ï¿½È¸ï¿½Ï¸é¼­ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         for (int i = 0; i < availableState.Length; i++)
         {
             sum += availableState[i];
         }
 
-        return sum; // ÃÖÁ¾ ÇÕÀ» ¹İÈ¯
+        return sum; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
     }
 
     public int getAvailablePosition(Vector2 targetPosition)
     {
         foreach (Vector2 pos in availablePositions)
         {
-            if (pos.ToString() == targetPosition.ToString()) // Vector2´Â == ¿¬»êÀÚ¸¦ ¿À¹ö·ÎµåÇÏ¿© µ¿µî¼º ºñ±³°¡ °¡´ÉÇÕ´Ï´Ù.
+            if (pos.ToString() == targetPosition.ToString()) // Vector2ï¿½ï¿½ == ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Îµï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½î¼º ï¿½ñ±³°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
             {
                 return availablePositions.IndexOf(pos);
             }
@@ -73,7 +73,32 @@ public class UnitSpawnManager : MonoBehaviour
     }
     public Transform GetParentTransform() { return parentTransform ? parentTransform : null; }
     public bool IsSpawnNext() { return GetSumOfAvailableState() < (rows * columns) ? true : false; }
-    //»ı¼º ·ÎÁ÷
+
+    // ---- Phase C ëŒ€ì „ ë¯¸ëŸ¬ìš© (ì…€ ì¸ë±ìŠ¤ <-> ìœ„ì¹˜) ----
+    public int CellCount => rows * columns;
+
+    public Vector2 CellToPosition(int cell)
+    {
+        if (availablePositions == null) Initialize();
+        if (cell < 0 || cell >= availablePositions.Count) return new Vector2(-1, -1);
+        return availablePositions[cell];
+    }
+
+    /// ì›”ë“œ/ë¡œì»¬ ìœ„ì¹˜ë¥¼ ê·¸ë¦¬ë“œ ì…€ ì¸ë±ìŠ¤ë¡œ. ëª» ì°¾ìœ¼ë©´ -1.
+    public int PositionToCell(Vector2 position)
+    {
+        if (availablePositions == null) Initialize();
+        return getAvailablePosition(position);
+    }
+
+    /// ì§€ì • ì…€ì— ìœ ë‹› ìŠ¤í°(ìƒëŒ€ ìŠ¤í° ì¬í˜„). owner ê°€ "ai" ë©´ unitID ë¡œ ì¡°íšŒëœë‹¤.
+    public GameObject SpawnAt(int cell, string unitID)
+    {
+        Vector2 pos = CellToPosition(cell);
+        if (pos.x < 0 && pos.y < 0) { Debug.LogWarning("[UnitSpawnManager] SpawnAt bad cell " + cell); return null; }
+        return SpawnNextAlly(pos, unitID);
+    }
+    //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public GameObject SpawnNextAlly(Vector2? defpos = null, string unitID = null)
     {
         GameObject newAlly = null;
@@ -95,38 +120,38 @@ public class UnitSpawnManager : MonoBehaviour
                     }
                 }
                 spawnPos = spawnRandomPosition(randomPositionIndex);
-                // »ç¿ëµÈ À§Ä¡¸¦ ¸®½ºÆ®¿¡¼­ Á¦°Å
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 availableState[randomPositionIndex] = 1;
 
                 
             } else {
-                // °ªÀÇ ÀÎµ¦½º Ã£±â
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ Ã£ï¿½ï¿½
                 int idx = getAvailablePosition(spawnPos);
                 Debug.Log("idx: "+ idx);
                 availableState[idx] = 1;
                 mergeIdx = idx;
             }
 
-            // ·£´ıÇÏ°Ô ¾Æ±º ÇÁ¸®ÆÕ ¼±ÅÃ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Æ±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             UnitData unitData = null;
             if (owner == "player") unitData = unitDatabase.GetUnitDataRandom(owner);
             else if (owner == "ai") { unitData = unitDatabase.GetUnitData(owner, unitID);}
-            // ¼±ÅÃµÈ ¾Æ±º ÇÁ¸®ÆÕÀ» ÇØ´ç À§Ä¡¿¡ »ı¼º
+            // ï¿½ï¿½ï¿½Ãµï¿½ ï¿½Æ±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ø´ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             newAlly = Instantiate(unitData.unitPrefab, spawnPos, Quaternion.identity);
-            if (owner == "ai") newAlly.GetComponent<SpriteRenderer>().flipX = !newAlly.GetComponent<SpriteRenderer>().flipX; // ai À¯´ÖÀÌ¸é µÚÁı±â
+            if (owner == "ai") newAlly.GetComponent<SpriteRenderer>().flipX = !newAlly.GetComponent<SpriteRenderer>().flipX; // ai ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             newAlly.transform.SetParent(parentTransform, false);
 
-            // À¯´ÖÀÇ ¼Ó¼ºÀ» ¼³Á¤ÇÕ´Ï´Ù.
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ó¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
             Unit unitset = newAlly.GetComponent<Unit>();
             if (unitset != null)
             {
                 unitset.Initialize(unitData, owner, spawnPos);
-                // À¯´Ö »èÁ¦ ½Ã À§Ä¡¸¦ ´Ù½Ã Ãß°¡ÇÏµµ·Ï ÀÌº¥Æ® µî·Ï
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ß°ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½
                 unitset.OnUnitDestroyed += () => OnUnitDestroyed(spawnPos);
             }
             
             Debug.Log("availableState: " + string.Join(", ", availableState) );
-            // ·£´ı¼ÒÈ¯ ÀÏ¶§¸¸ ½ºÆùÀÌº¥Æ® ±â·Ï (+playerÀÏ¶§¸¸)
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¯ ï¿½Ï¶ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ìºï¿½Æ® ï¿½ï¿½ï¿½ (+playerï¿½Ï¶ï¿½ï¿½ï¿½)
             if (defpos == null && owner == "player") eventManager.OnUnitSpawned(unitData.id, spawnPos);
         }
         return newAlly;
@@ -134,7 +159,7 @@ public class UnitSpawnManager : MonoBehaviour
 
     Vector2 spawnRandomPosition(int randNum)
     {
-        // °¡´ÉÇÑ À§Ä¡µé Áß ·£´ıÇÏ°Ô ¼±ÅÃ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½
         Vector2 spawnPosition = availablePositions[randNum];
 
         return spawnPosition;
@@ -142,13 +167,13 @@ public class UnitSpawnManager : MonoBehaviour
 
     void OnUnitDestroyed(Vector2 position)
     {
-        // »èÁ¦µÈ À¯´ÖÀÇ À§Ä¡¸¦ ´Ù½Ã Ãß°¡
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ß°ï¿½
         int idx = getAvailablePosition(position);
         //if(mergeIdx != idx) 
             availableState[idx] = 0;
     }
 
-    // À¯´ÖÀº Áö¿ìµÇ state´Â ³²±â´Â Kill
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ stateï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Kill
     public void KillUnit(GameObject unit)
     {
         unit.SetActive(false);

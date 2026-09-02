@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class WaveManager : MonoBehaviour
+public class WaveManager : MonoBehaviour, IWaveDriver
 {
     private Dictionary<int, WaveData> waves;
     private Dictionary<int, WaveGroupData> waveGroups;
@@ -12,6 +12,11 @@ public class WaveManager : MonoBehaviour
     public WaypointManager waypointManager;
     private List<Transform> waypoints;
     private int currentWaveIndex = 1;
+
+    [Tooltip("PvP 씬에서는 false 로 두고 PvpBattleController 가 BeginWaves() 호출")]
+    public bool autoStart = true;
+    private bool _wavesStarted;
+    public int CurrentWave => currentWaveIndex;
     public Transform enemyParentToPlayer;
     public Transform enemyParentToAI;
     public float waveTimeLimit = 60f;
@@ -30,6 +35,13 @@ public class WaveManager : MonoBehaviour
         waveProgressSlider.maxValue = waveTimeLimit;
         waveProgressSlider.value = 0;
 
+        if (autoStart) BeginWaves();
+    }
+
+    public void BeginWaves()
+    {
+        if (_wavesStarted) return;
+        _wavesStarted = true;
         StartCoroutine(ManageWaves());
     }
 

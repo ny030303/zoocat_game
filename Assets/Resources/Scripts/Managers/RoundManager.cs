@@ -4,24 +4,29 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class RoundManager : MonoBehaviour
+public class RoundManager : MonoBehaviour, IWaveDriver
 {
     public WaveScriptableObject[] waves;
     public WaypointManager waypointManager;
     private List<Transform> waypoints;
     private int currentWaveIndex = 0;
+
+    [Tooltip("PvP ì”¬ì—ì„œëŠ” false ë¡œ ë‘ê³  PvpBattleController ê°€ BeginWaves() í˜¸ì¶œ")]
+    public bool autoStart = true;
+    private bool _wavesStarted;
+    public int CurrentWave => currentWaveIndex;
     public Transform enemyParentToPlayer;
     public Transform enemyParentToAI;
-    public float waveTimeLimit = 60f; // ¿þÀÌºêº° ½Ã°£ Á¦ÇÑ (ÃÊ ´ÜÀ§)
-    public Slider waveProgressSlider; // Slider ÂüÁ¶ º¯¼ö
-    public TextMeshPro waveText; // Slider ÂüÁ¶ º¯¼ö
+    public float waveTimeLimit = 60f; // ï¿½ï¿½ï¿½Ìºêº° ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
+    public Slider waveProgressSlider; // Slider ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    public TextMeshPro waveText; // Slider ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public GameObject nextWaveText; // next wave Text
 
     void Start()
     {
         if (waypointManager == null)
         {
-            Debug.LogError("WaypointManager°¡ ÇÒ´çµÇÁö ¾Ê¾Ò½À´Ï´Ù!");
+            Debug.LogError("WaypointManagerï¿½ï¿½ ï¿½Ò´ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾Ò½ï¿½ï¿½Ï´ï¿½!");
             return;
         }
 
@@ -29,25 +34,32 @@ public class RoundManager : MonoBehaviour
 
         if (waypoints == null || waypoints.Count == 0)
         {
-            Debug.LogError("Waypoints ¸®½ºÆ®°¡ ºñ¾î ÀÖ½À´Ï´Ù! ¸ó½ºÅÍ¸¦ »ý¼ºÇÒ ¼ö ¾ø½À´Ï´Ù.");
+            Debug.LogError("Waypoints ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½! ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
             return;
         }
 
         if (waveProgressSlider == null)
         {
-            Debug.LogError("WaveProgressSlider°¡ ÇÒ´çµÇÁö ¾Ê¾Ò½À´Ï´Ù!");
+            Debug.LogError("WaveProgressSliderï¿½ï¿½ ï¿½Ò´ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾Ò½ï¿½ï¿½Ï´ï¿½!");
             return;
         }
 
-        waveProgressSlider.maxValue = waveTimeLimit; // SliderÀÇ ÃÖ´ë°ª ¼³Á¤
-        waveProgressSlider.value = 0; // Slider ÃÊ±âÈ­
+        waveProgressSlider.maxValue = waveTimeLimit; // Sliderï¿½ï¿½ ï¿½Ö´ë°ª ï¿½ï¿½ï¿½ï¿½
+        waveProgressSlider.value = 0; // Slider ï¿½Ê±ï¿½È­
 
+        if (autoStart) BeginWaves();
+    }
+
+    public void BeginWaves()
+    {
+        if (_wavesStarted) return;
+        _wavesStarted = true;
         StartCoroutine(ManageWaves());
     }
 
     IEnumerator ManageWaves()
     {
-        while (true) // ¹«ÇÑ ·çÇÁ, ¸¶Áö¸· ¿þÀÌºê°¡ ¹Ýº¹µÇµµ·Ï ¼³Á¤
+        while (true) // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìºê°¡ ï¿½Ýºï¿½ï¿½Çµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         {
             nextWaveText.SetActive(false);
             yield return StartCoroutine(SpawnWave());
@@ -55,29 +67,29 @@ public class RoundManager : MonoBehaviour
             currentWaveIndex++;
             if (currentWaveIndex >= waves.Length)
             {
-                currentWaveIndex = waves.Length - 1; // ¸¶Áö¸· ¿þÀÌºê¸¦ ¹Ýº¹ÇÏµµ·Ï ÀÎµ¦½º °íÁ¤
-                Debug.Log("¸¶Áö¸· ¿þÀÌºê¸¦ ¹Ýº¹ÇÕ´Ï´Ù! ¸ó½ºÅÍÀÇ ½ºÆåÀÌ °è¼Ó Áõ°¡ÇÕ´Ï´Ù.");
+                currentWaveIndex = waves.Length - 1; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìºê¸¦ ï¿½Ýºï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+                Debug.Log("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìºê¸¦ ï¿½Ýºï¿½ï¿½Õ´Ï´ï¿½! ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.");
             }
 
-            yield return new WaitForSeconds(5f); // ¿þÀÌºê °£ ´ë±â ½Ã°£
+            yield return new WaitForSeconds(5f); // ï¿½ï¿½ï¿½Ìºï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
         }
     }
 
     IEnumerator SpawnWave()
     {
         WaveScriptableObject currentWave = waves[currentWaveIndex];
-        float waveStartTime = Time.time; // ¿þÀÌºê ½ÃÀÛ ½Ã°£
-        bool timeLimitReached = false; // ½Ã°£ Á¦ÇÑ µµ´Þ ¿©ºÎ
+        float waveStartTime = Time.time; // ï¿½ï¿½ï¿½Ìºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+        bool timeLimitReached = false; // ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-        waveProgressSlider.value = 0; // Slider ÃÊ±âÈ­
+        waveProgressSlider.value = 0; // Slider ï¿½Ê±ï¿½È­
 
         while (!timeLimitReached)
         {
-            float waveProgressTime = Time.time - waveStartTime; // ÇöÀç ¿þÀÌºê °æ°ú ½Ã°£ °è»ê
+            float waveProgressTime = Time.time - waveStartTime; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìºï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½
 
             if (waveProgressTime >= waveTimeLimit)
             {
-                Debug.Log("¿þÀÌºê ½Ã°£ Á¦ÇÑ¿¡ µµ´ÞÇß½À´Ï´Ù! ´ÙÀ½ ¿þÀÌºê·Î ÁøÇàÇÕ´Ï´Ù.");
+                Debug.Log("ï¿½ï¿½ï¿½Ìºï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½Ñ¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½! ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìºï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.");
                 timeLimitReached = true;
                 break;
             }
@@ -91,7 +103,7 @@ public class RoundManager : MonoBehaviour
                         break;
                     }
 
-                    // ºÎ¸ð ¿ÀºêÁ§Æ®¿Í ÇÔ²² Instantiate
+                    // ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Ô²ï¿½ Instantiate
                     GameObject enemyObj = Instantiate(currentWave.enemies[i].unitPrefab, waypoints[0].position, Quaternion.identity, enemyParentToPlayer);
                     Enemy enemy = enemyObj.GetComponent<Enemy>();
 
@@ -100,20 +112,20 @@ public class RoundManager : MonoBehaviour
                     Enemy AIenemy = AIEnemyObj.GetComponent<Enemy>();
                     if (enemy == null || AIenemy == null)
                     {
-                        Debug.LogError("»ý¼ºµÈ ¿ÀºêÁ§Æ®¿¡ Enemy ÄÄÆ÷³ÍÆ®°¡ ¾ø½À´Ï´Ù!");
-                        Destroy(enemyObj); // Ãß°¡ ¹®Á¦ ¹æÁö¸¦ À§ÇØ ¿ÀºêÁ§Æ® ÆÄ±«
-                        Destroy(AIEnemyObj); // Ãß°¡ ¹®Á¦ ¹æÁö¸¦ À§ÇØ ¿ÀºêÁ§Æ® ÆÄ±«
+                        Debug.LogError("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ Enemy ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½!");
+                        Destroy(enemyObj); // ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ä±ï¿½
+                        Destroy(AIEnemyObj); // ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ä±ï¿½
                         yield break;
                     }
 
-                    // ¿þÀÌºê ¹øÈ£¿¡ µû¸¥ ¸ó½ºÅÍ ½ºÆå Áõ°¡
+                    // ï¿½ï¿½ï¿½Ìºï¿½ ï¿½ï¿½È£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                     float statMultiplier = 1f + (currentWaveIndex * 0.1f);
                     enemy.Initialize("player", waypoints, currentWave.enemies[i], statMultiplier);
                     AIenemy.Initialize("ai", waypointManager.AIWaypoints, currentWave.enemies[i], statMultiplier);
-                    yield return new WaitForSeconds(1.5f); // ¿¡³Ê¹Ì »çÀÌÀÇ ½ºÆù °£°Ý
+                    yield return new WaitForSeconds(1.5f); // ï¿½ï¿½ï¿½Ê¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-                    waveProgressTime = Time.time - waveStartTime; // ¿þÀÌºê °æ°ú ½Ã°£ ¾÷µ¥ÀÌÆ®
-                    waveProgressSlider.value = waveProgressTime; // Slider °ª ¾÷µ¥ÀÌÆ®
+                    waveProgressTime = Time.time - waveStartTime; // ï¿½ï¿½ï¿½Ìºï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
+                    waveProgressSlider.value = waveProgressTime; // Slider ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
                     waveText.text = waveProgressTime.ToString();
                 }
             }

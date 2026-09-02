@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Resources/Scenes/LobbyTestScene.unity
     guid: 04472d8beea6060459dfe98331cbfef7
+  - enabled: 1
+    path: Assets/Resources/Scenes/GameScenePvP.unity
+    guid: 1f4de34fab9b36d44bda10f9531ef620
   m_configObjects: {}
