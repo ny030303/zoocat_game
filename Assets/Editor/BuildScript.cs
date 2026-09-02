@@ -24,8 +24,8 @@ public static class BuildScript
 {
     private enum Env { Dev, Prod }
 
-    private const string DevApplicationId = "com.zoocompany.zoocat.dev";
-    private const string ProdApplicationId = "com.zoocompany.zoocat";
+    private const string DevApplicationId = "cloud.zoocat.game.dev";
+    private const string ProdApplicationId = "cloud.zoocat.game";
     private const string DevProductName = "우당탕고양이 DEV";
     private const string ProdProductName = "우당탕 고양이";
 
