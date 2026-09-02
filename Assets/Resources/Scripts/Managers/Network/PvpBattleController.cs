@@ -38,6 +38,14 @@ public class PvpBattleController : MonoBehaviour
     [SerializeField] private float helloTimeoutSec = 8f;   // 상대 hello 없어도 이 시간 후 시작
     [SerializeField] private float autoReturnSec = 4f;     // 결과 UI 없을 때 자동 복귀
 
+    [Header("보상 (승/패/무 재화)")]
+    [SerializeField] private int winGold = 120;
+    [SerializeField] private int winGems = 2;
+    [SerializeField] private int loseGold = 30;
+    [SerializeField] private int loseGems = 0;
+    [SerializeField] private int drawGold = 60;
+    [SerializeField] private int drawGems = 1;
+
     private IWaveDriver _wave;
     private PvpRelay _relay;
     private PvpOpponentView _oppView;
@@ -45,6 +53,8 @@ public class PvpBattleController : MonoBehaviour
     private int _mySeed;
     private int _oppSeed;
     private bool _iSaidHello, _oppSaidHello, _battleRunning, _resolved;
+    private PvpResult _finalResult = PvpResult.Undecided;
+    private bool _rewardGranted;
 
     private float _battleStart;
     private int _lastSentWave = -1;
@@ -312,7 +322,12 @@ public class PvpBattleController : MonoBehaviour
     private void ShowResult(PvpResult r)
     {
         Time.timeScale = 0f;
-        string label = r == PvpResult.Win ? "승리!" : r == PvpResult.Lose ? "패배" : "무승부";
+        _finalResult = r;
+
+        RewardFor(r, out int gold, out int gems);
+        string label = (r == PvpResult.Win ? "승리!" : r == PvpResult.Lose ? "패배" : "무승부")
+                       + $"  +{gold} 골드"
+                       + (gems > 0 ? $"  +{gems} 젬" : "");
 
         if (resultPanel != null)
         {
@@ -324,7 +339,36 @@ public class PvpBattleController : MonoBehaviour
             Debug.Log("[PvP] " + label + " (결과 패널 미연결 → 자동 복귀)");
             StartCoroutine(AutoReturn());
         }
-        // TODO(server backlog): matchResult 이벤트 생기면 여기서 전적/보상 전송
+        // TODO(server backlog): matchResult 이벤트 생기면 여기서 전적/보상을 서버에도 반영
+    }
+
+    private void RewardFor(PvpResult r, out int gold, out int gems)
+    {
+        switch (r)
+        {
+            case PvpResult.Win:  gold = winGold;  gems = winGems;  break;
+            case PvpResult.Lose: gold = loseGold; gems = loseGems; break;
+            default:             gold = drawGold; gems = drawGems; break; // Draw / Undecided
+        }
+    }
+
+    /// UserManager.currentUser 재화에 보상 적용 + 로컬 저장 + 로비에서 표시할 MatchSession.PendingReward 세팅.
+    private void GrantReward()
+    {
+        if (_rewardGranted || _finalResult == PvpResult.Undecided) return;
+        _rewardGranted = true;
+
+        RewardFor(_finalResult, out int gold, out int gems);
+
+        var um = UserManager.Instance;
+        if (um != null && um.currentUser != null)
+        {
+            um.currentUser.gold += gold;
+            um.currentUser.gems += gems;
+            FileManager.SaveUserData(um.currentUser); // 로컬 영속(게스트). 서버 동기화는 백로그.
+        }
+        MatchSession.PendingReward = new MatchReward { result = _finalResult, gold = gold, gems = gems };
+        Debug.Log($"[PvP] reward granted: {_finalResult} +{gold}G +{gems} gem");
     }
 
     private IEnumerator AutoReturn()
@@ -337,6 +381,7 @@ public class PvpBattleController : MonoBehaviour
     public void ReturnToLobby()
     {
         Time.timeScale = 1f;
+        GrantReward(); // 씬 이동 전에 재화 적용 → 로비 헤더가 갱신된 값을 읽음
         SocketSender.Send(SocketEvents.LeaveMatch, new { matchId = MatchSession.MatchId });
         MatchSession.Clear();
         if (gameManager != null) gameManager.pvpMode = false;
