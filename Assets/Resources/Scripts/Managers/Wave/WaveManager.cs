@@ -1,14 +1,20 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// CSV(Wave / WaveGroup / Reward) 기반 웨이브 진행. authored 웨이브를 다 쓰면
+/// <see cref="BalanceConfig"/> 의 endless* 파라미터로 무한 연장한다(HP/수 증가, 시간 감소).
+/// PvP 는 이 무한 연장 덕분에 결판이 난다(강한 쪽이 영원히 안 죽는 상황 방지).
+/// </summary>
 public class WaveManager : MonoBehaviour, IWaveDriver
 {
     private Dictionary<int, WaveData> waves;
     private Dictionary<int, WaveGroupData> waveGroups;
     private Dictionary<int, RewardData> rewardData;
+
     public WaypointManager waypointManager;
     private List<Transform> waypoints;
     private int currentWaveIndex = 1;
@@ -17,6 +23,7 @@ public class WaveManager : MonoBehaviour, IWaveDriver
     public bool autoStart = true;
     private bool _wavesStarted;
     public int CurrentWave => currentWaveIndex;
+
     public Transform enemyParentToPlayer;
     public Transform enemyParentToAI;
     public float waveTimeLimit = 60f;
@@ -24,14 +31,20 @@ public class WaveManager : MonoBehaviour, IWaveDriver
     public TextMeshPro waveText;
     public GameObject nextWaveText;
 
+    private int _authoredMaxId;      // CSV 에 정의된 마지막 웨이브 번호
+    private WaveData _lastAuthored;  // 무한 연장의 기준
+    private GameManager _gm;
+
     void Start()
     {
         waves = CSVLoader.LoadWaveData("Scripts/Data/Sheet/Wave");
         waveGroups = CSVLoader.LoadWaveGroupData("Scripts/Data/Sheet/WaveGroup");
         rewardData = RewardLoader.LoadRewardData("Scripts/Data/Sheet/Reward");
+        _gm = FindAnyObjectByType<GameManager>();
+
+        ResolveAuthoredTail();
 
         waypoints = waypointManager.waypoints;
-
         waveProgressSlider.maxValue = waveTimeLimit;
         waveProgressSlider.value = 0;
 
@@ -45,53 +58,83 @@ public class WaveManager : MonoBehaviour, IWaveDriver
         StartCoroutine(ManageWaves());
     }
 
+    // ---------------------------------------------------------------- 웨이브 데이터
 
+    private void ResolveAuthoredTail()
+    {
+        _authoredMaxId = 0;
+        foreach (int k in waves.Keys)
+            if (k > _authoredMaxId) _authoredMaxId = k;
+
+        if (_authoredMaxId > 0)
+        {
+            _lastAuthored = waves[_authoredMaxId];
+        }
+        else
+        {
+            // CSV 비었음: 최소 폴백 (아무 waveGroup 하나)
+            int gid = 1;
+            foreach (int k in waveGroups.Keys) { gid = k; break; }
+            _lastAuthored = new WaveData(1, 30f, 0, 0, 0, gid);
+            Debug.LogWarning("[WaveManager] Wave CSV 비어 있음 - 폴백 웨이브로 무한 진행");
+        }
+    }
+
+    /// authored 면 CSV 값, 아니면 마지막 authored 를 스케일해 합성.
+    private WaveData GetWave(int index)
+    {
+        if (waves.TryGetValue(index, out var w)) return w;
+
+        var b = BalanceConfig.Current;
+        int extra = index - _authoredMaxId; // >= 1
+        float timeLimit = Mathf.Max(
+            b.endlessMinTimeLimit,
+            _lastAuthored.timeLimit - extra * b.endlessTimeReducePerWave);
+        int hpAdd = _lastAuthored.hpAdditional + Mathf.RoundToInt(extra * b.endlessHpAddPerWave);
+
+        return new WaveData(index, timeLimit, hpAdd, _lastAuthored.spdAdditional,
+                            _lastAuthored.rewardId, _lastAuthored.waveGroupId);
+    }
+
+    /// 무한 연장 구간의 몬스터 수 배수 (authored 는 1.0).
+    private float EndlessCountMul(int index)
+    {
+        if (index <= _authoredMaxId) return 1f;
+        return 1f + (index - _authoredMaxId) * BalanceConfig.Current.endlessCountRampPerWave;
+    }
+
+    // ---------------------------------------------------------------- 보상
 
     public RewardData GetWaveReward(int waveId)
     {
-        if (waves.ContainsKey(waveId))
-        {
-            int rewardId = waves[waveId].rewardId;
-            if (rewardData.ContainsKey(rewardId))
-            {
-                return rewardData[rewardId];
-            }
-        }
-        return null;
+        var wave = GetWave(waveId);
+        return (wave != null && rewardData.TryGetValue(wave.rewardId, out var r)) ? r : null;
     }
 
     public void GrantWaveReward(int waveId)
     {
         RewardData reward = GetWaveReward(waveId);
-        if (reward != null)
+        if (reward == null || reward.entries.Count == 0) return; // rewardId 0 등 - 보상 없음은 정상
+        foreach (var e in reward.entries) ApplyReward(e);
+    }
+
+    private void ApplyReward(RewardEntry e)
+    {
+        switch (e.itemId)
         {
-            Debug.Log($"[웨이브 {waveId} 클리어] 보상 지급: {reward.type} x {reward.amount}");
-            ApplyReward(reward);
-        }
-        else
-        {
-            Debug.LogWarning($"[웨이브 {waveId}] 보상 없음.");
+            case MaterialItemLoader.GoldItemId: // 무료 재화 = 인게임 소환 화폐
+                if (_gm != null) _gm.AddGold(e.count);
+                Debug.Log($"[Wave] +{e.count} gold");
+                break;
+
+            default:
+                // 유료 재화 / 플레이 포인트 등 영속 메타 보상 - 별도 시스템 + 서버 동기화 필요 (백로그)
+                Debug.Log($"[Wave] item {e.itemId} x{e.count} - 메타 보상 시스템 연결 대기");
+                break;
         }
     }
 
-    private static void ApplyReward(RewardData reward)
-    {
-        switch (reward.type)
-        {
-            case "Gold":
-                Debug.Log($"골드 {reward.amount} 지급");
-                break;
-            case "Gem":
-                Debug.Log($"젬 {reward.amount} 지급");
-                break;
-            case "Item":
-                Debug.Log($"아이템 지급 (ID: {reward.id})");
-                break;
-            default:
-                Debug.LogWarning($"알 수 없는 보상 타입: {reward.type}");
-                break;
-        }
-    }
+    // ---------------------------------------------------------------- 진행
 
     IEnumerator ManageWaves()
     {
@@ -101,81 +144,74 @@ public class WaveManager : MonoBehaviour, IWaveDriver
             yield return StartCoroutine(SpawnWave());
             nextWaveText.SetActive(true);
 
-            currentWaveIndex++;
-            if (!waves.ContainsKey(currentWaveIndex))
-            {
-                currentWaveIndex = waves.Count;
-                Debug.Log("마지막 웨이브 반복");
-            }
-
-            yield return new WaitForSeconds(5f);
+            currentWaveIndex++; // 무한 - 리셋하지 않음
+            yield return new WaitForSeconds(BalanceConfig.Current.betweenWaveDelay);
         }
     }
 
     IEnumerator SpawnWave()
     {
-        if (!waves.ContainsKey(currentWaveIndex))
-        {
-            Debug.LogError($"WaveData에서 Key {currentWaveIndex}를 찾을 수 없습니다!");
-            yield break;
-        }
-
-        WaveData currentWave = waves[currentWaveIndex];
+        WaveData currentWave = GetWave(currentWaveIndex);
         if (!waveGroups.TryGetValue(currentWave.waveGroupId, out WaveGroupData waveGroup))
         {
             Debug.LogError($"WaveGroup ID {currentWave.waveGroupId} 없음!");
             yield break;
         }
 
+        float countMul = EndlessCountMul(currentWaveIndex);
         float waveStartTime = Time.time;
         waveProgressSlider.value = 0;
-        waveProgressSlider.maxValue = currentWave.timeLimit; // 슬라이더 최대값 설정
-        waveText.text = $"0 / {currentWave.timeLimit} sec"; // 초기 텍스트 표시
-        bool waveRunning = true;
+        waveProgressSlider.maxValue = currentWave.timeLimit;
+        waveText.text = $"0 / {currentWave.timeLimit:0} sec";
 
-        // 💡 웨이브 시간이 끝날 때까지 실행
-        while (Time.time - waveStartTime < currentWave.timeLimit && waveRunning)
+        while (Time.time - waveStartTime < currentWave.timeLimit)
         {
             for (int i = 0; i < waveGroup.monsterIds.Count; i++)
             {
-                for (int j = 0; j < waveGroup.monsterCounts[i]; j++)
+                UnitData sponEnemyData = EnemyListLoader.Instance.GetEnemyPrefabToId(waveGroup.monsterIds[i]);
+                if (sponEnemyData == null)
                 {
-                    // 생성될 몬스터 데이터 준비
-                    UnitData sponEnemyData = EnemyListLoader.Instance.GetEnemyPrefabToId(waveGroup.monsterIds[i]);
+                    Debug.LogError($"[WaveManager] 몬스터 id '{waveGroup.monsterIds[i]}' 를 찾을 수 없음");
+                    continue;
+                }
 
-                    // 몬스터 생성 (플레이어 쪽)
+                int baseCount = i < waveGroup.monsterCounts.Count ? waveGroup.monsterCounts[i] : 0;
+                int spawnCount = Mathf.CeilToInt(baseCount * countMul);
+                for (int j = 0; j < spawnCount; j++)
+                {
                     GameObject enemyObj = Instantiate(sponEnemyData.unitPrefab, waypoints[0].position, Quaternion.identity, enemyParentToPlayer);
                     Enemy enemy = enemyObj.GetComponent<Enemy>();
 
-                    // 몬스터 생성 (AI 쪽)
                     GameObject AIEnemyObj = Instantiate(sponEnemyData.unitPrefab, waypointManager.AIWaypoints[0].position, Quaternion.identity, enemyParentToAI);
-                    AIEnemyObj.GetComponent<SpriteRenderer>().flipX = !AIEnemyObj.GetComponent<SpriteRenderer>().flipX;
+                    var sr = AIEnemyObj.GetComponent<SpriteRenderer>();
+                    if (sr != null) sr.flipX = !sr.flipX;
                     Enemy AIenemy = AIEnemyObj.GetComponent<Enemy>();
 
                     if (enemy == null || AIenemy == null)
                     {
                         Debug.LogError("생성된 오브젝트에 Enemy 컴포넌트가 없습니다!");
-                        Destroy(enemyObj); 
+                        Destroy(enemyObj);
                         Destroy(AIEnemyObj);
                         yield break;
                     }
-                    // 웨이브 진행 시간 업데이트
-                    waveProgressSlider.value = Time.time - waveStartTime;
-                    waveText.text = $"{Mathf.Floor(waveProgressSlider.value)} / {currentWave.timeLimit} sec";
 
-                    // 웨이브 번호에 따른 몬스터 스펙 증가
+                    waveProgressSlider.value = Time.time - waveStartTime;
+                    waveText.text = $"{Mathf.Floor(waveProgressSlider.value):0} / {currentWave.timeLimit:0} sec";
+
                     float statMultiplier = currentWave.hpAdditional;
                     enemy.Initialize("player", waypoints, sponEnemyData, statMultiplier);
                     AIenemy.Initialize("ai", waypointManager.AIWaypoints, sponEnemyData, statMultiplier);
-                    Debug.LogWarning($"waveGroup.monsterIds[i]: {waveGroup.monsterIds[i]}, statMultiplier: {statMultiplier}");
-                    yield return new WaitForSeconds(1.5f);
+
+                    yield return new WaitForSeconds(BalanceConfig.Current.enemySpawnInterval);
+
+                    if (Time.time - waveStartTime >= currentWave.timeLimit) break;
                 }
+                if (Time.time - waveStartTime >= currentWave.timeLimit) break;
             }
         }
 
-        // 💡 웨이브 시간이 끝나면 진행 완료 처리
-        Debug.Log($"웨이브 {currentWaveIndex} 완료 (지속 시간: {currentWave.timeLimit}초)");
+        Debug.Log($"웨이브 {currentWaveIndex} 완료 ({currentWave.timeLimit:0}s, x{countMul:0.00})");
         GrantWaveReward(currentWaveIndex);
-        yield return new WaitForSeconds(3f); // 잠시 대기 후 다음 웨이브 시작
+        // 웨이브 간 대기는 ManageWaves 에서 한 번만.
     }
 }

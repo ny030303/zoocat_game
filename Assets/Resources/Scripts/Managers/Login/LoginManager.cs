@@ -182,8 +182,8 @@ public class LoginManager : MonoBehaviour
             country = "",
             language = "ko",
             selectedUnits = new string[] { "1001", "1002", "1003", "1004", "1005" },
-            gold = 1000,
-            gems = 0
+            gold = BalanceConfig.Current.guestStartGold,
+            gems = BalanceConfig.Current.guestStartGems
         };
         FileManager.SaveUnits(units);
         FileManager.SaveUserData(user);

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba1ace00ba1ace00ba1ace00ba1ace00, type: 3}
+  m_Name: Balance
+  m_EditorClassIdentifier:
+  startLives: 3
+  critMultiplier: 2
+  levelUpAtkMul: 1.1
+  mergeAtkBonus: 0.5
+  maxGrade: 5
+  mergeScalePerGrade: 0.1
+  summonCostStart: 10
+  summonCostMax: 50
+  summonCostStep: 10
+  startCurrency: 100
+  enemySpawnInterval: 1.5
+  betweenWaveDelay: 5
+  endlessHpAddPerWave: 20
+  endlessCountRampPerWave: 0.12
+  endlessTimeReducePerWave: 1.5
+  endlessMinTimeLimit: 25
+  pvpWinGold: 120
+  pvpWinGems: 2
+  pvpLoseGold: 30
+  pvpLoseGems: 0
+  pvpDrawGold: 60
+  pvpDrawGems: 1
+  guestStartGold: 1000
+  guestStartGems: 0

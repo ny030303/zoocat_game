@@ -5,15 +5,15 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    private int playerLifePoints = 3;
+    private int playerLifePoints;
     public LifeManager playerLifeManager;
 
-    private int aiLifePoints = 3;
+    private int aiLifePoints;
     public LifeManager aiLifeManager;
 
-    private int summonCost = 10;
-    private int maxSummonCost = 50;
-    private int currency = 100;
+    private int summonCost;
+    private int maxSummonCost;
+    private int currency;
     public TextMeshPro currencyTextObj;
     public UnitDatabase unitDatabase;
 
@@ -33,6 +33,12 @@ public class GameManager : MonoBehaviour
     public int OpponentLife => aiLifePoints;
     void Awake()
     {
+        var b = BalanceConfig.Current;
+        playerLifePoints = aiLifePoints = b.startLives;
+        summonCost = b.summonCostStart;
+        maxSummonCost = b.summonCostMax;
+        currency = b.startCurrency;
+
         unitDatabase.Initialize();
     }
      void Start()
@@ -48,7 +54,7 @@ public class GameManager : MonoBehaviour
             // ���� ��ȯ ����
             currency -= summonCost;
             ChangeCurrency();
-            summonCost = Mathf.Min(summonCost + 10, maxSummonCost);
+            summonCost = Mathf.Min(summonCost + BalanceConfig.Current.summonCostStep, maxSummonCost);
             return true;
         }
         else

@@ -25,7 +25,7 @@ public class PvpBattleController : MonoBehaviour
     [SerializeField] private UnitSpawnManager playerSpawn;   // owner == "player"
     [SerializeField] private UnitSpawnManager aiSpawn;       // owner == "ai"
     [SerializeField] private UnitDatabase unitDatabase;
-    [Tooltip("WaveManager 또는 RoundManager. 비우면 활성화된 IWaveDriver 자동 탐색")]
+    [Tooltip("WaveManager. 비우면 활성화된 IWaveDriver 자동 탐색")]
     [SerializeField] private MonoBehaviour waveDriverObject;
 
     [Header("결과 UI (선택)")]
@@ -38,13 +38,7 @@ public class PvpBattleController : MonoBehaviour
     [SerializeField] private float helloTimeoutSec = 8f;   // 상대 hello 없어도 이 시간 후 시작
     [SerializeField] private float autoReturnSec = 4f;     // 결과 UI 없을 때 자동 복귀
 
-    [Header("보상 (승/패/무 재화)")]
-    [SerializeField] private int winGold = 120;
-    [SerializeField] private int winGems = 2;
-    [SerializeField] private int loseGold = 30;
-    [SerializeField] private int loseGems = 0;
-    [SerializeField] private int drawGold = 60;
-    [SerializeField] private int drawGems = 1;
+    // 승/패/무 보상 재화는 BalanceConfig(Resources/Config/Balance) 에서 읽는다.
 
     private IWaveDriver _wave;
     private PvpRelay _relay;
@@ -344,11 +338,12 @@ public class PvpBattleController : MonoBehaviour
 
     private void RewardFor(PvpResult r, out int gold, out int gems)
     {
+        var b = BalanceConfig.Current;
         switch (r)
         {
-            case PvpResult.Win:  gold = winGold;  gems = winGems;  break;
-            case PvpResult.Lose: gold = loseGold; gems = loseGems; break;
-            default:             gold = drawGold; gems = drawGems; break; // Draw / Undecided
+            case PvpResult.Win:  gold = b.pvpWinGold;  gems = b.pvpWinGems;  break;
+            case PvpResult.Lose: gold = b.pvpLoseGold; gems = b.pvpLoseGems; break;
+            default:             gold = b.pvpDrawGold; gems = b.pvpDrawGems; break; // Draw / Undecided
         }
     }
 
@@ -405,7 +400,7 @@ public class PvpBattleController : MonoBehaviour
             }
         }
 
-        // 인스펙터 ref 가 비활성 컴포넌트(예: 꺼둔 RoundManager)를 가리키면 무시하고 재탐색
+        // 인스펙터 ref 가 비활성 컴포넌트를 가리키면 무시하고 재탐색
         _wave = null;
         if (waveDriverObject != null && waveDriverObject.isActiveAndEnabled && waveDriverObject is IWaveDriver wd0)
             _wave = wd0;
@@ -415,7 +410,7 @@ public class PvpBattleController : MonoBehaviour
                 if (mb is IWaveDriver wd && mb.isActiveAndEnabled) { _wave = wd; break; }
         }
         if (_wave == null)
-            Debug.LogError("[PvP] 활성화된 IWaveDriver(WaveManager/RoundManager) 를 찾지 못했습니다 - 웨이브가 시작되지 않습니다");
+            Debug.LogError("[PvP] 활성화된 WaveManager 를 찾지 못했습니다 - 웨이브가 시작되지 않습니다");
         else
             Debug.Log("[PvP] wave driver = " + ((MonoBehaviour)_wave).GetType().Name);
     }

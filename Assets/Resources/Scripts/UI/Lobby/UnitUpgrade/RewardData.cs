@@ -2,17 +2,23 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// ë³´ìƒ = (ì•„ì´í…œ id, ê°œìˆ˜) ìŒë“¤. Reward.csv: reward_id, item_id, count, item2, item2_count â€¦
+public struct RewardEntry
+{
+    public int itemId;
+    public int count;
+    public RewardEntry(int itemId, int count) { this.itemId = itemId; this.count = count; }
+}
+
 public class RewardData
 {
     public int id;
-    public string type;
-    public int amount;
+    public List<RewardEntry> entries;
 
-    public RewardData(int id, string type, int amount)
+    public RewardData(int id, List<RewardEntry> entries)
     {
         this.id = id;
-        this.type = type;
-        this.amount = amount;
+        this.entries = entries ?? new List<RewardEntry>();
     }
 }
 
@@ -20,35 +26,31 @@ public static class RewardLoader
 {
     public static Dictionary<int, RewardData> LoadRewardData(string fileName)
     {
-        Dictionary<int, RewardData> rewardDictionary = new Dictionary<int, RewardData>();
-
+        var dict = new Dictionary<int, RewardData>();
         try
         {
-            TextAsset csvFile = Resources.Load<TextAsset>(fileName.Replace(".csv", ""));
-            if (csvFile == null)
+            TextAsset csv = Resources.Load<TextAsset>(fileName.Replace(".csv", ""));
+            if (csv == null) { Debug.LogError($"CSV ì—†ìŒ: {fileName}"); return dict; }
+
+            string[] lines = csv.text.Split('\n');
+            for (int i = 1; i < lines.Length; i++)               // 0í–‰ = í—¤ë”
             {
-                Debug.LogError($"CSV ÆÄÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù: {fileName}");
-                return rewardDictionary;
-            }
+                string[] v = lines[i].Trim().Split(',');
+                if (v.Length < 3 || string.IsNullOrEmpty(v[0])) continue;
 
-            string[] lines = csvFile.text.Split('\n');
-            for (int i = 1; i < lines.Length; i++) // Ã¹ ÁÙ(Çì´õ) Á¦¿Ü
-            {
-                string[] values = lines[i].Trim().Split(',');
-                if (values.Length < 3) continue;
-
-                int id = int.Parse(values[0]);
-                string type = values[1];
-                int amount = int.Parse(values[2]);
-
-                rewardDictionary[id] = new RewardData(id, type, amount);
+                int id = int.Parse(v[0]);
+                var entries = new List<RewardEntry>();
+                // (item_id, count) ìŒì„ ëê¹Œì§€
+                for (int c = 1; c + 1 < v.Length; c += 2)
+                {
+                    if (string.IsNullOrEmpty(v[c]) || string.IsNullOrEmpty(v[c + 1])) continue;
+                    if (int.TryParse(v[c], out int itemId) && int.TryParse(v[c + 1], out int cnt) && cnt != 0)
+                        entries.Add(new RewardEntry(itemId, cnt));
+                }
+                dict[id] = new RewardData(id, entries);
             }
         }
-        catch (Exception ex)
-        {
-            Debug.LogError($"Failed to load Reward CSV: {ex.Message}");
-        }
-
-        return rewardDictionary;
+        catch (Exception ex) { Debug.LogError($"Failed to load Reward CSV: {ex.Message}"); }
+        return dict;
     }
 }

@@ -92,7 +92,8 @@ public class SceneLoader : MonoBehaviour
             if (baseUnitData.TryGetValue(unitList[i].id.Replace("CHA_", ""), out UnitData foundUnit))
             {
                 float baseAtk = foundUnit.atk; // 처음 설정된 기본 공격력
-                unitList[i].atk = (int)Mathf.Round(baseAtk * Mathf.Pow(1.1f, userUnits[i].lv - 1)); // 레벨이 올라갈 때마다 10% 증가
+                float lvMul = BalanceConfig.Current.levelUpAtkMul; // 레벨당 공격력 배수 (기본 1.1 = +10%/lv)
+                unitList[i].atk = (int)Mathf.Round(baseAtk * Mathf.Pow(lvMul, userUnits[i].lv - 1));
             }
             else
             {

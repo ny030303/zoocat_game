@@ -6,9 +6,9 @@ public class Unit : MonoBehaviour
     public Vector2 spawnPos;
     public UnitData unitData;
     public int currentHp;
-    public GameObject bulletPrefab;  // ºÒ¸´ ÇÁ¸®ÆÕ ·¹ÆÛ·±½º
+    public GameObject bulletPrefab;  // ï¿½Ò¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Û·ï¿½ï¿½ï¿½
 
-    private float nextAttackTime = 0f; // ´ÙÀ½ °ø°Ý ½Ã°£
+    private float nextAttackTime = 0f; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
     private Skill unitSkill;
     private float elapsedTime = 0f;
     private int attackCount = 0;
@@ -28,9 +28,9 @@ public class Unit : MonoBehaviour
         this.owner = owner;
         this.spawnPos = spawnPos;
         unitData = data.DeepCopy();
-        currentHp = unitData.hp; // À¯´ÖÀÇ Ã¼·ÂÀ» ÃÊ±âÈ­
-        unitSkill = new Skill(data);  // UnitData¿¡¼­ ½ºÅ³ »ý¼º
-        unitData.ApplyStatIncrease(unitData.level); // ·¹º§ ¼öÄ¡¿¡ ¸Â°Ô Àû¿ë
+        currentHp = unitData.hp; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¼ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
+        unitSkill = new Skill(data);  // UnitDataï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å³ ï¿½ï¿½ï¿½ï¿½
+        unitData.ApplyStatIncrease(unitData.level); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Â°ï¿½ ï¿½ï¿½ï¿½ï¿½
     }
 
     internal void LevelUpgrade()
@@ -40,7 +40,7 @@ public class Unit : MonoBehaviour
 
     public void Kill()
     {
-        // À¯´ÖÀÌ ÆÄ±«µÉ ¶§ ÀÌº¥Æ® ¹ß»ý
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ä±ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ìºï¿½Æ® ï¿½ß»ï¿½
         if (OnUnitDestroyed != null)
         {
             OnUnitDestroyed();
@@ -53,21 +53,21 @@ public class Unit : MonoBehaviour
         return currentHp > 0;
     }
 
-    // µ¥¹ÌÁö ¹Þ¾ÒÀ»¶§
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¾ï¿½ï¿½ï¿½ï¿½ï¿½
     public void TakeDamage(int damage)
     {
-        currentHp -= Mathf.Max(damage - unitData.def, 0); // ¹æ¾î·ÂÀ» °¨¾ÈÇÑ µ¥¹ÌÁö °è»ê
-        currentHp = Mathf.Max(currentHp, 0); // Ã¼·ÂÀÌ À½¼ö·Î ³»·Á°¡Áö ¾Êµµ·Ï Ã³¸®
+        currentHp -= Mathf.Max(damage - unitData.def, 0); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+        currentHp = Mathf.Max(currentHp, 0); // Ã¼ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Êµï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
     }
 
     public int CalculateDamage()
     {
         int damage = unitData.atk;
 
-        // Ä¡¸íÅ¸ ¹ß»ý È®·ü Ã¼Å©
+        // Ä¡ï¿½ï¿½Å¸ ï¿½ß»ï¿½ È®ï¿½ï¿½ Ã¼Å©
         if (Random.value < unitData.cri / 100f)
         {
-            damage *= 2; // Ä¡¸íÅ¸ ½Ã °ø°Ý·Â 2¹è
+            damage = (int)(damage * BalanceConfig.Current.critMultiplier); // Ä¡ï¿½ï¿½Å¸ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             //Debug.Log(unitData.unitName + " has landed a critical hit!");
         }
 
@@ -76,17 +76,17 @@ public class Unit : MonoBehaviour
 
     public void Attack(Enemy target)
     {
-        animator.SetTrigger("AttackTrigger"); // °ø°Ý ¾Ö´Ï¸ÞÀÌ¼ÇÀ» Æ®¸®°Å
+        animator.SetTrigger("AttackTrigger"); // ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ Æ®ï¿½ï¿½ï¿½ï¿½
 
         attackCount++;
-        // °ø°Ý ºÎ¿©ÇÏ´Â ¹æ½Ä
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Î¿ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½
         //target.TakeDamage(CalculateDamage());
         ThrowBullet(target, CalculateDamage());
         CheckAndApplySkill();
     }
     private void ThrowBullet(Enemy target, int damage)
     {
-        // ³¯¾Æ°¡´Â ºÒ·¿ À§Ä¡Á¶Á¤ - À¯´Ö ±âÁØÀ¸·Î ÀÌµ¿
+        // ï¿½ï¿½ï¿½Æ°ï¿½ï¿½ï¿½ ï¿½Ò·ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
         Vector2 spawnPosition = new Vector2(this.gameObject.transform.position.x -1f, this.gameObject.transform.position.y - 0.7f); 
         GameObject bullet = Instantiate(bulletPrefab, spawnPosition, this.gameObject.transform.rotation, this.gameObject.transform.parent.parent);
         Bullet bulletScript = bullet.GetComponent<Bullet>();
@@ -116,7 +116,7 @@ public class Unit : MonoBehaviour
             if (Time.time >= nextAttackTime)
             {
                 Attack(closestEnemy);
-                nextAttackTime = Time.time + 1f / unitData.attackSpeed; // ´ÙÀ½ °ø°Ý ½Ã°£À» ÇöÀç ½Ã°£¿¡ °ø°Ý ¼Óµµ¸¦ ¹Ý¿µÇÏ¿© ¼³Á¤
+                nextAttackTime = Time.time + 1f / unitData.attackSpeed; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Óµï¿½ï¿½ï¿½ ï¿½Ý¿ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ï¿½
             }
             
         }
@@ -135,7 +135,7 @@ public class Unit : MonoBehaviour
             GameObject manager = GameObject.Find("AIEnemiesSpawnLocation");
             enemies = manager.GetComponentsInChildren<Enemy>();
         }
-        //Enemy[] enemies = FindObjectsOfType<Enemy>(); // ¾À ³»ÀÇ ¸ðµç ¸ó½ºÅÍ Ã£±â
+        //Enemy[] enemies = FindObjectsOfType<Enemy>(); // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½
         Enemy closestEnemy = null;
         float closestDistance = Mathf.Infinity;
 
@@ -154,12 +154,13 @@ public class Unit : MonoBehaviour
     public void UpgradeUnitMerged(UnitData beforeUnitData)
     {
         Debug.Log("beforeUnitData.grade: " + beforeUnitData.grade);
-        if (unitData != null && unitData.grade < 5)
+        var b = BalanceConfig.Current;
+        if (unitData != null && unitData.grade < b.maxGrade)
         {
             unitData.grade = beforeUnitData.grade + 1;
-            unitData.atk = beforeUnitData.atk + (int)(beforeUnitData.atk * 0.5f);
-            // µî±ÞÀÌ ¿Ã¶ó°¥ ¶§ Å©±â Áõ°¡
-            float scaleFactor = 1.0f + (unitData.grade * 0.1f);
+            unitData.atk = beforeUnitData.atk + (int)(beforeUnitData.atk * b.mergeAtkBonus);
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã¶ï¿½ ï¿½ï¿½ Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            float scaleFactor = 1.0f + (unitData.grade * b.mergeScalePerGrade);
             this.gameObject.transform.localScale *= scaleFactor;
         }
     }
@@ -168,15 +169,15 @@ public class Unit : MonoBehaviour
     {
 
         AttackClosestEnemy();
-       //UpdateTime(Time.deltaTime);  // ½ºÅ³ Àû¿ëÀ» À§ÇÑ ½Ã°£ ¾÷µ¥ÀÌÆ®
+       //UpdateTime(Time.deltaTime);  // ï¿½ï¿½Å³ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
     }
     //public void Upgrade()
     //{
     //    if (level < 5)
     //    {
     //        level++;
-    //        attackPower += 10; // °ø°Ý·Â Áõ°¡
-    //        // ÇÃ·¹ÀÌ¾îÀÇ °ñµå¸¦ Â÷°¨
+    //        attackPower += 10; // ï¿½ï¿½ï¿½Ý·ï¿½ ï¿½ï¿½ï¿½ï¿½
+    //        // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½ ï¿½ï¿½å¸¦ ï¿½ï¿½ï¿½ï¿½
     //    }
     //}
 }
