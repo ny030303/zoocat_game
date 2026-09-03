@@ -4,28 +4,53 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "UnitDatabase", menuName = "scriptable Object/Create Unit Database")]
 public class UnitDatabase : ScriptableObject
 {
+    // ë¡œë¹„ UI ì‘ì—…ìš© (LobbyUserManager ë“±ì´ Resources í´ë”ì—ì„œ ì±„ì›€). ì „íˆ¬ ë¡œì§ì€ ì•„ë˜ static ì‚¬ìš©.
     public List<UnitData> unitDeck;
     public List<UnitData> aiUnitDeck;
+
+    private const string PlayerUnitFolder = "Scripts/Data/UnitData/Unit_UnitData";
+    private const string CharacterSheet = "Scripts/Data/Sheet/CharacterSheet";
 
     public static List<UnitData> unitList = new List<UnitData>();
     public static List<UnitData> aiUnitList = new List<UnitData>();
 
+    /// í”Œë ˆì´ì–´ ìœ ë‹› = Unit_UnitData í´ë”ì˜ ëª¨ë“  .asset (í”„ë¦¬íŒ¹/ìŠ¤í”„ë¼ì´íŠ¸) + CharacterSheet.csv ì˜ ìŠ¤íƒ¯(authoritative).
+    /// AI/PvP ë¯¸ëŸ¬ëŠ” ë™ì¼ ì„¸íŠ¸ë¥¼ ì“´ë‹¤.
     public void Initialize()
     {
-        foreach (var unit in unitDeck)  { unitList.Add(unit.DeepCopy()); }
-        foreach (var aiunit in aiUnitDeck) {
-            UnitData tmp = aiunit.DeepCopy();
-            //Dictionary<string, UnitData> baseUnitData;  // ±âº»°ª À¯´Ö µ¥ÀÌÅÍ
-            //string sheetCsvFilePath = "Scripts/Data/Sheet/CharacterSheet"; // CSV ÆÄÀÏ °æ·Î
-            //baseUnitData = CSVLoader.LoadUnitData(sheetCsvFilePath);
-            //Debug.Log(tmp.id);
-            //baseUnitData.TryGetValue(tmp.id.Replace("CHA_", ""), out UnitData foundUnit);
+        unitList.Clear();
+        aiUnitList.Clear();
 
-            //// ±âÁ¸ baseAtk °ªÀ» À¯ÁöÇÏ°í 10% Áõ°¡ ¹æ½ÄÀ¸·Î atk Àç°è»ê
-            //int baseAtk = foundUnit.atk; // Ã³À½ ¼³Á¤µÈ ±âº» °ø°İ·Â
-            //tmp.atk = baseAtk;
-            aiUnitList.Add(tmp); 
+        var sheet = CSVLoader.LoadUnitData(CharacterSheet);           // id -> UnitData(ìŠ¤íƒ¯)
+        var assets = Resources.LoadAll<UnitData>(PlayerUnitFolder);
+        if (assets.Length == 0)
+            Debug.LogError($"[UnitDatabase] {PlayerUnitFolder} ì— UnitData ì—ì…‹ì´ ì—†ìŠµë‹ˆë‹¤");
+
+        foreach (var asset in assets)
+        {
+            UnitData u = asset.DeepCopy();       // id / unitPrefab / unitSprite ëŠ” ì—ì…‹
+            MergeStatsFromSheet(u, sheet);       // ë‚˜ë¨¸ì§€ ìˆ˜ì¹˜ëŠ” CSV
+            unitList.Add(u);
+            aiUnitList.Add(u.DeepCopy());        // ìƒëŒ€ ë¯¸ëŸ¬ìš© ë™ì¼ ì„¸íŠ¸ (id ëˆ„ë½ìœ¼ë¡œ ì¸í•œ NRE ë°©ì§€)
         }
+    }
+
+    /// CharacterSheet.csv ì˜ ìˆ˜ì¹˜ë¥¼ ì—ì…‹ ìœ„ì— ë®ì–´ì”€ (CSV ê°€ ë°¸ëŸ°ìŠ¤ ì†ŒìŠ¤).
+    private static void MergeStatsFromSheet(UnitData u, Dictionary<string, UnitData> sheet)
+    {
+        string key = u.id.Replace("CHA_", "");
+        if (!sheet.TryGetValue(key, out var s))
+        {
+            Debug.LogWarning($"[UnitDatabase] '{u.id}' ê°€ CharacterSheet.csv ì— ì—†ìŒ - ì—ì…‹ ìŠ¤íƒ¯ ì‚¬ìš©");
+            return;
+        }
+        u.unitName = s.unitName;
+        u.grade = s.grade;
+        u.atk = s.atk; u.hit = s.hit; u.cri = s.cri;
+        u.attackSpeed = s.attackSpeed; u.attackRange = s.attackRange; u.splashRange = s.splashRange;
+        u.hp = s.hp; u.def = s.def; u.moveSpeed = s.moveSpeed;
+        u.skillId = s.skillId; u.skillValue = s.skillValue;
+        u.skillDuration = s.skillDuration; u.skillCooltime = s.skillCooltime;
     }
 
     public bool IsNull(string owner)  { 

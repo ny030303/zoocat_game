@@ -91,19 +91,12 @@ public static class CSVLoader
             {
                 string[] values = lines[i].Trim().Split(',');
 
-                if (values.Length < 16) // 데이터 개수 확인
+                if (values.Length < 16 || string.IsNullOrEmpty(values[0])) // 데이터 개수 확인
                 {
-                    Debug.LogWarning($"Invalid data at line {i + 1}");
+                    if (!string.IsNullOrWhiteSpace(lines[i]))
+                        Debug.LogWarning($"[CharacterSheet] line {i + 1} 열 부족({values.Length}/16) - 건너뜀");
                     continue;
                 }
-                string value = "val: ";
-                foreach (string val in values)
-                {
-                    value += $" {val},";
-                }
-                Debug.LogWarning(value);
-
-                string check_line = "";
 
                 try
                 {
@@ -136,9 +129,9 @@ public static class CSVLoader
                     }
                 } catch (Exception ex)
                 {
-                    Debug.LogError($" 2Failed to load CSV file: {ex.Message}, {check_line}, {value}");
+                    Debug.LogError($"[CharacterSheet] line {i + 1} 파싱 실패: {ex.Message} | {lines[i]}");
                 }
-               
+
             }
         }
         catch (Exception ex)
