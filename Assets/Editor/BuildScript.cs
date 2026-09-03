@@ -105,12 +105,20 @@ public static class BuildScript
         if (!string.IsNullOrEmpty(versionName))
             PlayerSettings.bundleVersion = versionName;
 
-        // -versionCode 인자가 있으면 그 값으로 고정(CI), 없으면 +1 자동 증가(dev/prod 모두).
-        // Play 는 versionCode 가 앱마다 유니크 + 단조 증가여야 함.
+        // versionCode 규칙 (Play: 앱마다 유니크 + 단조 증가):
+        //  - -versionCode 인자 있으면 그 값 (CI)
+        //  - prod: 시간 기반 자동 코드 → ProjectSettings 관리 불필요, 재빌드해도 항상 이전보다 큼
+        //  - dev: +1 (로컬 사이드로드라 값 자체는 무의미)
         if (int.TryParse(GetArg("-versionCode", null), out int vc))
             PlayerSettings.Android.bundleVersionCode = vc;
-        else
+        else if (isDev)
             PlayerSettings.Android.bundleVersionCode += 1;
+        else
+        {
+            int timeCode = (int)((DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 1_600_000_000L) / 100L);
+            PlayerSettings.Android.bundleVersionCode =
+                Mathf.Max(timeCode, PlayerSettings.Android.bundleVersionCode + 1);
+        }
 
         if (isDev)
         {
