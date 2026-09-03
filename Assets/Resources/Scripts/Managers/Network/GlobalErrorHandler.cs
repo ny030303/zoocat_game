@@ -26,7 +26,7 @@ public static class GlobalErrorHandler
         switch (msg)
         {
             case "로그인이 필요합니다":
-                if (SocketBinder.Instance != null) SocketBinder.Instance.RequestReLogin();
+                if (SocketBinder.Instance != null) SocketBinder.Instance.RequestReAuth();
                 break;
             case "요청이 너무 많습니다":
                 ToastMessage.Show("잠시 후 다시 시도해주세요.");

@@ -4,6 +4,11 @@ apply from: '../shared/keepUnitySymbols.gradle'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // CredentialStore (EncryptedSharedPreferences).
+    // androidx.annotation 은 Assets/Plugins/Android/androidx.annotation.annotation-1.1.0.jar 로 이미 포함 → 중복 클래스 방지 위해 transitive 제외
+    implementation('androidx.security:security-crypto:1.0.0') {
+        exclude group: 'androidx.annotation', module: 'annotation'
+    }
 **DEPS**}
 
 android {

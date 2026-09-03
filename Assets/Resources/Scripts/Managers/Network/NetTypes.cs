@@ -6,11 +6,20 @@ using System;
 /// </summary>
 
 [Serializable]
+public class RegisteredData
+{
+    public string userId;
+    public string deviceId;
+    public string deviceSecret;
+    public string token;
+    public UserData userProfile;
+}
+
+[Serializable]
 public class LoginSuccessData
 {
-    public string message;
+    public string token;        // login 응답에만. resumeSession 응답엔 없음
     public UserData userProfile;
-    public bool isNewUser;
 }
 
 [Serializable]

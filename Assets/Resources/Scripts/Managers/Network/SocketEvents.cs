@@ -4,14 +4,27 @@
 /// </summary>
 public static class SocketEvents
 {
-    // --- 인증 ---
-    public const string Login = "login";
-    public const string LoginSuccess = "loginSuccess";
+    // --- 인증 (auth-session) ---
+    public const string Register = "register";
+    public const string Registered = "registered";
+    public const string RegisterError = "registerError";
+    public const string Login = "login";                 // { userId, deviceId, deviceSecret }
+    public const string LoginSuccess = "loginSuccess";    // { token?, userProfile }
     public const string LoginError = "loginError";
+    public const string ResumeSession = "resumeSession";  // { token }
+    public const string SessionExpired = "sessionExpired";
+    public const string Logout = "logout";
+    public const string LoggedOut = "loggedOut";
 
     // --- 로비 ---
     public const string JoinLobby = "joinLobby";
     public const string UserJoined = "userJoined";
+    public const string LeaveLobby = "leaveLobby";
+    public const string UserLeft = "userLeft";
+
+    // --- 전역 채팅 ---
+    public const string SendMessage = "sendMessage";
+    public const string NewMessage = "newMessage";
 
     // --- 덱 ---
     public const string UpdateDeck = "updateDeck";

@@ -17,6 +17,8 @@ public class UserData
     public string[] selectedUnits;
     public int gold;
     public int gems;
+    public string providerType;    // "gpgs" 등. 미연동이면 서버 응답에 없음 → null (Phase 2)
+    public string providerUserId;
 }
 
 [System.Serializable]

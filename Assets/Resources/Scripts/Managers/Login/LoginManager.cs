@@ -1,248 +1,188 @@
 using LitJson;
-using System;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
-using UnityEngine.SocialPlatforms.Impl;
 
+/// <summary>
+/// auth-session 로그인 화면.
+///  - 자격증명 있으면 (CredentialStore) SocketBinder 가 연결 직후 resumeSession/login 을 자동으로 보낸다.
+///    → LoginManager 는 "접속 중" 표시 후 registered/loginSuccess 를 기다린다.
+///  - 없으면 로그인 패널을 띄우고, 유저가 "게스트로 계속" / "구글 로그인" 을 고르면 register 를 보낸다.
+///  - 유닛 로스터·프로필은 서버가 준다 (registered / loginSuccess / userJoined). 로컬 생성 없음.
+/// </summary>
 public class LoginManager : MonoBehaviour
 {
-    public SceneLoader sceneLoader; // SceneLoader ��ũ��Ʈ�� ����
+    public SceneLoader sceneLoader;
 
     private GameObject LoginPanel;
     private GameObject GuestformPanel;
     private GameObject LobbyEntryPanel;
 
-    private const string UUID_KEY = "GuestUUID";
-
     void Start()
     {
-        if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.ExternalStorageWrite)) {
-            UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.ExternalStorageWrite);
-        }
-        // Ŭ���� ������ Guestform ������ �ʱ�ȭ
         LoginPanel = GameObject.Find("Login Panel");
         GuestformPanel = GameObject.Find("Guest Form Panel");
         LobbyEntryPanel = GameObject.Find("Lobby Entry Panel");
+        if (GuestformPanel != null) GuestformPanel.SetActive(false);
 
-        // ���������� ã�������� Ȯ���ϴ� ���� �����ϴ�.
-        if (GuestformPanel != null && LobbyEntryPanel != null && LobbyEntryPanel != null) { GuestformPanel.SetActive(false); }
-        else { Debug.LogError("Panel�� ã�� �� �����ϴ�. �̸��� Ȯ���ϼ���."); }
+        var d = SocketDispatcher.Instance;
+        d.On(SocketEvents.Registered, OnAuthed);
+        d.On(SocketEvents.LoginSuccess, OnAuthed);
+        d.On(SocketEvents.LoginError, OnAuthFailedUI);
+        d.On(SocketEvents.RegisterError, OnAuthFailedUI);
+        // sessionExpired 는 SocketBinder 가 login 폴백으로 처리 (여기선 UI 무변경)
 
-        // 서버 로그인 응답 구독
-        SocketDispatcher.Instance.On(SocketEvents.LoginSuccess, OnLoginSuccess);
-        SocketDispatcher.Instance.On(SocketEvents.LoginError, OnLoginError);
-
-        if (AppConfig.Current.gpgsEnabled)
+        if (SocketBinder.Instance != null)
         {
-        GPGSBinder.Inst.Init((isLoggedIn, localUser) => {
-            if (isLoggedIn)
-            {
-                Debug.Log("User is logged in." + localUser);
-                SendGoogleLoginEventMessageToServer(localUser);
-                UserManager.Instance.isGuest = 1;
-                UserManager.Instance.isAnonymous = false; // 구글 연동됨
-                // ������ �α��� �� ���� ó��
-                LoginPanel.SetActive(false);
-                LobbyEntryPanel.SetActive(true);
-            }
-            else {
-                Debug.Log("Googlegames User failed to log in.");
-                // �α��� ���� �� ó���� ����
-                LoginPanel.SetActive(true);
-                LobbyEntryPanel.SetActive(false);
-            }
-        });
+            SocketBinder.Instance.OnKicked += OnKicked;
+            SocketBinder.Instance.OnAuthFailed += ShowLoginPanel;
+        }
+
+        if (CredentialStore.HasCredentials)
+        {
+            // SocketBinder 가 자동 resume/login → 응답 기다림
+            ShowConnecting();
         }
         else
         {
-            // dev 빌드: GPGS 초기화 스킵. 선택 화면 표시
-            LoginPanel.SetActive(true);
-            LobbyEntryPanel.SetActive(false);
-        }
-        // 자동 게스트 로그인 안 함 — 유저가 LoginPanel 에서 "게스트로 계속" / "구글 로그인" 을 명시적으로 선택
-    }
-    public void Logout()
-    {
-        GPGSBinder.Inst.Logout();
-        FileManager.DeleteDataFile();
-        LoginPanel.SetActive(true);
-        LobbyEntryPanel.SetActive(false);
-    }
-    public void GooglePlayLogin() {
-        if (!AppConfig.Current.gpgsEnabled)
-        {
-            // dev 빌드(.dev 패키지)는 GPGS 미설정 → 구글 로그인 불가
-            Debug.LogWarning("[Login] GPGS disabled in this build - use guest login");
-            ToastMessage.Show("이 빌드에서는 게스트 로그인만 가능합니다.");
-            return;
-        }
-        GPGSBinder.Inst.Login((success, localUser) => {
-            if (success)
-            {
-                UserManager.Instance.isGuest = 1;          // 서버(구글) 로그인 사용자
-                UserManager.Instance.isAnonymous = false;  // 구글 연동됨
-                SendGoogleLoginEventMessageToServer(localUser);
-                LoginPanel.SetActive(false);
-                LobbyEntryPanel.SetActive(true);
-            }
-            else
-            {
-                Debug.LogWarning("[Login] Google Play sign-in failed");
-                LoginPanel.SetActive(true);
-                LobbyEntryPanel.SetActive(false);
-            }
-        });
-    }
-
-    public void SendGoogleLoginEventMessageToServer(ILocalUser localUser)
-    {
-        string id = localUser.id;
-        string userName = localUser.userName;
-        string underage = localUser.underage.ToString();
-
-        // 재연결 시 자동 재로그인용으로 캐시
-        SocketBinder.Instance.CacheLoginPayload(id, userName, underage);
-        SocketSender.Send(SocketEvents.Login, new { id, userName, underage });
-    }
-
-    // 서버 login 응답 → 유저 프로필 로드
-    private void OnLoginSuccess(JsonData data)
-    {
-        if (data != null && data.Has("userProfile") && data["userProfile"] != null)
-        {
-            UserManager.Instance.LoadUserFromJson(data["userProfile"]);
+            ShowLoginPanel("");
         }
 
-        bool isNewUser = data != null && data.Has("isNewUser") && (bool)data["isNewUser"];
-        Debug.Log($"[Login] success (isNewUser={isNewUser})");
-        // TODO: isNewUser 면 튜토리얼 분기
+        if (AppConfig.Current.gpgsEnabled)
+            GPGSBinder.Inst.Init((ok, localUser) => Debug.Log("[Login] GPGS init: " + ok));
     }
 
-    private void OnLoginError(JsonData data)
+    void OnDestroy()
     {
-        string msg = data != null ? data.ToString() : "로그인에 실패했습니다.";
-        Debug.LogError("[Login] error: " + msg);
-        if (LoginPanel != null) LoginPanel.SetActive(true);
-        if (LobbyEntryPanel != null) LobbyEntryPanel.SetActive(false);
-        // TODO: 로그인 패널에 에러 텍스트 노출
-    }
-    //�Խ�Ʈ �α���
-    public void GuestLogin()
-    {
-        // 로컬 캐시 먼저 (즉시 UI 표시용 — 서버 loginSuccess 오면 덮어씀)
-        UserManager.Instance.currentUser = FileManager.LoadUserData();
-        UserManager.Instance.units = FileManager.LoadUnits();
-        UserManager.Instance.isGuest = 1;        // 서버 세션 사용
-        UserManager.Instance.isAnonymous = true; // UUID 게스트 (아직 계정 미연동)
-
-        // 서버에 게스트 UUID 로 로그인 (서버 auth 는 id 문자열뿐, 없으면 자동 가입)
-        UserData local = UserManager.Instance.currentUser;
-        string uuid = local != null ? local.id : null;
-        string name = local != null && !string.IsNullOrEmpty(local.username) ? local.username : "Guest";
-
-        if (string.IsNullOrEmpty(uuid))
+        if (SocketDispatcher.HasInstance)
         {
-            Debug.LogError("[Login] guest UUID missing - cannot server-login");
-            return;
+            var d = SocketDispatcher.Instance;
+            d.Off(SocketEvents.Registered, OnAuthed);
+            d.Off(SocketEvents.LoginSuccess, OnAuthed);
+            d.Off(SocketEvents.LoginError, OnAuthFailedUI);
+            d.Off(SocketEvents.RegisterError, OnAuthFailedUI);
         }
-
-        SocketBinder.Instance.CacheLoginPayload(uuid, name, "true");
-        SocketSender.Send(SocketEvents.Login, new { id = uuid, userName = name, underage = "true" });
+        if (SocketBinder.Instance != null)
+        {
+            SocketBinder.Instance.OnKicked -= OnKicked;
+            SocketBinder.Instance.OnAuthFailed -= ShowLoginPanel;
+        }
     }
-    //�Խ�Ʈ ȸ������
-    // 닉네임 지정해서 새 게스트 계정 생성 (닉네임 폼용). 폼 없이 자동 생성도 가능.
-    private void CreateGuestAccount(string playerName)
+
+    // ---------------------------------------------------------------- 버튼
+
+    /// "게스트로 계속"
+    public void ContinueAsGuest()
     {
-        string newUUID = Guid.NewGuid().ToString();
-        FileManager.SaveData(UUID_KEY, newUUID);
-        FileManager.SaveData("GuestPlayerName", playerName);
+        if (GuestformPanel != null) GuestformPanel.SetActive(false);
 
-        UserUnit[] units =
-        {
-            new UserUnit { id = "1001", unlock = 1, lv = 1, exp = 0, piece = 30 },
-            new UserUnit { id = "1002", unlock = 1, lv = 1, exp = 0, piece = 20 },
-            new UserUnit { id = "1003", unlock = 1, lv = 1, exp = 0, piece = 0 },
-            new UserUnit { id = "1004", unlock = 1, lv = 1, exp = 0, piece = 0 },
-            new UserUnit { id = "1005", unlock = 1, lv = 1, exp = 0, piece = 0 },
-            new UserUnit { id = "1006", unlock = 0, lv = 0, exp = 0, piece = 0 },
-            new UserUnit { id = "1007", unlock = 1, lv = 1, exp = 0, piece = 0 },
-            new UserUnit { id = "1008", unlock = 0, lv = 0, exp = 0, piece = 0 },
-            new UserUnit { id = "1009", unlock = 0, lv = 0, exp = 0, piece = 0 }
-        };
-        UserData user = new UserData
-        {
-            id = newUUID,
-            underage = true,
-            username = playerName,
-            level = 1,
-            experience = 0,
-            friends = new string[] { },
-            country = "",
-            language = "ko",
-            selectedUnits = new string[] { "1001", "1002", "1003", "1004", "1005" },
-            gold = BalanceConfig.Current.guestStartGold,
-            gems = BalanceConfig.Current.guestStartGems
-        };
-        FileManager.SaveUnits(units);
-        FileManager.SaveUserData(user);
-        Debug.Log("[Login] guest account created: " + playerName);
+        if (CredentialStore.HasCredentials) { ShowConnecting(); return; } // 이미 resume 중
+
+        string name = "게스트" + UnityEngine.Random.Range(1000, 10000);
+        SocketBinder.Instance.SendRegister(name, true);
+        ShowConnecting();
     }
 
-    // 닉네임 입력 폼의 확인 버튼
+    /// 닉네임 입력 폼 확인
     public void GuestSignup()
     {
-        TMP_InputField input = GuestformPanel != null ? GuestformPanel.GetComponentInChildren<TMP_InputField>() : null;
-        string playerName = input != null ? input.text : "";
-        if (string.IsNullOrWhiteSpace(playerName))
-        {
-            Debug.LogWarning("[Login] guest name empty");
-            return;
-        }
-
-        CreateGuestAccount(playerName.Trim());
-        GuestLogin();
+        var input = GuestformPanel != null ? GuestformPanel.GetComponentInChildren<TMPro.TMP_InputField>() : null;
+        string name = input != null ? input.text.Trim() : "";
+        if (string.IsNullOrWhiteSpace(name)) { Debug.LogWarning("[Login] 닉네임 비어 있음"); return; }
+        if (name.Length > 32) name = name.Substring(0, 32);
 
         if (input != null) input.text = "";
         if (GuestformPanel != null) GuestformPanel.SetActive(false);
-        LoginPanel.SetActive(false);
-        LobbyEntryPanel.SetActive(true);
+
+        if (CredentialStore.HasCredentials) { ShowConnecting(); return; }
+        SocketBinder.Instance.SendRegister(name, true);
+        ShowConnecting();
     }
 
+    /// "구글 로그인" — GPGS 인증해서 표시명만 가져오고 register/resume 는 게스트와 동일.
+    /// 서버 provider 연동은 Phase 2. googleId 는 PendingGpgsLink 로 보관.
+    public void GooglePlayLogin()
+    {
+        if (!AppConfig.Current.gpgsEnabled)
+        {
+            ToastMessage.Show("이 빌드에서는 게스트 로그인만 가능합니다.");
+            return;
+        }
+        GPGSBinder.Inst.Login((success, localUser) =>
+        {
+            if (!success) { Debug.LogWarning("[Login] Google 로그인 실패"); ShowLoginPanel(""); return; }
 
+            CredentialStore.PendingGpgsLink = localUser.id; // Phase 2 연동 준비
+            if (CredentialStore.HasCredentials) { ShowConnecting(); return; }
+
+            string name = !string.IsNullOrEmpty(localUser.userName) ? localUser.userName : "Player";
+            if (name.Length > 32) name = name.Substring(0, 32);
+            SocketBinder.Instance.SendRegister(name, false);
+            ShowConnecting();
+        });
+    }
 
     public void ShowGuestLoginPanel()
     {
-        if (GuestformPanel != null)
-        {  GuestformPanel.SetActive(!GuestformPanel.activeSelf); }
-        else {  Debug.LogError("Guestform�� null�Դϴ�. �ʱ�ȭ�� ������ ���� �� �ֽ��ϴ�."); }
+        if (GuestformPanel != null) GuestformPanel.SetActive(!GuestformPanel.activeSelf);
     }
 
-    // 저장된 게스트 데이터(UUID)가 있는지
-    private bool HasSavedGuest()
+    /// 계정 전환/로그아웃
+    public void Logout()
     {
-        GameData gamedata = FileManager.LoadData();
-        return gamedata != null && gamedata.dataDictionary.ContainsKey(UUID_KEY);
+        SocketBinder.Instance.LogoutAndClear();
+        CredentialStore.Clear();
+        try { GPGSBinder.Inst.Logout(); } catch { }
+        ShowLoginPanel("");
     }
 
-    /// "게스트로 계속" 버튼.
-    /// 저장된 게스트가 있으면 그대로 이어서, 없으면 닉네임 입력 없이 자동 생성 후 로그인.
-    /// (닉네임을 직접 정하고 싶으면 GuestformPanel + GuestSignup 경로를 별도로 두면 됨)
-    public void ContinueAsGuest()
-    {
-        if (!HasSavedGuest())
-            CreateGuestAccount("게스트" + UnityEngine.Random.Range(1000, 10000));
+    // ---------------------------------------------------------------- 서버 응답
 
-        GuestLogin(); // 로컬 로드 + 서버 login(UUID)
-        LoginPanel.SetActive(false);
+    private void OnAuthed(JsonData data)
+    {
+        if (data != null && data.Has("userProfile") && data["userProfile"] != null)
+            UserManager.Instance.LoadUserFromJson(data["userProfile"]);
+
+        UserManager.Instance.isGuest = 1; // 서버 세션 있음
+        UserManager.Instance.isAnonymous = string.IsNullOrEmpty(CredentialStore.PendingGpgsLink);
+
+        Debug.Log("[Login] authed (userId=" + CredentialStore.UserId + ")");
+        if (LoginPanel != null) LoginPanel.SetActive(false);
         if (GuestformPanel != null) GuestformPanel.SetActive(false);
-        LobbyEntryPanel.SetActive(true);
+        if (LobbyEntryPanel != null) LobbyEntryPanel.SetActive(true);
+    }
+
+    private void OnAuthFailedUI(JsonData data)
+    {
+        string msg = data != null ? data.ToString() : "인증에 실패했습니다.";
+        Debug.LogError("[Login] auth error: " + msg);
+        ShowLoginPanel(msg);
+    }
+
+    private void OnKicked(string msg)
+    {
+        ToastMessage.Show(msg);
+        ShowLoginPanel(msg);
+    }
+
+    // ---------------------------------------------------------------- UI 상태
+
+    private void ShowConnecting()
+    {
+        if (LoginPanel != null) LoginPanel.SetActive(false);
+        if (GuestformPanel != null) GuestformPanel.SetActive(false);
+        if (LobbyEntryPanel != null) LobbyEntryPanel.SetActive(false);
+        // TODO: "접속 중..." 스피너 패널
+    }
+
+    private void ShowLoginPanel(string _)
+    {
+        if (LoginPanel != null) LoginPanel.SetActive(true);
+        if (GuestformPanel != null) GuestformPanel.SetActive(false);
+        if (LobbyEntryPanel != null) LobbyEntryPanel.SetActive(false);
     }
 
     public void OnLobbyEnterButtonClicked()
     {
-        // �κ� ������ ��ȯ
         sceneLoader.LoadScene("LobbyTestScene");
     }
 }
