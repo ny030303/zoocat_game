@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply from: '../shared/keepUnitySymbols.gradle'
 **APPLY_PLUGINS**
 
 dependencies {
@@ -6,26 +7,29 @@ dependencies {
 **DEPS**}
 
 android {
+    namespace "com.unity3d.player"
+    ndkVersion "**NDKVERSION**"
     ndkPath "**NDKPATH**"
 
-    compileSdkVersion 32
-    buildToolsVersion '30.0.3'  // 안정적인 빌드 도구 버전으로 변경
+    compileSdkVersion **APIVERSION**
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
 
-    packagingOptions {
+    packaging {
         jniLibs {
             useLegacyPackaging = true
         }
     }
 
     defaultConfig {
-        minSdkVersion **MINSDKVERSION**
-        targetSdkVersion **TARGETSDKVERSION**
+**DEFAULT_CONFIG_SETUP**
+        minSdk **MINSDK**
+        targetSdk **TARGETSDK**
         ndk {
+            debugSymbolLevel **DEBUGSYMBOLLEVEL**
             abiFilters **ABIFILTERS**
         }
         versionCode **VERSIONCODE**
@@ -33,14 +37,14 @@ android {
         consumerProguardFiles 'proguard-unity.txt'**USER_PROGUARD**
     }
 
-    lintOptions {
+    lint {
         abortOnError false
     }
 
-    aaptOptions {
+    androidResources {
         noCompress = **BUILTIN_NOCOMPRESS** + unityStreamingAssets.tokenize(', ')
         ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~"
-    }**PACKAGING_OPTIONS**
+    }**PACKAGING**
 }
 **IL_CPP_BUILD_SETUP**
 **SOURCE_BUILD_SETUP**

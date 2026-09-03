@@ -87,3 +87,10 @@ fastlane/*.log
 # cloude
 /docs/
 /.bkit/
+
+# Unity 자동 백업/복구 + 로컬 임시
+*.gradle.backup
+*.gradle.backup.meta
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta
+/.utmp/
