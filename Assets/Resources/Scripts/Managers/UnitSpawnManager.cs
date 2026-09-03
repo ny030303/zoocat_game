@@ -62,6 +62,21 @@ public class UnitSpawnManager : MonoBehaviour
 
     public int getAvailablePosition(Vector2 targetPosition)
     {
+        // 문자열(.ToString) 비교 대신 거리 비교 — Unity 버전별 Vector 포맷/부동소수 오차에 안전
+        int best = -1;
+        float bestSqr = 0.25f; // 허용 오차(≈0.5 유닛). 셀 간격보다 훨씬 작음
+        for (int bi = 0; bi < availablePositions.Count; bi++)
+        {
+            float sqr = (availablePositions[bi] - targetPosition).sqrMagnitude;
+            if (sqr < bestSqr) { bestSqr = sqr; best = bi; }
+        }
+        return best;
+    }
+
+    private int getAvailablePosition_legacy_UNUSED(Vector2 targetPosition)
+    {
+        return -1; // legacy .ToString() 매칭 제거됨
+#pragma warning disable
         foreach (Vector2 pos in availablePositions)
         {
             if (pos.ToString() == targetPosition.ToString()) // Vector2�� == �����ڸ� �����ε��Ͽ� ��� �񱳰� �����մϴ�.
@@ -127,7 +142,11 @@ public class UnitSpawnManager : MonoBehaviour
             } else {
                 // ���� �ε��� ã��
                 int idx = getAvailablePosition(spawnPos);
-                Debug.Log("idx: "+ idx);
+                if (idx < 0)
+                {
+                    Debug.LogWarning("[UnitSpawnManager] SpawnNextAlly: 위치 " + spawnPos + " 가 그리드 셀과 매칭 안 됨 - 스폰 취소");
+                    return null;
+                }
                 availableState[idx] = 1;
                 mergeIdx = idx;
             }
@@ -136,6 +155,13 @@ public class UnitSpawnManager : MonoBehaviour
             UnitData unitData = null;
             if (owner == "player") unitData = unitDatabase.GetUnitDataRandom(owner);
             else if (owner == "ai") { unitData = unitDatabase.GetUnitData(owner, unitID);}
+
+            if (unitData == null || unitData.unitPrefab == null)
+            {
+                Debug.LogError("[UnitSpawnManager] SpawnNextAlly: unitData/unitPrefab null (owner=" + owner + ", id=" + unitID + ") - 스폰 취소");
+                return null;
+            }
+
             // ���õ� �Ʊ� �������� �ش� ��ġ�� ����
             newAlly = Instantiate(unitData.unitPrefab, spawnPos, Quaternion.identity);
             if (owner == "ai") newAlly.GetComponent<SpriteRenderer>().flipX = !newAlly.GetComponent<SpriteRenderer>().flipX; // ai �����̸� ������
@@ -169,8 +195,7 @@ public class UnitSpawnManager : MonoBehaviour
     {
         // ������ ������ ��ġ�� �ٽ� �߰�
         int idx = getAvailablePosition(position);
-        //if(mergeIdx != idx) 
-            availableState[idx] = 0;
+        if (idx >= 0) availableState[idx] = 0;
     }
 
     // ������ ����� state�� ����� Kill

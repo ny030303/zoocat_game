@@ -25,10 +25,10 @@ public class UnitMerger : MonoBehaviour
             unitSpawnManager = manager.GetComponent<UnitSpawnManager>();
         }
 
-        // ºÎ¸ğ ¿ÀºêÁ§Æ® ÁÂÇ¥
+        // ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½Ç¥
         parentTransform = this.gameObject.transform.parent;
         Vector2 unitpos = new Vector2(this.transform.position.x, this.transform.position.y);
-        // ¿ùµå ÁÂÇ¥°è¿¡¼­ÀÇ À§Ä¡¸¦ ·ÎÄÃ ÁÂÇ¥°è·Î º¯È¯
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ï¿½è¿¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
         localPos = parentTransform.InverseTransformPoint(unitpos);
     }
 
@@ -40,28 +40,29 @@ public class UnitMerger : MonoBehaviour
 
         Unit otherUnitset = otherUnit.GetComponent<Unit>();
 
-        //·Î±×¿ë ÀúÀå
+        //ï¿½Î±×¿ï¿½ ï¿½ï¿½ï¿½ï¿½
         unitID1 = otherUnitset.unitData.id;
         unitID2 = unitset.unitData.id;
-        //Vector2 ve1 = cpyLocalPos(otherUnit);
         Vector2 ve1 = otherUnitset.spawnPos;
 
-        // ²ø¾î¿Â ´ë»óÀº Unit ¼Ó¼º Kill
-        otherUnitset.Kill();
-
-        Debug.Log("localPos"+ localPos);
-        //// ±âÁ¸ À¯´Ö ÀÚ¸®¿¡ »õ À¯´Ö »ı¼º
+        // ê²°ê³¼ ìœ ë‹›ì„ ë¨¼ì € ìŠ¤í° ì‹œë„ - ì‹¤íŒ¨í•˜ë©´ ì•„ë¬´ê²ƒë„ ì£½ì´ì§€ ì•ŠìŒ(ì›ë³¸ ìœ ì§€)
         GameObject unit = unitSpawnManager.SpawnNextAlly(localPos);
-        // »õ À¯´Ö ¾÷±×·¹ÀÌµå
+        if (unit == null)
+        {
+            Debug.LogWarning("[UnitMerger] ë³‘í•© ìŠ¤í° ì‹¤íŒ¨ - ì›ë³¸ ìœ ë‹› ìœ ì§€ (localPos=" + localPos + ")");
+            return;
+        }
         Unit newunitset = unit.GetComponent<Unit>();
+        if (newunitset == null) { Destroy(unit); return; }
+
+        // ìŠ¤í° ì„±ê³µ í›„ì— ì›ë³¸ ë‘˜ ì œê±°
+        otherUnitset.Kill();
         resultUnitID = newunitset.unitData.id;
         newunitset.UpgradeUnitMerged(unitset.unitData);
-        // ±âÁ¸ À¯´Ö Áö¿ì±â
         unitSpawnManager.KillUnit(this.gameObject);
 
         Debug.Log(unitID1 + unitID2 + resultUnitID + localPos);
-        // ÀÌº¥Æ® Æ®¸®°Å
-        eventManager.OnUnitMerged(unitID1, ve1, unitID2, localPos, resultUnitID, localPos);
+        eventManager?.OnUnitMerged(unitID1, ve1, unitID2, localPos, resultUnitID, localPos);
     }
 
 }
